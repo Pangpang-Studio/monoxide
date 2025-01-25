@@ -1,0 +1,28 @@
+[package]
+name = "monoxide"
+version = "0.0.1"
+edition = "2021"
+homepage = "https://github.com/rami3l/monoxide"
+repository = "https://github.com/rami3l/monoxide"
+readme = "README.md"
+
+[dependencies]
+
+[build-dependencies]
+
+[lints.rust]
+rust_2018_idioms = { level = "deny", priority = -1 }
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
+trivial_numeric_casts = "warn"
+unused_allocation = "warn"
+
+[lints.clippy]
+nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+dbg_macro = "warn"
+todo = "warn"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+wildcard_imports = "allow"
