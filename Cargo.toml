@@ -29,3 +29,6 @@ missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 module_name_repetitions = "allow"
 wildcard_imports = "allow"
+
+[workspace]
+members = [".", "crates/monoxide-ttf"]

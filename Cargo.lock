@@ -123,6 +123,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "monoxide-ttf"
+version = "0.1.0"
+
+[[package]]
 name = "mutually_exclusive_features"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
