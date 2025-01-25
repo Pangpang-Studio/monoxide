@@ -10,6 +10,8 @@ readme = "README.md"
 anyhow = "1.0.95"
 kurbo = "0.11.1"
 norad = { version = "0.14.2", features = ["kurbo"] }
+opener = "0.7.2"
+url = "2.5.4"
 
 [build-dependencies]
 

@@ -3,6 +3,7 @@ use std::fmt::Write;
 use anyhow::Result;
 use kurbo::PathEl;
 use norad::{Contour, Glyph};
+use url::Url;
 
 struct SvgPen<W> {
     buf: W,
@@ -46,8 +47,15 @@ impl<W: Write + Default> SvgPen<W> {
 fn main() -> Result<()> {
     let glyph = Glyph::load("assets/R_.glif")?;
     let buf = String::new();
-    let mut pen = SvgPen { buf };
-    pen.draw_glyph(&glyph)?;
-    println!("{}", pen.finish());
+    let mut svg = {
+        let mut pen = SvgPen { buf };
+        pen.draw_glyph(&glyph)?;
+        pen.finish()
+    };
+    let endpoint = Url::parse("https://svg-path-visualizer.netlify.app/")?.join({
+        svg.insert(0, '#');
+        &svg
+    })?;
+    opener::open_browser(endpoint.as_str())?;
     Ok(())
 }
