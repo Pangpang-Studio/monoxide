@@ -7,6 +7,9 @@ repository = "https://github.com/rami3l/monoxide"
 readme = "README.md"
 
 [dependencies]
+anyhow = "1.0.95"
+kurbo = "0.11.1"
+norad = { version = "0.14.2", features = ["kurbo"] }
 
 [build-dependencies]
 
