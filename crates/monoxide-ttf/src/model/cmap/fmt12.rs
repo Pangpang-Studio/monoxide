@@ -1,6 +1,6 @@
 use bytes::BufMut;
 
-use super::raw;
+use crate::hl::cmap as hl;
 
 #[derive(Debug)]
 pub struct SequentialMapGroup {
@@ -43,7 +43,7 @@ impl Table {
         }
     }
 
-    pub fn from_raw(raw: &raw::SubTable) -> Self {
+    pub fn from_raw(raw: &hl::SubTable) -> Self {
         // The mapping is very straightforward, as the raw format is already
         // mimicking the format 12.
         let groups = raw

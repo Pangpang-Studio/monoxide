@@ -1,9 +1,7 @@
 use bytes::BufMut;
 
-use super::{
-    raw::{self, SeqMapping},
-    NON_MACINTOSH_LANG_CODE,
-};
+use super::NON_MACINTOSH_LANG_CODE;
+use crate::hl::cmap as hl;
 
 #[derive(Debug, PartialEq, Eq)]
 struct Segment {
@@ -75,7 +73,7 @@ impl Table {
     }
 
     /// Convert a raw subtable to a format 4 subtable.
-    pub fn from_raw(tbl: &raw::SubTable) -> Self {
+    pub fn from_raw(tbl: &hl::SubTable) -> Self {
         // As the input range list does not contain holes, the number of
         // segments is the same as the number of ranges.
         let seg_count = tbl.len() + 1; // +1 for the dummy segment, see below
@@ -107,7 +105,7 @@ impl Table {
             // Anyway, the following code will truncate the segment to the BMP
             // if by any chance it extends beyond it.
             let seq = if (seq.start_code + seq.len - 1) > 0xffff {
-                &SeqMapping {
+                &hl::SeqMapping {
                     start_code: seq.start_code,
                     len: 0x10000 - seq.start_code,
                     glyph_id: seq.glyph_id,
@@ -187,17 +185,17 @@ fn test_opentype_spec_example() {
         Note that the delta values could be reworked so as to reorder the segments.
     */
     let raw_tbl = vec![
-        raw::SeqMapping {
+        hl::SeqMapping {
             start_code: 10,
             len: 11,
             glyph_id: 1,
         },
-        raw::SeqMapping {
+        hl::SeqMapping {
             start_code: 30,
             len: 61,
             glyph_id: 12,
         },
-        raw::SeqMapping {
+        hl::SeqMapping {
             start_code: 153,
             len: 328,
             glyph_id: 73,
