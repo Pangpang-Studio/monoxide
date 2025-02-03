@@ -7,6 +7,7 @@
 use bytes::BufMut;
 pub mod cmap;
 pub mod head;
+pub mod hhea;
 
 /// The trait implemented by all tables in a TrueType font file.
 pub trait ITable {
