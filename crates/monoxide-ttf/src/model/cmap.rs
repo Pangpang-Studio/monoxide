@@ -19,7 +19,6 @@
 
 pub mod fmt12;
 pub mod fmt4;
-pub mod raw;
 
 /// The platform IDs for subtables of the `cmap` table.
 #[repr(u16)]
@@ -132,7 +131,7 @@ impl Table {
     ///
     /// This function will generate the correct format 4 and 12 subtables based
     /// on the input raw table. Subtable sharing is explicitly supported here.
-    pub fn from_raw(mut raw: raw::Table) -> Self {
+    pub fn from_raw(mut raw: crate::hl::cmap::Table) -> Self {
         // Ensure that the character mappings within each subtable is sorted.
         for subtable in &mut raw.subtables {
             subtable.sort_by_key(|x| x.start_code);

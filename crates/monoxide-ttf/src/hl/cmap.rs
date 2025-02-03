@@ -3,7 +3,9 @@
 //! Code creating `cmap` table records should use types in this module, and then
 //! convert it to various other formats using their respective modules, instead
 //! of trying to instantiate the other formats directly.
-use super::{EncodingRecord, PlatformId, UnicodePlatformEncoding, WindowsPlatformEncoding};
+use crate::model::cmap::{
+    EncodingRecord, PlatformId, UnicodePlatformEncoding, WindowsPlatformEncoding,
+};
 
 /// A run of characters to be mapped sequentially to glyphs. A list of them
 /// should be sorted by `start_code`.
