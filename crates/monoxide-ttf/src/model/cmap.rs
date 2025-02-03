@@ -176,8 +176,8 @@ impl Table {
 }
 
 impl ITable for Table {
-    fn name_raw(&self) -> &'static str {
-        "cmap"
+    fn name(&self) -> &'static [u8; 4] {
+        b"cmap"
     }
 
     fn write(&self, writer: &mut impl bytes::BufMut) {
