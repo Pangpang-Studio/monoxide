@@ -8,6 +8,19 @@ use bytes::BufMut;
 pub mod cmap;
 pub mod head;
 pub mod hhea;
+pub mod hmtx;
+
+#[allow(non_camel_case_types)]
+/// A signed 16-bit number describing number of font design units.
+pub type fword = i16;
+
+#[allow(non_camel_case_types)]
+/// An unsigned 16-bit number describing number of font design units.
+pub type ufword = u16;
+
+#[allow(non_camel_case_types)]
+/// A signed fix-point number of 14 fractional bits.
+pub type f2dot14 = fixed::types::I2F14;
 
 /// The trait implemented by all tables in a TrueType font file.
 pub trait ITable {
