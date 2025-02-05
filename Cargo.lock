@@ -181,6 +181,7 @@ dependencies = [
  "bitflags",
  "bytes",
  "fixed",
+ "indexmap",
  "widestring",
 ]
 
