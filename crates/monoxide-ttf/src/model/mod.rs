@@ -9,6 +9,7 @@ pub mod cmap;
 pub mod head;
 pub mod hhea;
 pub mod hmtx;
+pub mod name;
 
 #[allow(non_camel_case_types)]
 /// A signed 16-bit number describing number of font design units.
