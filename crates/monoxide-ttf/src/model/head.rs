@@ -5,7 +5,7 @@ use bitflags::bitflags;
 
 use super::ITable;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HeaderFlags(u16);
 bitflags! {
     impl HeaderFlags: u16 {
@@ -22,14 +22,14 @@ bitflags! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(unused)]
 pub enum IndexToLocFormat {
     Short = 0,
     Long = 1,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MacStyle(u16);
 bitflags! {
     impl MacStyle: u16 {
@@ -44,12 +44,12 @@ bitflags! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Table {
     pub major_version: u16,
     pub minor_version: u16,
     pub font_revision: u32,
-    pub checksum_adjustment: u32,
+    pub checksum_adjustment: u32, // set to 0, will be rewritten in later stages
     pub magic_number: u32,
     pub flags: HeaderFlags,
     pub units_per_em: u16,
