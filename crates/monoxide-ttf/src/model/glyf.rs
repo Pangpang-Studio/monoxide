@@ -1,6 +1,7 @@
 use bytes::BufMut;
+use thiserror::Error;
 
-use super::fword;
+use super::{fword, ITable};
 
 pub struct GlyphCommon {
     pub x_min: fword,
@@ -18,14 +19,50 @@ impl GlyphCommon {
     }
 }
 
-mod compound;
-mod simple;
+pub mod compound;
+pub mod simple;
 
 pub enum Glyph {
     Simple(simple::SimpleGlyph),
     Compound(compound::CompoundGlyph),
 }
 
+#[derive(Debug, Error)]
+pub enum GlyphVerifyError {
+    #[error("{0}")]
+    Simple(#[from] simple::SimpleGlyphVerifyError),
+    #[error("{0}")]
+    Compound(#[from] compound::CompoundGlyphVerifyError),
+}
+
+impl Glyph {
+    pub fn verify(&self) -> Result<(), GlyphVerifyError> {
+        match self {
+            Glyph::Simple(g) => g.verify().map_err(|x| x.into()),
+            Glyph::Compound(g) => g.verify().map_err(|x| x.into()),
+        }
+    }
+
+    pub fn write(&self, w: &mut impl BufMut) {
+        match self {
+            Glyph::Simple(g) => g.write(w),
+            Glyph::Compound(g) => g.write(w),
+        }
+    }
+}
+
 pub struct Table {
     pub glyphs: Vec<Glyph>,
+}
+
+impl ITable for Table {
+    fn name(&self) -> &'static [u8; 4] {
+        b"glyf"
+    }
+
+    fn write(&self, w: &mut impl BufMut) {
+        for g in &self.glyphs {
+            g.write(w);
+        }
+    }
 }
