@@ -218,16 +218,16 @@ impl SFamilyClass {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct PanroseClassification {
-    pub b_family_type: u8,
-    pub b_serif_style: u8,
-    pub b_weight: u8,
-    pub b_proportion: u8,
-    pub b_contrast: u8,
-    pub b_stroke_variation: u8,
-    pub b_arm_style: u8,
-    pub b_letterform: u8,
-    pub b_midline: u8,
-    pub b_x_height: u8,
+    pub family_type: u8,
+    pub serif_style: u8,
+    pub weight: u8,
+    pub proportion: u8,
+    pub contrast: u8,
+    pub stroke_variation: u8,
+    pub arm_style: u8,
+    pub letterform: u8,
+    pub midline: u8,
+    pub x_height: u8,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -248,7 +248,7 @@ bitflags::bitflags! {
 }
 
 pub struct Table {
-    pub version: u16,
+    // pub version: u16, = 4
     pub x_avg_char_width: fword,
     pub us_weight_class: u16,
 
@@ -306,7 +306,9 @@ impl ITable for Table {
     }
 
     fn write(&self, writer: &mut impl BufMut) {
-        writer.put_u16(self.version);
+        // writer.put_u16(self.version);
+        let version = 4;
+        writer.put_u16(version);
         writer.put_i16(self.x_avg_char_width);
         writer.put_u16(self.us_weight_class);
         writer.put_u16(self.usage_permission as u16 | self.fs_type.bits());
@@ -321,16 +323,16 @@ impl ITable for Table {
         writer.put_i16(self.y_strikeout_size);
         writer.put_i16(self.y_strikeout_position);
         writer.put_u16(self.s_family_class.to_int());
-        writer.put_u8(self.panose_classification.b_family_type);
-        writer.put_u8(self.panose_classification.b_serif_style);
-        writer.put_u8(self.panose_classification.b_weight);
-        writer.put_u8(self.panose_classification.b_proportion);
-        writer.put_u8(self.panose_classification.b_contrast);
-        writer.put_u8(self.panose_classification.b_stroke_variation);
-        writer.put_u8(self.panose_classification.b_arm_style);
-        writer.put_u8(self.panose_classification.b_letterform);
-        writer.put_u8(self.panose_classification.b_midline);
-        writer.put_u8(self.panose_classification.b_x_height);
+        writer.put_u8(self.panose_classification.family_type);
+        writer.put_u8(self.panose_classification.serif_style);
+        writer.put_u8(self.panose_classification.weight);
+        writer.put_u8(self.panose_classification.proportion);
+        writer.put_u8(self.panose_classification.contrast);
+        writer.put_u8(self.panose_classification.stroke_variation);
+        writer.put_u8(self.panose_classification.arm_style);
+        writer.put_u8(self.panose_classification.letterform);
+        writer.put_u8(self.panose_classification.midline);
+        writer.put_u8(self.panose_classification.x_height);
         writer.put_u32(self.unicode_range1);
         writer.put_u32(self.unicode_range2);
         writer.put_u32(self.unicode_range3);

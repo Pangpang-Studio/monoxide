@@ -204,6 +204,30 @@ pub struct CompoundGlyph {
 }
 
 impl CompoundGlyph {
+    pub fn n_points(&self, glyphs: &[super::Glyph]) -> usize {
+        let mut n_points = 0;
+        for comp in &self.components {
+            n_points += glyphs[comp.glyph_index as usize].n_points(glyphs);
+        }
+        n_points
+    }
+
+    pub fn n_contours(&self, glyphs: &[super::Glyph]) -> usize {
+        let mut n_contours = 0;
+        for comp in &self.components {
+            n_contours += glyphs[comp.glyph_index as usize].n_contours(glyphs);
+        }
+        n_contours
+    }
+
+    pub fn depth(&self, glyphs: &[super::Glyph]) -> usize {
+        let mut depth = 0;
+        for comp in &self.components {
+            depth = depth.max(glyphs[comp.glyph_index as usize].depth(glyphs));
+        }
+        depth + 1
+    }
+
     pub fn verify(&self) -> Result<(), CompoundGlyphVerifyError> {
         if self.components.is_empty() {
             return Err(CompoundGlyphVerifyError::NoComponents);

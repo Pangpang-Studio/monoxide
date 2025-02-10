@@ -1,14 +1,38 @@
 use super::ITable;
 
-#[derive(Clone, Copy, Debug)]
+/// `maxp` table version 0.5. For use with CFF/CFF2 outlines.
+///
+/// For usage with TrueType outlines, use [`TableV1`].
+#[derive(Debug)]
+pub struct TableV0_5 {
+    pub n_glyphs: u16,
+}
+
+impl ITable for TableV0_5 {
+    fn name(&self) -> &'static [u8; 4] {
+        b"maxp"
+    }
+
+    fn write(&self, writer: &mut impl bytes::BufMut) {
+        let version = 0x00005000u32;
+        writer.put_u32(version);
+        writer.put_u16(self.n_glyphs);
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
 #[repr(u16)]
 pub enum MaxZonesKind {
+    #[default]
     DoesNotUseTwilightZone = 1,
     UsesTwilightZone = 2,
 }
 
-#[derive(Debug)]
-pub struct Table {
+/// `maxp` table version 1. For use with TrueType outlines.
+///
+/// For usage with CFF/CFF2 outlines, use [`TableV0_5`].
+#[derive(Debug, Default)]
+pub struct TableV1 {
     pub n_glyphs: u16,
     pub max_points: u16,
     pub max_contours: u16,
@@ -25,7 +49,7 @@ pub struct Table {
     pub max_component_depth: u16,
 }
 
-impl ITable for Table {
+impl ITable for TableV1 {
     fn name(&self) -> &'static [u8; 4] {
         b"maxp"
     }

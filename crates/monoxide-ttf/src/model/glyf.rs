@@ -36,6 +36,27 @@ pub enum GlyphVerifyError {
 }
 
 impl Glyph {
+    pub fn n_points(&self, glyphs: &[Glyph]) -> usize {
+        match self {
+            Glyph::Simple(g) => g.n_points(),
+            Glyph::Compound(g) => g.n_points(glyphs),
+        }
+    }
+
+    pub fn n_contours(&self, glyphs: &[Glyph]) -> usize {
+        match self {
+            Glyph::Simple(g) => g.n_contours(),
+            Glyph::Compound(g) => g.n_contours(glyphs),
+        }
+    }
+
+    pub fn depth(&self, glyphs: &[Glyph]) -> usize {
+        match self {
+            Glyph::Simple(_) => 1,
+            Glyph::Compound(g) => g.depth(glyphs),
+        }
+    }
+
     pub fn verify(&self) -> Result<(), GlyphVerifyError> {
         match self {
             Glyph::Simple(g) => g.verify().map_err(|x| x.into()),
