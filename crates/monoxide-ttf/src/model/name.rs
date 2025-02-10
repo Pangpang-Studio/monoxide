@@ -48,7 +48,7 @@ pub struct NameRecord {
 
 /// The language tag, in BCP-47 format
 #[derive(Clone, Hash, Eq, PartialEq)]
-pub struct Lang(String);
+pub struct Lang(pub String);
 
 pub struct Table {
     pub records: HashMap<Lang, Vec<NameRecord>>,

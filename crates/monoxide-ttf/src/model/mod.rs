@@ -76,12 +76,14 @@ fn ttf_checksum(data: &[u8]) -> u32 {
 pub struct TrueTypeTables {
     pub glyf: glyf::Table,
     pub loca: loca::Table,
+    pub maxp: maxp::TableV1,
 }
 
 /// Tables for CFF2 outlines.
 #[allow(deprecated)]
 pub struct CFF2Tables {
     pub cff2: cff2::Table,
+    pub maxp: maxp::TableV0_5,
 }
 
 pub enum Outline {
@@ -91,7 +93,6 @@ pub enum Outline {
 
 pub struct FontFile {
     pub head: head::Table,
-    pub maxp: maxp::Table,
     pub hhea: hhea::Table,
     pub hmtx: hmtx::Table,
     pub cmap: cmap::Table,
@@ -123,7 +124,6 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
     // now be treated as opaque blobs.
     let mut tables_except_header = Vec::<&dyn DynITable>::new();
     {
-        tables_except_header.push(&font.maxp);
         tables_except_header.push(&font.hhea);
         tables_except_header.push(&font.hmtx);
         tables_except_header.push(&font.cmap);
@@ -133,10 +133,12 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
             Outline::TrueType(tables) => {
                 tables_except_header.push(&tables.glyf);
                 tables_except_header.push(&tables.loca);
+                tables_except_header.push(&tables.maxp);
             }
             Outline::CFF2(_) => {
                 todo!("CFF2 tables are not implemented yet");
                 // tables_except_header.push(Box::new(tables.cff2));
+                // tables_except_header.push(Box::new(tables.maxp));
             }
         }
     }
@@ -151,17 +153,17 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         ... table records ...
      */
     let header_size = 12 + n_table_records * 16;
-    let search_range = (1 << n_table_records.next_power_of_two().trailing_zeros()) * 16;
-    let entry_selector = n_table_records.next_power_of_two().trailing_zeros();
-    let range_shift = n_table_records * 16 - search_range;
+    let search_range = (1 << (n_table_records as f32).log2().floor() as u32) * 16;
+    let entry_selector = (n_table_records as f32).log2().floor() as u16;
+    let range_shift = (n_table_records as u16 * 16) - search_range as u16;
 
     // Write the header
     let mut header_buffer = Vec::new();
     header_buffer.extend_from_slice(&version);
     header_buffer.extend_from_slice(&(n_table_records as u16).to_be_bytes());
     header_buffer.extend_from_slice(&(search_range as u16).to_be_bytes());
-    header_buffer.extend_from_slice(&(entry_selector as u16).to_be_bytes());
-    header_buffer.extend_from_slice(&(range_shift as u16).to_be_bytes());
+    header_buffer.extend_from_slice(&entry_selector.to_be_bytes());
+    header_buffer.extend_from_slice(&range_shift.to_be_bytes());
 
     // Calculate the checksum of the whole font file.
     //

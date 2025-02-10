@@ -9,6 +9,18 @@ pub enum Coord {
     Long(i16),
 }
 
+impl From<i16> for Coord {
+    fn from(value: i16) -> Self {
+        Coord::Long(value)
+    }
+}
+
+impl From<u8> for Coord {
+    fn from(value: u8) -> Self {
+        Coord::Short(value)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OutlineFlag(u8);
 bitflags::bitflags! {
@@ -107,6 +119,14 @@ pub enum SimpleGlyphVerifyError {
 }
 
 impl SimpleGlyph {
+    pub fn n_points(&self) -> usize {
+        self.end_points_of_countours.last().copied().unwrap_or(0) as usize
+    }
+
+    pub fn n_contours(&self) -> usize {
+        self.end_points_of_countours.len()
+    }
+
     pub fn verify(&self) -> Result<(), SimpleGlyphVerifyError> {
         use SimpleGlyphVerifyError::*;
 
