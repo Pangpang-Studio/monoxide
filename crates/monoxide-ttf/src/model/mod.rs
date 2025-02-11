@@ -116,7 +116,7 @@ impl FontFile {
 
 fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Result<()> {
     let version = match font.outline {
-        Outline::TrueType(_) => (0x00010000u32).to_be_bytes(),
+        Outline::TrueType(_) => [0x00, 0x01, 0x00, 0x00],
         Outline::CFF2(_) => b"OTTO".to_owned(),
     };
     // The `head` requires special treatment because it needs to be
