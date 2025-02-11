@@ -153,6 +153,7 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         ... table records ...
      */
     let header_size = 12 + n_table_records * 16;
+
     let search_range = (1 << (n_table_records as f32).log2().floor() as u32) * 16;
     let entry_selector = (n_table_records as f32).log2().floor() as u16;
     let range_shift = (n_table_records as u16 * 16) - search_range as u16;
@@ -194,8 +195,12 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
     let mut table_records = Vec::with_capacity(n_table_records);
     let mut offset = header_size; // current write offset
 
+    // To assist debugging, we write "__{tag}__" before the beginning of each table
+    let debug_data_len = 8;
+
     // Head table record
     {
+        offset += debug_data_len;
         let head_cksum = ttf_checksum(&head_ser);
         table_records.push(TableRecord {
             tag: *font.head.name(),
@@ -210,6 +215,8 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         font_cksum = font_cksum.wrapping_add(head_cksum);
     }
     for (table, ser) in tables_except_header.iter().zip(tables_ser.iter()) {
+        offset += debug_data_len;
+
         let cksum = ttf_checksum(ser);
         table_records.push(TableRecord {
             tag: *table.name_dyn(),
@@ -247,23 +254,77 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         head_buf.freeze()
     };
 
-    fn write_ser(mut w: impl std::io::Write, ser: &[u8]) -> std::io::Result<()> {
-        let pad = [0u8; 4];
+    fn write_ser(mut w: impl std::io::Write, name: [u8; 4], ser: &[u8]) -> std::io::Result<()> {
+        write!(w, "__{}__", std::str::from_utf8(&name).unwrap())?;
+
         w.write_all(ser)?;
-        let pad_len = ser.len() % 4;
-        if pad_len != 0 {
-            w.write_all(&pad[..pad_len])?;
-        }
+        pad_to_4_bytes(ser.len(), &mut w)?;
+
         Ok(())
     }
 
     // Noice, we can finally write the font file
+    // Do offset checks for tables and table records
+    let mut actual_offset = 0;
+
     w.write_all(&header_buffer)?;
+    actual_offset += header_buffer.len();
+    debug_assert_eq!(header_buffer.len(), 12, "header size mismatch");
+
     w.write_all(&table_records_ser)?;
-    write_ser(&mut w, &head_ser)?;
-    for ser in tables_ser {
-        write_ser(&mut w, &ser)?;
+    actual_offset += table_records_ser.len();
+    debug_assert_eq!(
+        table_records_ser.len(),
+        n_table_records * 16,
+        "table records size mismatch"
+    );
+    debug_assert_eq!(
+        actual_offset, header_size,
+        "header (including table records) size mismatch"
+    );
+
+    pad_to_4_bytes(actual_offset, &mut w)?;
+
+    actual_offset += 8; // debug info
+
+    assert_table_invariants(actual_offset, &table_records[0], "head");
+    write_ser(&mut w, *new_head.name(), &head_ser)?;
+    actual_offset += head_ser.len().next_multiple_of(4);
+
+    for (ser, tbl) in tables_ser.iter().zip(table_records.iter().skip(1)) {
+        actual_offset += 8; // debug info
+        let table_tag_string = std::str::from_utf8(&tbl.tag).unwrap();
+
+        assert_table_invariants(actual_offset, tbl, table_tag_string);
+
+        write_ser(&mut w, tbl.tag, ser)?;
+        actual_offset += ser.len().next_multiple_of(4);
     }
+
+    Ok(())
+}
+
+fn assert_table_invariants(actual_offset: usize, tbl: &TableRecord, table_tag_string: &str) {
+    debug_assert_eq!(
+        actual_offset % 4,
+        0,
+        "table {} should be aligned to 4 bytes, offset={}",
+        table_tag_string,
+        actual_offset
+    );
+    debug_assert_eq!(
+        actual_offset, tbl.offset as usize,
+        "offset mismatch for table {}",
+        table_tag_string
+    );
+}
+
+fn pad_to_4_bytes(curr_len: usize, w: &mut impl std::io::Write) -> std::io::Result<()> {
+    let pad = [0u8; 4];
+    let need_to_pad = (4 - curr_len % 4) % 4;
+    w.write_all(&pad[..need_to_pad])?;
+
+    debug_assert_eq!(curr_len + need_to_pad, curr_len.next_multiple_of(4));
 
     Ok(())
 }
