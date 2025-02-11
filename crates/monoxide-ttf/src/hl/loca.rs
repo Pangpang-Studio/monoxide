@@ -21,8 +21,8 @@ pub fn glyf_to_loca(glyf: &glyf::Table) -> loca::Table {
     let mut offsets = Vec::with_capacity(glyf.glyphs.len());
     let mut w = SizeOnlyBufWriter::new();
     for it in &glyf.glyphs {
-        it.write(&mut w);
         offsets.push(w.size() as u32);
+        it.write(&mut w);
     }
     loca::Table { offsets }
 }
