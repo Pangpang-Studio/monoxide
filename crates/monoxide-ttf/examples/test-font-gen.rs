@@ -18,8 +18,6 @@ fn main() {
     // to a single glyph that is a square with side length 1024 units.
 
     let head = head::Table {
-        major_version: 0,
-        minor_version: 1,
         font_revision: 0,
         checksum_adjustment: 0,
         flags: HeaderFlags::empty(),
@@ -59,8 +57,8 @@ fn main() {
 
     let cmap_hl = hl::cmap::Table {
         subtables: vec![vec![SeqMapping {
-            start_code: 0,
-            len: 0xffff,
+            start_code: 65,
+            len: 1,
             glyph_id: 0,
         }]],
         mapping: vec![(hl::cmap::Encoding::Unicode, 0)],

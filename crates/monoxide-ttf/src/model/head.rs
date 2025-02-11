@@ -48,8 +48,8 @@ bitflags! {
 
 #[derive(Debug, Clone)]
 pub struct Table {
-    pub major_version: u16,
-    pub minor_version: u16,
+    // pub major_version: u16, = 1
+    // pub minor_version: u16, = 0
     pub font_revision: u32,
     /// Set to 0, will be rewritten in later stages
     pub checksum_adjustment: u32,
@@ -69,6 +69,8 @@ pub struct Table {
     // pub glyph_data_format: i16, = 0
 }
 
+const HEAD_MAJOR: u16 = 1;
+const HEAD_MINOR: u16 = 0;
 const MAGIC_NUMBER: u32 = 0x5F0F3CF5;
 
 impl ITable for Table {
@@ -80,8 +82,8 @@ impl ITable for Table {
         let time_offset_base: time::SystemTime =
             time::UNIX_EPOCH - time::Duration::from_secs(2082844800);
 
-        writer.put_u16(self.major_version);
-        writer.put_u16(self.minor_version);
+        writer.put_u16(HEAD_MAJOR);
+        writer.put_u16(HEAD_MINOR);
         writer.put_u32(self.font_revision);
         writer.put_u32(self.checksum_adjustment);
         // writer.put_u32(self.magic_number);
