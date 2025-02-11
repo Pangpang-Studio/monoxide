@@ -82,8 +82,8 @@ impl ITable for Table {
         for (lang, recs) in &self.records {
             let lang_u16 = U16String::from_str(&lang.0);
             let lang_start = pool.len();
-            let lang_len = lang_u16.as_vec().len() * 2;
-            for ch in lang_u16.as_vec() {
+            let lang_len = lang_u16.as_slice().len() * 2;
+            for ch in lang_u16.as_slice() {
                 pool.put_u16(*ch);
             }
             let tag_idx = lang_tags.len();
@@ -135,5 +135,8 @@ impl ITable for Table {
             writer.put_u16(tag.length);
             writer.put_u16(tag.offset);
         }
+
+        // Storage area
+        writer.put_slice(&pool);
     }
 }
