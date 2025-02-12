@@ -24,5 +24,8 @@ pub fn glyf_to_loca(glyf: &glyf::Table) -> loca::Table {
         offsets.push(w.size() as u32);
         it.write(&mut w);
     }
+    offsets.push(w.size() as u32);
+
+    debug_assert_eq!(offsets.len(), glyf.glyphs.len() + 1);
     loca::Table { offsets }
 }
