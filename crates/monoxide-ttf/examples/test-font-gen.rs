@@ -90,6 +90,7 @@ fn main() {
     let os2 = os2::Table {
         x_avg_char_width: 1024,
         us_weight_class: 400,
+        us_width_class: 5,
         usage_permission: os2::UsagePermissionKind::EditableEmbedding,
         fs_type: os2::FsTypeUpper::Nothing,
         y_subscript_x_size: 512,
@@ -147,21 +148,25 @@ fn main() {
             },
             end_points_of_countours: vec![3],
             instructions: vec![],
-            flags: vec![glyf::simple::FlagOrRepeat::Repeat(OutlineFlag::ON_CURVE, 4)],
+            flags: vec![glyf::simple::FlagOrRepeat::Repeat {
+                flag: OutlineFlag::ON_CURVE,
+                times_minus_1: 3,
+            }],
             x_coords: vec![
                 Coord::Long(0),
                 Coord::Long(1024),
-                Coord::Long(1024),
                 Coord::Long(0),
+                Coord::Long(-1024),
             ],
             y_coords: vec![
                 Coord::Long(0),
                 Coord::Long(0),
                 Coord::Long(1024),
-                Coord::Long(1024),
+                Coord::Long(0),
             ],
         })],
     };
+    glyf.verify().expect("Glyph verification failed");
     let loca = hl::loca::glyf_to_loca(&glyf);
     let maxp = hl::maxp::glyf_to_maxp(&glyf);
 

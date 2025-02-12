@@ -54,17 +54,23 @@ bitflags::bitflags! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FlagOrRepeat {
     Single(OutlineFlag),
-    Repeat(OutlineFlag, u8),
+    Repeat {
+        flag: OutlineFlag,
+        times_minus_1: u8,
+    },
 }
 
 impl FlagOrRepeat {
-    pub fn encode(&self, writer: &mut impl BufMut) {
+    pub fn write(&self, writer: &mut impl BufMut) {
         match *self {
             Self::Single(flag) => writer.put_u8(flag.bits()),
-            Self::Repeat(flag, times) => {
+            Self::Repeat {
+                flag,
+                times_minus_1,
+            } => {
                 let flag = flag | OutlineFlag::REPEAT;
                 writer.put_u8(flag.bits());
-                writer.put_u8(times);
+                writer.put_u8(times_minus_1);
             }
         }
     }
@@ -72,7 +78,7 @@ impl FlagOrRepeat {
     pub fn size(&self) -> usize {
         match self {
             Self::Single(_) => 1,
-            Self::Repeat(..) => 2,
+            Self::Repeat { .. } => 2,
         }
     }
 }
@@ -120,7 +126,10 @@ pub enum SimpleGlyphVerifyError {
 
 impl SimpleGlyph {
     pub fn n_points(&self) -> usize {
-        self.end_points_of_countours.last().copied().unwrap_or(0) as usize
+        self.end_points_of_countours
+            .last()
+            .copied()
+            .map_or(0, |x| x + 1) as usize
     }
 
     pub fn n_contours(&self) -> usize {
@@ -135,7 +144,7 @@ impl SimpleGlyph {
             return Err(NCountourTooLarge);
         }
 
-        let n_points = self.end_points_of_countours.last().copied().unwrap_or(0) as usize;
+        let n_points = self.n_points();
 
         let mut flag_count = 0;
         let mut x_coords_count = 0;
@@ -143,7 +152,10 @@ impl SimpleGlyph {
         for (i, f) in self.flags.iter().enumerate() {
             let (flags, repeat_times) = match f {
                 FlagOrRepeat::Single(f) => (f, 1),
-                FlagOrRepeat::Repeat(f, times) => (f, *times),
+                FlagOrRepeat::Repeat {
+                    flag,
+                    times_minus_1,
+                } => (flag, times_minus_1 + 1),
             };
             if flags.intersects(OutlineFlag::REPEAT) {
                 return Err(RepeatSetInFlags(i));
@@ -228,13 +240,7 @@ impl SimpleGlyph {
             w.put_u8(i);
         }
         for &f in &self.flags {
-            match f {
-                FlagOrRepeat::Single(f) => w.put_u8(f.bits()),
-                FlagOrRepeat::Repeat(f, repeat) => {
-                    w.put_u8(f.bits());
-                    w.put_u8(repeat);
-                }
-            }
+            f.write(w);
         }
         for &x in &self.x_coords {
             match x {

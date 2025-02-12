@@ -28,11 +28,18 @@ pub enum Glyph {
 }
 
 #[derive(Debug, Error)]
-pub enum GlyphVerifyError {
+pub enum GlyphVerifyErrorKind {
     #[error("{0}")]
     Simple(#[from] simple::SimpleGlyphVerifyError),
     #[error("{0}")]
     Compound(#[from] compound::CompoundGlyphVerifyError),
+}
+
+#[derive(Debug, Error)]
+#[error("Glyph verification failed: {kind}, at glyph index {index}")]
+pub struct GlyphVerifyError {
+    kind: GlyphVerifyErrorKind,
+    index: usize,
 }
 
 impl Glyph {
@@ -57,7 +64,7 @@ impl Glyph {
         }
     }
 
-    pub fn verify(&self) -> Result<(), GlyphVerifyError> {
+    pub fn verify(&self) -> Result<(), GlyphVerifyErrorKind> {
         match self {
             Glyph::Simple(g) => g.verify().map_err(|x| x.into()),
             Glyph::Compound(g) => g.verify().map_err(|x| x.into()),
@@ -74,6 +81,17 @@ impl Glyph {
 
 pub struct Table {
     pub glyphs: Vec<Glyph>,
+}
+
+impl Table {
+    pub fn verify(&self) -> Result<(), GlyphVerifyError> {
+        for (ix, g) in self.glyphs.iter().enumerate() {
+            if let Err(e) = g.verify() {
+                return Err(GlyphVerifyError { kind: e, index: ix });
+            }
+        }
+        Ok(())
+    }
 }
 
 impl ITable for Table {
