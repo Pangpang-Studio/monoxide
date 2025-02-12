@@ -251,6 +251,7 @@ pub struct Table {
     // pub version: u16, = 4
     pub x_avg_char_width: fword,
     pub us_weight_class: u16,
+    pub us_width_class: u16,
 
     // The following two fields should be bitwise ORed together forming a single 16-bit value
     pub usage_permission: UsagePermissionKind,
@@ -311,6 +312,7 @@ impl ITable for Table {
         writer.put_u16(version);
         writer.put_i16(self.x_avg_char_width);
         writer.put_u16(self.us_weight_class);
+        writer.put_u16(self.us_width_class);
         writer.put_u16(self.usage_permission as u16 | self.fs_type.bits());
         writer.put_i16(self.y_subscript_x_size);
         writer.put_i16(self.y_subscript_y_size);
