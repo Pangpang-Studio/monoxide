@@ -14,7 +14,7 @@ pub struct Table {
     // format: u16 = 12,
     // reserved: u16 = 0,
     // byte_length_including_header: u32,
-    pub language: u32,
+    // pub language: u32,
     // count: u32,
     pub groups: Vec<SequentialMapGroup>,
 }
@@ -34,7 +34,7 @@ impl Table {
         writer.put_u16(12); // format
         writer.put_u16(0); // reserved
         writer.put_u32(size_of_table);
-        writer.put_u32(self.language);
+        writer.put_u32(NON_MACINTOSH_LANG_CODE as u32);
         writer.put_u32(self.groups.len() as u32);
         for group in &self.groups {
             writer.put_u32(group.start_code);
@@ -54,8 +54,8 @@ impl Table {
                 start_glyph_id: mapping.glyph_id,
             })
             .collect();
-        let language = NON_MACINTOSH_LANG_CODE as u32;
+        // let language = NON_MACINTOSH_LANG_CODE as u32;
 
-        Table { language, groups }
+        Table { groups }
     }
 }

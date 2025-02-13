@@ -73,22 +73,6 @@ impl Table {
 
     /// Convert a raw subtable to a format 4 subtable.
     pub fn from_raw(tbl: &hl::SubTable) -> Self {
-        // As the input range list does not contain holes, the number of
-        // segments is the same as the number of ranges.
-        let seg_count = tbl.len() + 1; // +1 for the dummy segment, see below
-        let seg_count_u16 = seg_count as u16;
-
-        // Search parameters
-        // segCountX2 is just 2 * segCount
-        let seg_count_x2 = seg_count_u16 * 2;
-        // searchRange is the next power of 2 larger than segCount, times 2
-        let search_range = seg_count_u16.next_power_of_two() * 2;
-        // entrySelector is log2 of the maximum power of 2 that leq segCount
-        // that is to say, the number of bits needed to represent segCount
-        let entry_selector = seg_count_u16.next_power_of_two().trailing_zeros() as u16;
-        // rangeShift is segCount * 2 - searchRange
-        let range_shift = seg_count_x2 - search_range;
-
         // Encode the segments
         let mut segments = vec![];
         for seq in tbl {
@@ -134,6 +118,19 @@ impl Table {
             id_delta: 1,
             id_range_offset: 0,
         });
+
+        let seg_count = segments.len();
+        let seg_count_u16 = seg_count as u16;
+
+        // Search parameters
+        // segCountX2 is just 2 * segCount
+        let seg_count_x2 = seg_count_u16 * 2;
+        // searchRange is the maximum power of 2 less than or equal to segCount, times 2
+        let search_range = (1 << seg_count.ilog2()) as u16 * 2;
+        // entrySelector is log2 of the maximum power of 2 that leq segCount
+        let entry_selector = seg_count.ilog2() as u16;
+        // rangeShift is segCount * 2 - searchRange
+        let range_shift = seg_count_x2 - search_range;
 
         let length = 8 * 2 // header & padding
             + (4 * 2) * seg_count_u16; // segments
@@ -202,11 +199,11 @@ fn test_opentype_spec_example() {
     ];
 
     let table = Table::from_raw(&raw_tbl);
-    assert_eq!(table.seg_count_x2, 8);
-    assert_eq!(table.search_range, 8);
-    assert_eq!(table.entry_selector, 2);
-    assert_eq!(table.range_shift, 0);
-    assert_eq!(table.segments.len(), 4);
+    assert_eq!(table.seg_count_x2, 8, "seg_count_x2");
+    assert_eq!(table.search_range, 8, "search_range");
+    assert_eq!(table.entry_selector, 2, "entry_selector");
+    assert_eq!(table.range_shift, 0, "range_shift");
+    assert_eq!(table.segments.len(), 4, "segments.len()");
     assert_eq!(
         &table.segments[0],
         &Segment {

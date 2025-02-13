@@ -131,10 +131,11 @@ impl ITable for Table {
         let total_size_encoding_records = self.mapping.len() * size_encoding_record;
         let subtables_start_offset = size_header + total_size_encoding_records;
         // Now we can calculate the offset for each table.
-        let mut subtable_offsets = vec![subtables_start_offset];
+        let mut subtable_offsets = Vec::new();
+        let mut curr_offset = subtables_start_offset;
         for subtable in &self.subtables {
-            let offset = subtable_offsets.last().unwrap() + subtable.byte_length();
-            subtable_offsets.push(offset);
+            subtable_offsets.push(curr_offset);
+            curr_offset += subtable.byte_length();
         }
 
         // Write header
