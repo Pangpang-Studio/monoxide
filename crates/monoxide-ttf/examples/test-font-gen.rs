@@ -48,10 +48,16 @@ fn main() {
     };
 
     let hmtx = hmtx::Table {
-        metrics: vec![hmtx::LongHorizontalMetric {
-            advance_width: 1024,
-            left_side_bearing: 0,
-        }],
+        metrics: vec![
+            hmtx::LongHorizontalMetric {
+                advance_width: 1024,
+                left_side_bearing: 0,
+            },
+            hmtx::LongHorizontalMetric {
+                advance_width: 1024,
+                left_side_bearing: 0,
+            },
+        ],
         left_side_bearings: vec![],
     };
 
@@ -59,7 +65,7 @@ fn main() {
         subtables: vec![vec![SeqMapping {
             start_code: 65,
             len: 1,
-            glyph_id: 0,
+            glyph_id: 1,
         }]],
         mapping: vec![(hl::cmap::Encoding::Unicode, 0)],
     };
@@ -139,32 +145,60 @@ fn main() {
     };
 
     let glyf = glyf::Table {
-        glyphs: vec![glyf::Glyph::Simple(SimpleGlyph {
-            common: glyf::GlyphCommon {
-                x_min: 0,
-                y_min: 0,
-                x_max: 1024,
-                y_max: 1024,
-            },
-            end_points_of_countours: vec![3],
-            instructions: vec![],
-            flags: vec![glyf::simple::FlagOrRepeat::Repeat {
-                flag: OutlineFlag::ON_CURVE,
-                times_minus_1: 3,
-            }],
-            x_coords: vec![
-                Coord::Long(0),
-                Coord::Long(1024),
-                Coord::Long(0),
-                Coord::Long(-1024),
-            ],
-            y_coords: vec![
-                Coord::Long(0),
-                Coord::Long(0),
-                Coord::Long(1024),
-                Coord::Long(0),
-            ],
-        })],
+        glyphs: vec![
+            glyf::Glyph::Simple(SimpleGlyph {
+                common: glyf::GlyphCommon {
+                    x_min: 0,
+                    y_min: 0,
+                    x_max: 1024,
+                    y_max: 1024,
+                },
+                end_points_of_countours: vec![3],
+                instructions: vec![],
+                flags: vec![glyf::simple::FlagOrRepeat::Repeat {
+                    flag: OutlineFlag::ON_CURVE,
+                    times_minus_1: 3,
+                }],
+                x_coords: vec![
+                    Coord::Long(0),
+                    Coord::Long(1024),
+                    Coord::Long(0),
+                    Coord::Long(-1024),
+                ],
+                y_coords: vec![
+                    Coord::Long(0),
+                    Coord::Long(0),
+                    Coord::Long(1024),
+                    Coord::Long(0),
+                ],
+            }),
+            glyf::Glyph::Simple(SimpleGlyph {
+                common: glyf::GlyphCommon {
+                    x_min: 0,
+                    y_min: 0,
+                    x_max: 1024,
+                    y_max: 1024,
+                },
+                end_points_of_countours: vec![3],
+                instructions: vec![],
+                flags: vec![glyf::simple::FlagOrRepeat::Repeat {
+                    flag: OutlineFlag::ON_CURVE,
+                    times_minus_1: 3,
+                }],
+                x_coords: vec![
+                    Coord::Long(0),
+                    Coord::Long(1024),
+                    Coord::Long(0),
+                    Coord::Long(-1024),
+                ],
+                y_coords: vec![
+                    Coord::Long(0),
+                    Coord::Long(0),
+                    Coord::Long(1024),
+                    Coord::Long(0),
+                ],
+            }),
+        ],
     };
     glyf.verify().expect("Glyph verification failed");
     let loca = hl::loca::glyf_to_loca(&glyf);
