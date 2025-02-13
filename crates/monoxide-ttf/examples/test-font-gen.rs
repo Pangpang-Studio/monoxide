@@ -67,7 +67,7 @@ fn main() {
 
     let name = name::Table {
         records: [(
-            name::Lang("en-US".into()),
+            name::Lang::Microsoft(name::MSLangID::en_us),
             vec![
                 name::NameRecord {
                     name_id: name::NameId::FullFontName,

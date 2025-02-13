@@ -1,7 +1,6 @@
 use bytes::BufMut;
 
-use super::NON_MACINTOSH_LANG_CODE;
-use crate::hl::cmap as hl;
+use crate::{hl::cmap as hl, model::encoding::NON_MACINTOSH_LANG_CODE};
 
 #[derive(Debug, PartialEq, Eq)]
 struct Segment {

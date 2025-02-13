@@ -5,12 +5,15 @@ use std::collections::HashMap;
 use bytes::{BufMut, BytesMut};
 use widestring::U16String;
 
-use super::ITable;
+use super::{
+    encoding::{self, PlatformId, UnicodePlatformEncoding},
+    ITable,
+};
 
 pub use lang_id_ms::MSLangID;
 
 /// The version of the name table. Only version 1 is supported by this library.
-const NAME_TABLE_VERSION: u16 = 1;
+const NAME_TABLE_VERSION: u16 = 0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
@@ -50,11 +53,27 @@ pub struct NameRecord {
     pub value: String,
 }
 
-/// The language tag, in BCP-47 format
 #[derive(Clone, Hash, Eq, PartialEq)]
-pub struct Lang(pub String);
+pub enum Lang {
+    /// Used by Unicode platform.
+    ///
+    /// There is no platform-specific encoding for the Unicode platform.
+    /// As version-1 of the name table is not widely supported, the alternative
+    /// format of using BCP-47 language tags with Unicode platform is not
+    /// implemented in this library.
+    ///
+    /// Or actually, it has been implemented before, but it was rejected by the
+    /// majority of commonly-used parsers, so it was removed.
+    Unicode,
+
+    /// Used by Microsoft platform.
+    ///
+    /// Please refer to the [`MSLangID`] enum for the list of language IDs.
+    Microsoft(MSLangID),
+}
 
 pub struct Table {
+    // version: u16 = 0
     pub records: HashMap<Lang, Vec<NameRecord>>,
 }
 
@@ -67,11 +86,6 @@ struct EncodedNameRecord {
     name_offset: u16,
 }
 
-struct InsertedString {
-    length: u16,
-    offset: u16,
-}
-
 impl ITable for Table {
     fn name(&self) -> &'static [u8; 4] {
         b"name"
@@ -79,23 +93,17 @@ impl ITable for Table {
 
     fn write(&self, writer: &mut impl bytes::BufMut) {
         let mut pool = BytesMut::new();
-        let mut lang_tags = Vec::new();
         let mut name_records = Vec::new();
-        let lang_tag_start = 0x8000;
 
         for (lang, recs) in &self.records {
-            let lang_u16 = U16String::from_str(&lang.0);
-            let lang_start = pool.len();
-            let lang_len = lang_u16.as_slice().len() * 2;
-            for ch in lang_u16.as_slice() {
-                pool.put_u16(*ch);
-            }
-            let tag_idx = lang_tags.len();
-            lang_tags.push(InsertedString {
-                length: lang_len as u16,
-                offset: lang_start as u16,
-            });
-            let lang_tag = lang_tag_start + tag_idx;
+            let (platform_id, encoding_id, language_id) = match lang {
+                Lang::Unicode => (
+                    PlatformId::Unicode as u16,
+                    UnicodePlatformEncoding::V2Full as u16,
+                    0,
+                ),
+                Lang::Microsoft(mslang_id) => (PlatformId::Microsoft as u16, 10, *mslang_id as u16),
+            };
 
             for rec in recs {
                 let rec_u16 = U16String::from_str(&rec.value);
@@ -106,9 +114,9 @@ impl ITable for Table {
                 }
 
                 name_records.push(EncodedNameRecord {
-                    platform_id: 0, // Unicode
-                    encoding_id: 4, // Unicode Full
-                    language_id: lang_tag as u16,
+                    platform_id,
+                    encoding_id,
+                    language_id,
                     name_id: rec.name_id as u16,
                     name_length: rec_len as u16,
                     name_offset: rec_start as u16,
@@ -118,8 +126,7 @@ impl ITable for Table {
 
         name_records.sort_by_key(|x| (x.platform_id, x.encoding_id, x.language_id, x.name_id));
 
-        let storage_offset = 4 * 2 // version, len, startOffset, langTagsLen
-            + (2 * 2) * lang_tags.len() // lang tag entries { len, offset }
+        let storage_offset = 3 * 2 // version, len, startOffset
             + (6 * 2) * name_records.len(); // name record entries
 
         // Actual encoding
@@ -133,11 +140,6 @@ impl ITable for Table {
             writer.put_u16(rec.name_id);
             writer.put_u16(rec.name_length);
             writer.put_u16(rec.name_offset);
-        }
-        writer.put_u16(lang_tags.len() as u16);
-        for tag in lang_tags {
-            writer.put_u16(tag.length);
-            writer.put_u16(tag.offset);
         }
 
         // Storage area

@@ -5,7 +5,7 @@
 //! of trying to instantiate the other formats directly.
 use crate::model::{
     self,
-    cmap::{EncodingRecord, PlatformId, UnicodePlatformEncoding, WindowsPlatformEncoding},
+    encoding::{EncodingRecord, PlatformId, UnicodePlatformEncoding, WindowsPlatformEncoding},
 };
 
 /// A run of characters to be mapped sequentially to glyphs. A list of them
