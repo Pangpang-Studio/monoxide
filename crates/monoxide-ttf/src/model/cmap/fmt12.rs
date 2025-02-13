@@ -1,6 +1,6 @@
 use bytes::BufMut;
 
-use crate::hl::cmap as hl;
+use crate::{hl::cmap as hl, model::encoding::NON_MACINTOSH_LANG_CODE};
 
 #[derive(Debug)]
 pub struct SequentialMapGroup {
@@ -54,7 +54,7 @@ impl Table {
                 start_glyph_id: mapping.glyph_id,
             })
             .collect();
-        let language = super::NON_MACINTOSH_LANG_CODE as u32;
+        let language = NON_MACINTOSH_LANG_CODE as u32;
 
         Table { language, groups }
     }

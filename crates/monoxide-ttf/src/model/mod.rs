@@ -7,6 +7,7 @@
 use bytes::{BufMut, BytesMut};
 pub mod cff2;
 pub mod cmap;
+pub mod encoding;
 pub mod glyf;
 pub mod head;
 pub mod hhea;
