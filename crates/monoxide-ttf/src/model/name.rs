@@ -46,6 +46,100 @@ pub enum NameId {
     VariationsPostscriptNamePrefix = 25,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct NameRecords {
+    pub copyright: Option<String>,
+    pub font_family_name: Option<String>,
+    pub font_subfamily_name: Option<String>,
+    pub unique_font_identifier: Option<String>,
+    pub full_font_name: Option<String>,
+    pub version: Option<String>,
+    pub postscript_name: Option<String>,
+    pub trademark: Option<String>,
+    pub manufacturer: Option<String>,
+    pub designer: Option<String>,
+    pub description: Option<String>,
+    pub vendor_url: Option<String>,
+    pub designer_url: Option<String>,
+    pub license_description: Option<String>,
+    pub license_info_url: Option<String>,
+    pub reserved: Option<String>,
+    pub preferred_family: Option<String>,
+    pub preferred_subfamily: Option<String>,
+    pub compatible_full: Option<String>,
+    pub sample_text: Option<String>,
+    pub postscript_cid_findfont_name: Option<String>,
+    pub wws_family_name: Option<String>,
+    pub wws_subfamily_name: Option<String>,
+    pub light_background_palette: Option<String>,
+    pub dark_background_palette: Option<String>,
+    pub variations_postscript_name_prefix: Option<String>,
+}
+
+macro_rules! opt_to_record {
+    ($self:expr, $records:expr, $field_name:ident, $name_id_name:ident) => {
+        if let Some(value) = &$self.$field_name {
+            $records.push(NameRecord {
+                name_id: NameId::$name_id_name,
+                value: value.clone(),
+            });
+        }
+    };
+}
+
+impl NameRecords {
+    fn to_records(&self) -> Vec<NameRecord> {
+        let mut records = Vec::new();
+        opt_to_record!(self, records, copyright, Copyright);
+        opt_to_record!(self, records, font_family_name, FontFamilyName);
+        opt_to_record!(self, records, font_subfamily_name, FontSubfamilyName);
+        opt_to_record!(self, records, unique_font_identifier, UniqueFontIdentifier);
+        opt_to_record!(self, records, full_font_name, FullFontName);
+        opt_to_record!(self, records, version, Version);
+        opt_to_record!(self, records, postscript_name, PostscriptName);
+        opt_to_record!(self, records, trademark, Trademark);
+        opt_to_record!(self, records, manufacturer, Manufacturer);
+        opt_to_record!(self, records, designer, Designer);
+        opt_to_record!(self, records, description, Description);
+        opt_to_record!(self, records, vendor_url, VendorURL);
+        opt_to_record!(self, records, designer_url, DesignerURL);
+        opt_to_record!(self, records, license_description, LicenseDescription);
+        opt_to_record!(self, records, license_info_url, LicenseInfoURL);
+        opt_to_record!(self, records, reserved, Reserved);
+        opt_to_record!(self, records, preferred_family, PreferredFamily);
+        opt_to_record!(self, records, preferred_subfamily, PreferredSubfamily);
+        opt_to_record!(self, records, compatible_full, CompatibleFull);
+        opt_to_record!(self, records, sample_text, SampleText);
+        opt_to_record!(
+            self,
+            records,
+            postscript_cid_findfont_name,
+            PostscriptCIDFindfontName
+        );
+        opt_to_record!(self, records, wws_family_name, WWSFamilyName);
+        opt_to_record!(self, records, wws_subfamily_name, WWSSubfamilyName);
+        opt_to_record!(
+            self,
+            records,
+            light_background_palette,
+            LightBackgroundPalette
+        );
+        opt_to_record!(
+            self,
+            records,
+            dark_background_palette,
+            DarkBackgroundPalette
+        );
+        opt_to_record!(
+            self,
+            records,
+            variations_postscript_name_prefix,
+            VariationsPostscriptNamePrefix
+        );
+        records
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct NameRecord {
     pub name_id: NameId,
@@ -74,7 +168,7 @@ pub enum Lang {
 
 pub struct Table {
     // version: u16 = 0
-    pub records: HashMap<Lang, Vec<NameRecord>>,
+    pub records: HashMap<Lang, NameRecords>,
 }
 
 struct EncodedNameRecord {
@@ -105,7 +199,7 @@ impl ITable for Table {
                 Lang::Microsoft(mslang_id) => (PlatformId::Microsoft as u16, 10, *mslang_id as u16),
             };
 
-            for rec in recs {
+            for rec in recs.to_records() {
                 let rec_u16 = U16String::from_str(&rec.value);
                 let rec_start = pool.len();
                 let rec_len = rec_u16.as_vec().len() * 2;

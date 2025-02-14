@@ -46,7 +46,7 @@ fn main() {
         caret_slope_run: 0,
         caret_offset: 0,
         metric_data_format: 0,
-        number_of_hmetrics: 1,
+        number_of_hmetrics: 2,
     };
 
     let hmtx = hmtx::Table {
@@ -76,20 +76,18 @@ fn main() {
     let name = name::Table {
         records: [(
             name::Lang::Microsoft(name::MSLangID::en_us),
-            vec![
-                name::NameRecord {
-                    name_id: name::NameId::FullFontName,
-                    value: "Test Font".into(),
-                },
-                name::NameRecord {
-                    name_id: name::NameId::FontFamilyName,
-                    value: "Test".into(),
-                },
-                name::NameRecord {
-                    name_id: name::NameId::UniqueFontIdentifier,
-                    value: "pangpangstudio.test_font".into(),
-                },
-            ],
+            name::NameRecords {
+                font_family_name: Some("Test Font".to_string()),
+                font_subfamily_name: Some("Regular".to_string()),
+                unique_font_identifier: Some("studio.pangpang.test-font".to_string()),
+                full_font_name: Some("Test Font Regular".to_string()),
+                version: Some("Version 1.0".to_string()),
+                postscript_name: Some("TestFont-Regular".to_string()),
+                trademark: Some("Trademark".to_string()),
+                manufacturer: Some("PangPang Studio".to_string()),
+
+                ..Default::default()
+            },
         )]
         .into_iter()
         .collect(),
