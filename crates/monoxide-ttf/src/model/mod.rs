@@ -30,6 +30,9 @@ pub type ufword = u16;
 /// A signed fix-point number of 14 fractional bits.
 pub type f2dot14 = fixed::types::I2F14;
 
+/// A signed fix-point number of 16 fractional bits.
+pub type Fixed = fixed::types::I16F16;
+
 /// The trait implemented by all tables in a TrueType font file.
 pub trait ITable {
     /// The name tag of the table.
@@ -100,6 +103,7 @@ pub struct FontFile {
     pub cmap: cmap::Table,
     pub name: name::Table,
     pub os2: os2::Table,
+    pub post: post::TableV3,
     pub outline: Outline,
 }
 
@@ -131,6 +135,7 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         tables_except_header.push(&font.cmap);
         tables_except_header.push(&font.name);
         tables_except_header.push(&font.os2);
+        tables_except_header.push(&font.post);
         match &font.outline {
             Outline::TrueType(tables) => {
                 tables_except_header.push(&tables.glyf);
