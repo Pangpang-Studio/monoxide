@@ -16,6 +16,7 @@ pub mod loca;
 pub mod maxp;
 pub mod name;
 pub mod os2;
+pub mod post;
 
 #[allow(non_camel_case_types)]
 /// A signed 16-bit number describing number of font design units.
