@@ -9,7 +9,9 @@ use monoxide_ttf::{
             simple::{Coord, OutlineFlag, SimpleGlyph},
         },
         head::{self, HeaderFlags, MacStyle},
-        hhea, hmtx, name, os2,
+        hhea, hmtx, name,
+        os2::{self, CodePageRange, UnicodeRange},
+        post, Fixed,
     },
 };
 
@@ -122,10 +124,7 @@ fn main() {
             midline: 0,
             x_height: 0,
         },
-        unicode_range1: 0,
-        unicode_range2: 0,
-        unicode_range3: 0,
-        unicode_range4: 0,
+        unicode_range: UnicodeRange::BasicLatin,
         ach_vend_id: *b"TEST",
         fs_selection: os2::FsSelectionKind::Regular,
         first_char_index: 0,
@@ -135,13 +134,23 @@ fn main() {
         s_typo_line_gap: 0,
         us_win_ascent: 1024,
         us_win_descent: 256,
-        ul_code_page_range1: 0,
-        ul_code_page_range2: 0,
+        code_page_range: CodePageRange::Latin1,
         sx_height: 0,
         s_cap_height: 0,
         us_default_char: 0,
         us_break_char: 0,
         us_max_context: 0,
+    };
+
+    let post = post::TableV3 {
+        italic_angle: Fixed::from_num(0),
+        underline_position: 0,
+        underline_thickness: 0,
+        is_fixed_pitch: false,
+        min_mem_type42: 0,
+        max_mem_type42: 0,
+        min_mem_type1: 0,
+        max_mem_type1: 0,
     };
 
     let glyf = glyf::Table {
@@ -213,6 +222,7 @@ fn main() {
         cmap,
         name,
         os2,
+        post,
         outline: monoxide_ttf::model::Outline::TrueType(tt_tables),
     };
 

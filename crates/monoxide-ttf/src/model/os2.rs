@@ -1,4 +1,5 @@
 use super::{fword, ufword, ITable};
+use bitflags::bitflags;
 use bytes::BufMut;
 
 #[repr(u16)]
@@ -247,6 +248,240 @@ bitflags::bitflags! {
     }
 }
 
+macro_rules! unicode_range {
+    (
+        struct $name:ident
+        {$(
+            $(#[$attr:meta])*
+            $range_name:ident ($bit:expr, $range:pat)
+        ),*$(,)?}
+    ) => {
+        #[derive(Clone, Copy, PartialEq, Eq)]
+        pub struct $name(u128);
+
+        bitflags::bitflags! {
+            impl $name: u128 {
+                $(
+                    $(#[$attr])*
+                    const $range_name = 1 << $bit;
+                )*
+            }
+        }
+
+        impl $name {
+            /// Set the bit for the given character. Might simultaneously set multiple bits.
+            pub fn add_bits_from_range(mut self, ch: char) -> Self {
+                let ch = ch as u32;
+                $(if matches!(ch, $range) { self.0 |= 1 << $bit; })*
+                self
+            }
+        }
+    };
+}
+
+unicode_range! {
+    struct UnicodeRange {
+        BasicLatin(0, 0x0000..=0x007F),
+        Latin1Supplement(1, 0x0080..=0x00FF),
+        LatinExtendedA(2, 0x0100..=0x017F),
+        LatinExtendedB(3, 0x0180..=0x024F),
+        IPAExtensions(4, 0x0250..=0x02AF),
+        PhoneticExtensions(5, 0x1D00..=0x1D7F),
+        PhoneticExtensionsSupplement(6, 0x1D80..=0x1DBF),
+        SpacingModifierLetters(7, 0x02B0..=0x02FF),
+        ModifierToneLetters(8, 0xA700..=0xA71F),
+        CombiningDiacriticalMarks(9, 0x0300..=0x036F),
+        CombiningDiacriticalMarksSupplement(10, 0x1DC0..=0x1DFF),
+        GreekAndCoptic(11, 0x0370..=0x03FF),
+        Coptic(12, 0x2C80..=0x2CFF),
+        Cyrillic(13, 0x0400..=0x04FF),
+        CyrillicSupplement(14, 0x0500..=0x052F),
+        CyrillicExtendedA(15, 0x2DE0..=0x2DFF),
+        CyrillicExtendedB(16, 0xA640..=0xA69F),
+        Armenian(17, 0x0530..=0x058F),
+        Hebrew(18, 0x0590..=0x05FF),
+        Vai(19, 0xA500..=0xA63F),
+        Arabic(20, 0x0600..=0x06FF),
+        ArabicSupplement(21, 0x0750..=0x077F),
+        NKo(22, 0x07C0..=0x07FF),
+        Kannada(22, 0x0C80..=0x0CFF),
+        Malayalam(23, 0x0D00..=0x0D7F),
+        Thai(24, 0x0E00..=0x0E7F),
+        Lao(25, 0x0E80..=0x0EFF),
+        Georgian(26, 0x10A0..=0x10FF),
+        GeorgianSupplement(26, 0x2D00..=0x2D2F),
+        Balinese(27, 0x1B00..=0x1B7F),
+        HangulJamo(28, 0x1100..=0x11FF),
+        LatinExtendedAdditional(29, 0x1E00..=0x1EFF),
+        LatinExtendedC(29, 0x2C60..=0x2C7F),
+        LatinExtendedD(29, 0xA720..=0xA7FF),
+        GreekExtended(30, 0x1F00..=0x1FFF),
+        GeneralPunctuation(31, 0x2000..=0x206F),
+        SupplementalPunctuation(31, 0x2E00..=0x2E7F),
+        SuperscriptsAndSubscripts(32, 0x2070..=0x209F),
+        CurrencySymbols(33, 0x20A0..=0x20CF),
+        CombiningDiacriticalMarksForSymbols(34, 0x20D0..=0x20FF),
+        LetterlikeSymbols(35, 0x2100..=0x214F),
+        NumberForms(36, 0x2150..=0x218F),
+        Arrows(37, 0x2190..=0x21FF | 0x27F0..=0x27FF | 0x2900..=0x297F),
+        MiscellaneousSymbolsAndArrows(37, 0x2B00..=0x2BFF),
+        MathematicalOperators(38, 0x2200..=0x22FF | 0x2A00..=0x2AFF | 0x27C0..=0x27EF | 0x2980..=0x29FF),
+        MiscellaneousTechnical(39, 0x2300..=0x23FF),
+        ControlPictures(40, 0x2400..=0x243F),
+        OpticalCharacterRecognition(41, 0x2440..=0x245F),
+        EnclosedAlphanumerics(42, 0x2460..=0x24FF),
+        BoxDrawing(43, 0x2500..=0x257F),
+        BlockElements(44, 0x2580..=0x259F),
+        GeometricShapes(45, 0x25A0..=0x25FF),
+        MiscellaneousSymbols(46, 0x2600..=0x26FF),
+        Dingbats(47, 0x2700..=0x27BF),
+        CJKSymbolsAndPunctuation(48, 0x3000..=0x303F),
+        Hiragana(49, 0x3040..=0x309F),
+        Katakana(50, 0x30A0..=0x30FF),
+        KatakanaPhoneticExtensions(50, 0x31F0..=0x31FF),
+        Bopomofo(51, 0x3100..=0x312F),
+        BopomofoExtended(51, 0x31A0..=0x31BF),
+        HangulCompatibilityJamo(52, 0x3130..=0x318F),
+        Phagspa(53, 0xA840..=0xA87F),
+        EnclosedCJKLettersAndMonths(54, 0x3200..=0x32FF),
+        CJKCompatibility(55, 0x3300..=0x33FF),
+        HangulSyllables(56, 0xAC00..=0xD7AF),
+        NonPlane0(57, 0x10000..=0x10FFFF),
+        Phoenician(58, 0x10900..=0x1091F),
+        CJKUnifiedIdeographs(59, 0x4E00..=0x9FFF),
+        CJKRadicalsSupplement(59, 0x2E80..=0x2EFF),
+        KangxiRadicals(59, 0x2F00..=0x2FDF),
+        IdeographicDescriptionCharacters(59, 0x2FF0..=0x2FFF),
+        CJKUnifiedIdeographsExtensionA(59, 0x3400..=0x4DBF),
+        CJKUnifiedIdeographsExtensionB(59, 0x20000..=0x2A6DF),
+        Kanbun(59, 0x3190..=0x319F),
+        PrivateUseAreaPlane0(60, 0xE000..=0xF8FF),
+        CJKStrokes(61, 0x31C0..=0x31EF),
+        CJKCompatibilityIdeographs(61, 0xF900..=0xFAFF),
+        CJKCompatibilityIdeographsSupplement(61, 0x2F800..=0x2FA1F),
+        AlphabeticPresentationForms(62, 0xFB00..=0xFB4F),
+        ArabicPresentationFormsA(63, 0xFB50..=0xFDFF),
+        CombiningHalfMarks(64, 0xFE20..=0xFE2F),
+        VerticalForms(65, 0xFE10..=0xFE1F),
+        CJKCompatibilityForms(65, 0xFE30..=0xFE4F),
+        SmallFormVariants(66, 0xFE50..=0xFE6F),
+        ArabicPresentationFormsB(67, 0xFE70..=0xFEFF),
+        HalfwidthAndFullwidthForms(68, 0xFF00..=0xFFEF),
+        Specials(69, 0xFFF0..=0xFFFF),
+        Tibetan(70, 0x0F00..=0x0FFF),
+        Syriac(71, 0x0700..=0x074F),
+        Thaana(72, 0x0780..=0x07BF),
+        Sinhala(73, 0x0D80..=0x0DFF),
+        Myanmar(74, 0x1000..=0x109F),
+        Ethiopic(75, 0x1200..=0x137F),
+        EthiopicSupplement(75, 0x1380..=0x139F),
+        EthiopicExtended(75, 0x2D80..=0x2DDF),
+        Cherokee(76, 0x13A0..=0x13FF),
+        UnifiedCanadianAboriginalSyllabics(77, 0x1400..=0x167F),
+        Ogham(78, 0x1680..=0x169F),
+        Runic(79, 0x16A0..=0x16FF),
+        Khmer(80, 0x1780..=0x17FF),
+        KhmerSymbols(80, 0x19E0..=0x19FF),
+        Mongolian(81, 0x1800..=0x18AF),
+        BraillePatterns(82, 0x2800..=0x28FF),
+        YiSyllables(83, 0xA000..=0xA48F),
+        YiRadicals(83, 0xA490..=0xA4CF),
+        Tagalog(84, 0x1700..=0x171F),
+        Hanunoo(84, 0x1720..=0x173F),
+        Buhid(84, 0x1740..=0x175F),
+        Tagbanwa(84, 0x1760..=0x177F),
+        OldItalic(85, 0x10300..=0x1032F),
+        Gothic(86, 0x10330..=0x1034F),
+        Deseret(87, 0x10400..=0x1044F),
+        ByzantineMusicalSymbols(88, 0x1D000..=0x1D0FF),
+        MusicalSymbols(88, 0x1D100..=0x1D1FF),
+        AncientGreekMusicalNotation(88, 0x1D200..=0x1D24F),
+        MathematicalAlphanumericSymbols(89, 0x1D400..=0x1D7FF),
+        PrivateUsePlane15(90, 0xF0000..=0xFFFFD),
+        PrivateUsePlane16(90, 0x100000..=0x10FFFD),
+        VariationSelectors(91, 0xFE00..=0xFE0F),
+        VariationSelectorsSupplement(91, 0xE0100..=0xE01EF),
+        Tags(92, 0xE0000..=0xE007F),
+        Limbu(93, 0x1900..=0x194F),
+        TaiLe(94, 0x1950..=0x197F),
+        NewTaiLue(95, 0x1980..=0x19DF),
+        Buginese(96, 0x1A00..=0x1A1F),
+        Glagolitic(97, 0x2C00..=0x2C5F),
+        Tifinagh(98, 0x2D30..=0x2D7F),
+        YijingHexagramSymbols(99, 0x4DC0..=0x4DFF),
+        SylotiNagri(100, 0xA800..=0xA82F),
+        LinearBSyllabary(101, 0x10000..=0x1007F),
+        LinearBIdeograms(101, 0x10080..=0x100FF),
+        AegeanNumbers(101, 0x10100..=0x1013F),
+        AncientGreekNumbers(102, 0x10140..=0x1018F),
+        Ugaritic(103, 0x10380..=0x1039F),
+        OldPersian(104, 0x103A0..=0x103DF),
+        Shavian(105, 0x10450..=0x1047F),
+        Osmanya(106, 0x10480..=0x104AF),
+        CypriotSyllabary(107, 0x10800..=0x1083F),
+        Kharoshthi(108, 0x10A00..=0x10A5F),
+        TaiXuanJingSymbols(109, 0x1D300..=0x1D35F),
+        Cuneiform(110, 0x12000..=0x123FF),
+        CuneiformNumbersAndPunctuation(110, 0x12400..=0x1247F),
+        CountingRodNumerals(111, 0x1D360..=0x1D37F),
+        Sundanese(112, 0x1B80..=0x1BBF),
+        Lepcha(113, 0x1C00..=0x1C4F),
+        OlChiki(114, 0x1C50..=0x1C7F),
+        Saurashtra(115, 0xA880..=0xA8DF),
+        KayahLi(116, 0xA900..=0xA92F),
+        Rejang(117, 0xA930..=0xA95F),
+        Cham(118, 0xAA00..=0xAA5F),
+        AncientSymbols(119, 0x10190..=0x101CF),
+        PhaistosDisc(120, 0x101D0..=0x101FF),
+        Carian(121, 0x102A0..=0x102DF),
+        Lycian(121, 0x10280..=0x1029F),
+        Lydian(121, 0x10920..=0x1093F),
+        DominoTiles(122, 0x1F030..=0x1F09F),
+        MahjongTiles(122, 0x1F000..=0x1F02F),
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct CodePageRange(u64);
+bitflags! {
+    impl CodePageRange: u64 {
+        const Latin1 = 1 << 0;
+        const Latin2 = 1 << 1;
+        const Cyrillic = 1 << 2;
+        const Greek = 1 << 3;
+        const Turkish = 1 << 4;
+        const Hebrew = 1 << 5;
+        const Arabic = 1 << 6;
+        const WindowsBaltic = 1 << 7;
+        const Vietnamese = 1 << 8;
+        const Thai = 1 << 16;
+        const JISJapan = 1 << 17;
+        const ChineseSimplified = 1 << 18;
+        const KoreanWansung = 1 << 19;
+        const ChineseTraditional = 1 << 20;
+        const KoreanJohab = 1 << 21;
+        const MacintoshCharacterSet = 1 << 29;
+        const OEMCharacterSet = 1 << 30;
+        const SymbolCharacterSet = 1 << 31;
+        const IBMGreek = 1 << 48;
+        const MSDOSRussian = 1 << 49;
+        const MSDOSNordic = 1 << 50;
+        const Arabic864 = 1 << 51;
+        const MSDOSCanadianFrench = 1 << 52;
+        const Hebrew862 = 1 << 53;
+        const MSDOSIcelandic = 1 << 54;
+        const MSDOSPortuguese = 1 << 55;
+        const IBMTurkish = 1 << 56;
+        const IBMCyrillic = 1 << 57;
+        const Latin2_852 = 1 << 58;
+        const MSDOSBaltic = 1 << 59;
+        const GreekFormer437G = 1 << 60;
+        const ArabicASMO708 = 1 << 61;
+        const WELatin1 = 1 << 62;
+        const US = 1 << 63;
+    }
+}
+
 pub struct Table {
     // pub version: u16, = 4
     pub x_avg_char_width: fword,
@@ -273,10 +508,7 @@ pub struct Table {
     pub panose_classification: PanroseClassification,
 
     // https://learn.microsoft.com/zh-cn/typography/opentype/spec/os2#ur
-    pub unicode_range1: u32,
-    pub unicode_range2: u32,
-    pub unicode_range3: u32,
-    pub unicode_range4: u32,
+    pub unicode_range: UnicodeRange,
 
     pub ach_vend_id: [u8; 4], // set to 4 spaces
     pub fs_selection: FsSelectionKind,
@@ -290,8 +522,7 @@ pub struct Table {
     pub us_win_ascent: ufword,
     pub us_win_descent: ufword,
 
-    pub ul_code_page_range1: u32,
-    pub ul_code_page_range2: u32,
+    pub code_page_range: CodePageRange,
 
     pub sx_height: fword,
     pub s_cap_height: fword,
@@ -335,10 +566,14 @@ impl ITable for Table {
         writer.put_u8(self.panose_classification.letterform);
         writer.put_u8(self.panose_classification.midline);
         writer.put_u8(self.panose_classification.x_height);
-        writer.put_u32(self.unicode_range1);
-        writer.put_u32(self.unicode_range2);
-        writer.put_u32(self.unicode_range3);
-        writer.put_u32(self.unicode_range4);
+        let unicode_range_1 = self.unicode_range.0 as u32;
+        let unicode_range_2 = (self.unicode_range.0 >> 32) as u32;
+        let unicode_range_3 = (self.unicode_range.0 >> 64) as u32;
+        let unicode_range_4 = (self.unicode_range.0 >> 96) as u32;
+        writer.put_u32(unicode_range_1);
+        writer.put_u32(unicode_range_2);
+        writer.put_u32(unicode_range_3);
+        writer.put_u32(unicode_range_4);
         writer.put_u32(u32::from_be_bytes(self.ach_vend_id));
         writer.put_u16(self.fs_selection.bits());
         writer.put_u16(self.first_char_index);
@@ -348,8 +583,10 @@ impl ITable for Table {
         writer.put_i16(self.s_typo_line_gap);
         writer.put_u16(self.us_win_ascent);
         writer.put_u16(self.us_win_descent);
-        writer.put_u32(self.ul_code_page_range1);
-        writer.put_u32(self.ul_code_page_range2);
+        let code_page_range_1 = self.code_page_range.0 as u32;
+        let code_page_range_2 = (self.code_page_range.0 >> 32) as u32;
+        writer.put_u32(code_page_range_1);
+        writer.put_u32(code_page_range_2);
         writer.put_i16(self.sx_height);
         writer.put_i16(self.s_cap_height);
         writer.put_u16(self.us_default_char);
