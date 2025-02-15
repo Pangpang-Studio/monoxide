@@ -31,7 +31,7 @@ fn main() {
         x_max: 1024,
         y_max: 1024,
         mac_style: MacStyle::REGULAR,
-        lowest_rec_ppem: 0,
+        lowest_rec_ppem: 72,
     };
 
     let hhea = hhea::Table {
@@ -133,10 +133,10 @@ fn main() {
         us_win_ascent: 1024,
         us_win_descent: 256,
         code_page_range: CodePageRange::Latin1,
-        sx_height: 0,
-        s_cap_height: 0,
-        us_default_char: 0,
-        us_break_char: 0,
+        sx_height: 768,
+        s_cap_height: 1024,
+        us_default_char: 65,
+        us_break_char: 65,
         us_max_context: 0,
     };
 
@@ -168,15 +168,15 @@ fn main() {
                 }],
                 x_coords: vec![
                     Coord::Long(0),
+                    Coord::Long(0),
                     Coord::Long(1024),
                     Coord::Long(0),
-                    Coord::Long(-1024),
                 ],
                 y_coords: vec![
                     Coord::Long(0),
-                    Coord::Long(0),
                     Coord::Long(1024),
                     Coord::Long(0),
+                    Coord::Long(-1024),
                 ],
             }),
             glyf::Glyph::Simple(SimpleGlyph {
@@ -194,15 +194,15 @@ fn main() {
                 }],
                 x_coords: vec![
                     Coord::Long(0),
+                    Coord::Long(0),
                     Coord::Long(1024),
                     Coord::Long(0),
-                    Coord::Long(-1024),
                 ],
                 y_coords: vec![
                     Coord::Long(0),
-                    Coord::Long(0),
                     Coord::Long(1024),
                     Coord::Long(0),
+                    Coord::Long(-1024),
                 ],
             }),
         ],
