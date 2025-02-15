@@ -6,7 +6,7 @@ use crate::model::{cff2, glyf, maxp};
 pub fn glyf_to_maxp(glyf: &glyf::Table) -> maxp::TableV1 {
     let mut maxp = maxp::TableV1 {
         n_glyphs: glyf.glyphs.len() as u16,
-        max_component_depth: 1,
+        max_component_depth: 0,
         ..Default::default()
     };
 
