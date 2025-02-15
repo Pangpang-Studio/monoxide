@@ -7,6 +7,7 @@
 use bytes::{BufMut, BytesMut};
 pub mod cff2;
 pub mod cmap;
+pub mod dsig;
 pub mod encoding;
 pub mod glyf;
 pub mod head;
@@ -105,6 +106,7 @@ pub struct FontFile {
     pub os2: os2::Table,
     pub post: post::TableV3,
     pub outline: Outline,
+    pub dsig: Option<dsig::Table>,
 }
 
 struct TableRecord {
@@ -147,6 +149,9 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
                 // tables_except_header.push(Box::new(tables.cff2));
                 // tables_except_header.push(Box::new(tables.maxp));
             }
+        }
+        if let Some(dsig) = &font.dsig {
+            tables_except_header.push(dsig);
         }
     }
     let n_table_records = tables_except_header.len() + 1;

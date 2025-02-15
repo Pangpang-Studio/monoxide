@@ -222,6 +222,7 @@ fn main() {
         os2,
         post,
         outline: monoxide_ttf::model::Outline::TrueType(tt_tables),
+        dsig: Some(Default::default()),
     };
 
     let out_path = std::env::args().nth(1).unwrap();
