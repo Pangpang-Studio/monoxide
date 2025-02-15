@@ -196,7 +196,7 @@ impl ITable for Table {
                     UnicodePlatformEncoding::V2Full as u16,
                     0,
                 ),
-                Lang::Microsoft(mslang_id) => (PlatformId::Microsoft as u16, 10, *mslang_id as u16),
+                Lang::Microsoft(mslang_id) => (PlatformId::Microsoft as u16, 1, *mslang_id as u16),
             };
 
             for rec in recs.to_records() {
