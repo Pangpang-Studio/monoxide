@@ -5,6 +5,7 @@
 //! used to generate these tables, see the [`crate::hl`] module.
 
 use bytes::{BufMut, BytesMut};
+use indexmap::IndexMap;
 pub mod cff2;
 pub mod cmap;
 pub mod dsig;
@@ -128,21 +129,23 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         Outline::CFF2(_) => b"OTTO".to_owned(),
     };
     // The `head` requires special treatment because it needs to be
-    // rewritten after the checksum is calculated. All other tables can
-    // now be treated as opaque blobs.
-    let mut tables_except_header = Vec::<&dyn DynITable>::new();
+    // rewritten after the checksum is calculated. Anyway, we can first
+    // serialize them as opaque blobs and pay special attention to the
+    // `head` table when calculating offsets and checksums.
+    let mut tables = Vec::<&dyn DynITable>::new();
     {
-        tables_except_header.push(&font.hhea);
-        tables_except_header.push(&font.hmtx);
-        tables_except_header.push(&font.cmap);
-        tables_except_header.push(&font.name);
-        tables_except_header.push(&font.os2);
-        tables_except_header.push(&font.post);
+        tables.push(&font.head);
+        tables.push(&font.hhea);
+        tables.push(&font.hmtx);
+        tables.push(&font.cmap);
+        tables.push(&font.name);
+        tables.push(&font.os2);
+        tables.push(&font.post);
         match &font.outline {
-            Outline::TrueType(tables) => {
-                tables_except_header.push(&tables.glyf);
-                tables_except_header.push(&tables.loca);
-                tables_except_header.push(&tables.maxp);
+            Outline::TrueType(tt_tables) => {
+                tables.push(&tt_tables.glyf);
+                tables.push(&tt_tables.loca);
+                tables.push(&tt_tables.maxp);
             }
             Outline::CFF2(_) => {
                 todo!("CFF2 tables are not implemented yet");
@@ -151,10 +154,10 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
             }
         }
         if let Some(dsig) = &font.dsig {
-            tables_except_header.push(dsig);
+            tables.push(dsig);
         }
     }
-    let n_table_records = tables_except_header.len() + 1;
+    let n_table_records = tables.len();
     /*
     header layout:
         version: u32
@@ -193,45 +196,31 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         font.head.write(&mut head_buf);
         head_buf.freeze()
     };
-    let tables_ser = tables_except_header
+    let mut tables_ser = tables
         .iter()
         .map(|table| {
             let mut buf = BytesMut::new();
             table.write_dyn(&mut buf);
-            buf.freeze()
+            (*table.name_dyn(), buf.freeze())
         })
-        .collect::<Vec<_>>();
+        .collect::<IndexMap<_, _>>();
+    // The tables must be sorted by tag
+    tables_ser.sort_by(|a, _, b, _| a.cmp(b));
 
     // We first do a virtual allocation of all tables to calculate the offsets,
     // before we write the actual data.
     let mut table_records = Vec::with_capacity(n_table_records);
     let mut offset = header_size; // current write offset
 
-    // To assist debugging, we write "__{tag}__" before the beginning of each table
+    // To assist debugging, we write "____{tag}" before the beginning of each table
     let debug_data_len = 8;
 
-    // Head table record
-    {
-        offset += debug_data_len;
-        let head_cksum = ttf_checksum(&head_ser);
-        table_records.push(TableRecord {
-            tag: *font.head.name(),
-            checksum: head_cksum,
-            offset: offset as u32,
-            length: head_ser.len() as u32,
-        });
-
-        offset += head_ser.len();
-        offset = offset.next_multiple_of(4); // pad to 4 bytes
-
-        font_cksum = font_cksum.wrapping_add(head_cksum);
-    }
-    for (table, ser) in tables_except_header.iter().zip(tables_ser.iter()) {
+    for (tag, ser) in tables_ser.iter() {
         offset += debug_data_len;
 
         let cksum = ttf_checksum(ser);
         table_records.push(TableRecord {
-            tag: *table.name_dyn(),
+            tag: *tag,
             checksum: cksum,
             offset: offset as u32,
             length: ser.len() as u32,
@@ -265,9 +254,10 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
         new_head.write(&mut head_buf);
         head_buf.freeze()
     };
+    tables_ser.insert(*new_head.name(), head_ser);
 
     fn write_ser(mut w: impl std::io::Write, name: [u8; 4], ser: &[u8]) -> std::io::Result<()> {
-        write!(w, "__{}__", std::str::from_utf8(&name).unwrap())?;
+        write!(w, "____{}", std::str::from_utf8(&name).unwrap())?;
 
         w.write_all(ser)?;
         pad_to_4_bytes(ser.len(), &mut w)?;
@@ -297,13 +287,7 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
 
     pad_to_4_bytes(actual_offset, &mut w)?;
 
-    actual_offset += 8; // debug info
-
-    assert_table_invariants(actual_offset, &table_records[0], "head");
-    write_ser(&mut w, *new_head.name(), &head_ser)?;
-    actual_offset += head_ser.len().next_multiple_of(4);
-
-    for (ser, tbl) in tables_ser.iter().zip(table_records.iter().skip(1)) {
+    for ((_, ser), tbl) in tables_ser.iter().zip(table_records.iter()) {
         actual_offset += 8; // debug info
         let table_tag_string = std::str::from_utf8(&tbl.tag).unwrap();
 
