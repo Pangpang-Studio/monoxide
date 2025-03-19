@@ -3,6 +3,7 @@ use thiserror::Error;
 
 use super::{fword, ITable};
 
+#[derive(Debug, Clone)]
 pub struct GlyphCommon {
     pub x_min: fword,
     pub y_min: fword,
