@@ -9,6 +9,22 @@ pub enum Coord {
     Long(i16),
 }
 
+impl Coord {
+    pub fn unwrap_short(self) -> u8 {
+        match self {
+            Coord::Short(x) => x,
+            Coord::Long(_) => panic!("Expected a short coordinate, got a long one"),
+        }
+    }
+
+    pub fn unwrap_long(self) -> i16 {
+        match self {
+            Coord::Short(_) => panic!("Expected a long coordinate, got a short one"),
+            Coord::Long(x) => x,
+        }
+    }
+}
+
 impl From<i16> for Coord {
     fn from(value: i16) -> Self {
         Coord::Long(value)
@@ -21,7 +37,7 @@ impl From<u8> for Coord {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct OutlineFlag(u8);
 bitflags::bitflags! {
     impl OutlineFlag: u8 {
@@ -48,6 +64,39 @@ bitflags::bitflags! {
         /// **Only if `Y_SHORT_VECTOR` is set.**
         /// Describes the sign of the value, with a value of 1 equalling positive and a zero value negative.
         const SHORT_Y_SIGN = 0b00100000;
+    }
+}
+
+impl std::fmt::Debug for OutlineFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut f = f.debug_set();
+        if self.intersects(OutlineFlag::ON_CURVE) {
+            f.entry(&"ON_CURVE");
+        }
+        if self.intersects(OutlineFlag::X_SHORT_VECTOR) {
+            f.entry(&"X_SHORT_VECTOR");
+        }
+        if self.intersects(OutlineFlag::Y_SHORT_VECTOR) {
+            f.entry(&"Y_SHORT_VECTOR");
+        }
+        if self.intersects(OutlineFlag::REPEAT) {
+            f.entry(&"REPEAT");
+        }
+        if self.intersects(OutlineFlag::LONG_X_SAME) {
+            if self.intersects(OutlineFlag::X_SHORT_VECTOR) {
+                f.entry(&"SHORT_X_SIGN");
+            } else {
+                f.entry(&"LONG_X_SAME");
+            }
+        }
+        if self.intersects(OutlineFlag::LONG_Y_SAME) {
+            if self.intersects(OutlineFlag::Y_SHORT_VECTOR) {
+                f.entry(&"SHORT_Y_SIGN");
+            } else {
+                f.entry(&"LONG_Y_SAME");
+            }
+        }
+        f.finish()
     }
 }
 
@@ -81,6 +130,20 @@ impl FlagOrRepeat {
             Self::Repeat { .. } => 2,
         }
     }
+
+    pub fn get_flag(&self) -> OutlineFlag {
+        match self {
+            Self::Single(flag) => *flag,
+            Self::Repeat { flag, .. } => *flag,
+        }
+    }
+
+    pub fn get_repeat_times(&self) -> usize {
+        match self {
+            Self::Single(_) => 1,
+            Self::Repeat { times_minus_1, .. } => (*times_minus_1 + 1) as usize,
+        }
+    }
 }
 
 impl From<OutlineFlag> for FlagOrRepeat {
@@ -89,6 +152,7 @@ impl From<OutlineFlag> for FlagOrRepeat {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SimpleGlyph {
     // pub n_countours: u16, // encoded in the 1st field, as positive number
     pub common: GlyphCommon,
@@ -111,10 +175,10 @@ pub enum SimpleGlyphVerifyError {
     RepeatSetInFlags(usize),
     #[error("The number of flags is different from the number of points")]
     FlagCountMismatch,
-    #[error("Too many coordinates in axis {axis}")]
-    TooManyCoords { axis: char },
-    #[error("Too little coordinates in axis {axis}")]
-    TooLittleCoords { axis: char },
+    #[error("Too many coordinates in axis {axis}, expecting {count}")]
+    TooManyCoords { axis: char, count: usize },
+    #[error("Too few coordinates in axis {axis}, expecting at least {count}")]
+    TooFewCoords { axis: char, count: usize },
     #[error("Format mismatch for coordinate {idx} in axis {axis}, expected is_short={expected}, got is_short={got}")]
     CoordFormatMismatch {
         axis: char,
@@ -163,8 +227,11 @@ impl SimpleGlyph {
             flag_count += repeat_times as usize;
 
             for _ in 0..repeat_times {
-                if x_coords_count >= self.x_coords.len() {
-                    return Err(TooLittleCoords { axis: 'x' });
+                if x_coords_count > self.x_coords.len() {
+                    return Err(TooFewCoords {
+                        axis: 'x',
+                        count: x_coords_count,
+                    });
                 }
                 if flags.intersects(OutlineFlag::X_SHORT_VECTOR) {
                     if !matches!(self.x_coords[x_coords_count], Coord::Short(_)) {
@@ -189,8 +256,11 @@ impl SimpleGlyph {
                     x_coords_count += 1;
                 }
 
-                if y_coords_count >= self.y_coords.len() {
-                    return Err(TooLittleCoords { axis: 'y' });
+                if y_coords_count > self.y_coords.len() {
+                    return Err(TooFewCoords {
+                        axis: 'y',
+                        count: y_coords_count,
+                    });
                 }
                 if flags.intersects(OutlineFlag::Y_SHORT_VECTOR) {
                     if !matches!(self.y_coords[y_coords_count], Coord::Short(_)) {
@@ -220,10 +290,16 @@ impl SimpleGlyph {
             return Err(FlagCountMismatch);
         }
         if x_coords_count != self.x_coords.len() {
-            return Err(TooManyCoords { axis: 'x' });
+            return Err(TooManyCoords {
+                axis: 'x',
+                count: x_coords_count,
+            });
         }
         if y_coords_count != self.y_coords.len() {
-            return Err(TooManyCoords { axis: 'y' });
+            return Err(TooManyCoords {
+                axis: 'y',
+                count: y_coords_count,
+            });
         }
 
         Ok(())
