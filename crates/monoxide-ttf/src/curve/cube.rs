@@ -1,10 +1,14 @@
+use num_traits::Num;
+
+use super::Point;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum CubicSegment<P> {
     Line(P),
     Curve(P, P, P),
 }
 
-impl<P> CubicSegment<P> {
+impl<P: Copy> CubicSegment<P> {
     pub fn is_line(&self) -> bool {
         matches!(self, CubicSegment::Line(_))
     }
@@ -13,6 +17,13 @@ impl<P> CubicSegment<P> {
         match self {
             CubicSegment::Line(_) => 1,
             CubicSegment::Curve(_, _, _) => 3,
+        }
+    }
+
+    pub fn last_point(&self) -> P {
+        match self {
+            CubicSegment::Line(p) => *p,
+            CubicSegment::Curve(_, _, p) => *p,
         }
     }
 }
@@ -24,7 +35,7 @@ pub struct CubicBezier<P> {
     pub closed: bool,
 }
 
-impl<P: Copy> CubicBezier<P> {
+impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
     pub fn cast<P1>(&self, cast: impl Fn(P) -> P1) -> CubicBezier<P1> {
         CubicBezier {
             start: cast(self.start),
@@ -52,6 +63,36 @@ impl<P: Copy> CubicBezier<P> {
 
     pub fn builder(start: P) -> CubicBezierBuilder<P> {
         CubicBezierBuilder::new(start)
+    }
+
+    pub fn point_at(&self, segment: usize, t: N) -> P {
+        let seg = &self.segments[segment];
+        let start_point = if segment == 0 {
+            self.start
+        } else {
+            self.segments[segment - 1].last_point()
+        };
+
+        let one_minus_t = N::one() - t;
+        let three = N::one() + N::one() + N::one();
+        match seg {
+            CubicSegment::Line(end) => {
+                (start_point.mul_scalar(one_minus_t)).point_add(&end.mul_scalar(t))
+            }
+            CubicSegment::Curve(p1, p2, p3) => {
+                let p0 = start_point;
+
+                let c0 = one_minus_t * one_minus_t * one_minus_t;
+                let c1 = three * one_minus_t * one_minus_t * t;
+                let c2 = three * one_minus_t * t * t;
+                let c3 = t * t * t;
+
+                (p0.mul_scalar(c0))
+                    .point_add(&p1.mul_scalar(c1))
+                    .point_add(&p2.mul_scalar(c2))
+                    .point_add(&p3.mul_scalar(c3))
+            }
+        }
     }
 }
 
@@ -92,6 +133,14 @@ impl<P: Copy> CubicBezierBuilder<P> {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum PointPosition {
+    Start,
+    Control1,
+    Control2,
+    End,
+}
+
 pub struct CubicBezierPointIter<'a, P> {
     curve: &'a CubicBezier<P>,
     /// the next segment to be processed
@@ -102,26 +151,32 @@ pub struct CubicBezierPointIter<'a, P> {
 }
 
 impl<P: Copy> Iterator for CubicBezierPointIter<'_, P> {
-    type Item = P;
+    type Item = (PointPosition, P);
 
-    fn next(&mut self) -> Option<P> {
-        if self.current_segment == self.curve.segments.len() {
+    fn next(&mut self) -> Option<(PointPosition, P)> {
+        use PointPosition::*;
+
+        if self.current_segment > self.curve.segments.len() {
             return None;
         }
+        if self.current_segment == 0 {
+            self.current_segment += 1;
+            return Some((Start, self.curve.start));
+        }
 
-        let seg = &self.curve.segments[self.current_segment];
+        let seg = &self.curve.segments[self.current_segment - 1];
         let point = match seg {
             CubicSegment::Line(p) => {
                 if self.current_in_segment_idx == 0 {
-                    Some(*p)
+                    Some((End, *p))
                 } else {
                     panic!("Invalid state: line segment has only one point");
                 }
             }
             CubicSegment::Curve(p1, p2, p3) => match self.current_in_segment_idx {
-                0 => Some(*p1),
-                1 => Some(*p2),
-                2 => Some(*p3),
+                0 => Some((Control1, *p1)),
+                1 => Some((Control2, *p2)),
+                2 => Some((End, *p3)),
                 _ => panic!("Invalid state: curve segment has only three points"),
             },
         };
@@ -134,4 +189,49 @@ impl<P: Copy> Iterator for CubicBezierPointIter<'_, P> {
 
         point
     }
+}
+
+#[test]
+fn test_cubic_bezier_builder() {
+    let mut curve = CubicBezier::builder((0, 0));
+    curve.line_to((1, 1)).curve_to((2, 2), (3, 3), (4, 4));
+    let curve = curve.build();
+
+    let points: Vec<_> = curve.iter().collect();
+    assert_eq!(
+        points,
+        vec![
+            (PointPosition::Start, (0, 0)),
+            (PointPosition::End, (1, 1)),
+            (PointPosition::Control1, (2, 2)),
+            (PointPosition::Control2, (3, 3)),
+            (PointPosition::End, (4, 4)),
+        ]
+    );
+}
+
+#[test]
+fn test_cubic_bezier_interpolation() {
+    let mut curve = CubicBezier::<(f64, f64)>::builder((0., 0.));
+    curve
+        .line_to((1., 0.))
+        .curve_to((2., 0.), (2., 1.), (2., 2.));
+    let curve = curve.build();
+
+    let points: Vec<_> = (0..2)
+        .flat_map(|seg_id| {
+            let curve = &curve;
+            (0..=10).map(move |i| {
+                let t = i as f64 / 10.;
+                curve.point_at(seg_id, t)
+            })
+        })
+        .collect();
+
+    println!("{:?}", points);
+    assert_eq!(points.len(), 22);
+    assert_eq!(points[0], (0., 0.));
+    assert_eq!(points[1], (0.1, 0.));
+    assert_eq!(points[11], (1., 0.));
+    assert_eq!(points[21], (2., 2.));
 }
