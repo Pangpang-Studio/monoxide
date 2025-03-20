@@ -188,6 +188,7 @@ dependencies = [
  "bytes",
  "fixed",
  "indexmap",
+ "num-traits",
  "rust_decimal",
  "thiserror 2.0.11",
  "widestring",
