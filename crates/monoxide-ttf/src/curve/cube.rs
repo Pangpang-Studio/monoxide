@@ -65,6 +65,22 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
         CubicBezierBuilder::new(start)
     }
 
+    pub fn segment(&self, idx: usize) -> Option<(P, CubicSegment<P>)> {
+        if idx >= self.segments.len() {
+            return None;
+        }
+        if idx == 0 {
+            Some((self.start, self.segments[0].clone()))
+        } else {
+            let prev = self.segments[idx - 1].last_point();
+            Some((prev, self.segments[idx].clone()))
+        }
+    }
+
+    pub fn segment_iter(&self) -> impl Iterator<Item = (P, CubicSegment<P>)> + '_ {
+        (0..self.segments.len()).filter_map(move |i| self.segment(i))
+    }
+
     pub fn point_at(&self, segment: usize, t: N) -> P {
         let seg = &self.segments[segment];
         let start_point = if segment == 0 {
@@ -73,27 +89,32 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
             self.segments[segment - 1].last_point()
         };
 
-        let one_minus_t = N::one() - t;
-        let three = N::one() + N::one() + N::one();
         match seg {
             CubicSegment::Line(end) => {
+                let one_minus_t = N::one() - t;
                 (start_point.mul_scalar(one_minus_t)).point_add(&end.mul_scalar(t))
             }
-            CubicSegment::Curve(p1, p2, p3) => {
-                let p0 = start_point;
-
-                let c0 = one_minus_t * one_minus_t * one_minus_t;
-                let c1 = three * one_minus_t * one_minus_t * t;
-                let c2 = three * one_minus_t * t * t;
-                let c3 = t * t * t;
-
-                (p0.mul_scalar(c0))
-                    .point_add(&p1.mul_scalar(c1))
-                    .point_add(&p2.mul_scalar(c2))
-                    .point_add(&p3.mul_scalar(c3))
-            }
+            CubicSegment::Curve(p1, p2, p3) => sample(start_point, *p1, *p2, *p3, t),
         }
     }
+}
+
+pub fn sample<P, N>(p1: P, p2: P, p3: P, p4: P, t: N) -> P
+where
+    P: Point<Scalar = N> + Copy,
+    N: Num + Copy,
+{
+    let one_minus_t = N::one() - t;
+    let three = N::one() + N::one() + N::one();
+    let p0 = p1;
+    let c0 = one_minus_t * one_minus_t * one_minus_t;
+    let c1 = three * one_minus_t * one_minus_t * t;
+    let c2 = three * one_minus_t * t * t;
+    let c3 = t * t * t;
+    (p0.mul_scalar(c0))
+        .point_add(&p2.mul_scalar(c1))
+        .point_add(&p3.mul_scalar(c2))
+        .point_add(&p4.mul_scalar(c3))
 }
 
 pub struct CubicBezierBuilder<P> {
