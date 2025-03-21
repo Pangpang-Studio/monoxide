@@ -1,15 +1,18 @@
 //! Operations and types related to Bezier curves.
+pub mod convert;
 pub mod cube;
 pub mod quad;
 pub use quad::{QuadBezier, QuadSegment};
 
-use num_traits::Num;
+use num_traits::{real::Real, Num};
 
+/// Represents a point in space.
 pub trait Point: PartialEq {
     type Scalar: Num;
 
     fn mul_scalar(&self, scalar: Self::Scalar) -> Self;
     fn point_add(&self, other: &Self) -> Self;
+    fn point_sub(&self, other: &Self) -> Self;
 }
 
 impl<N: Num + Copy> Point for (N, N) {
@@ -21,5 +24,20 @@ impl<N: Num + Copy> Point for (N, N) {
 
     fn point_add(&self, other: &Self) -> Self {
         (self.0 + other.0, self.1 + other.1)
+    }
+
+    fn point_sub(&self, other: &Self) -> Self {
+        (self.0 - other.0, self.1 - other.1)
+    }
+}
+
+/// A point with real coordinates.
+pub trait RealPoint: Point<Scalar: Real> {
+    fn norm(&self) -> Self::Scalar;
+}
+
+impl<N: Real + Copy> RealPoint for (N, N) {
+    fn norm(&self) -> N {
+        self.0.hypot(self.1)
     }
 }
