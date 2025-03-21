@@ -21,8 +21,7 @@ Algorithm
 
 */
 
-/// Convert a cubic bezier curve into a quadratic bezier curve using
-/// [this algorithm](https://stackoverflow.com/a/3334952).
+/// Convert a cubic bezier curve into a quadratic bezier curve
 pub fn cube_to_quad<P, S>(cube: CubicBezier<P>, prec: S) -> QuadBezier<P>
 where
     P: RealPoint<Scalar = S> + Copy,
@@ -44,7 +43,101 @@ where
     quad.build()
 }
 
-fn cube_to_quad_segment<P, S>(
+fn cube_to_quad_segment<P, S>(quad: &mut QuadBezierBuilder<P>, p1: P, c1: P, c2: P, p2: P, prec: S)
+where
+    P: RealPoint<Scalar = S> + Copy,
+    S: Real + Copy,
+{
+    if !cube_to_quad_segment_ff(quad, p1, c1, c2, p2, prec) {
+        cube_to_quad_segment_naive(quad, p1, c1, c2, p2, prec);
+    }
+}
+
+/// The maximum number of segments that can be used to approximate one cubic
+/// bezier segment in the FontForge algorithm.
+const MAX_SEGMENTS_ALLOWED: usize = 4;
+
+/// Convert a cubic segment into quadratic segment using the smarter approach
+/// as described in FontForge documentation. Returns `false` if this algorithm
+/// cannot find a good enough approximation.
+///
+/// The quadratic bezier will only be modified if this algorithm can find a
+/// good enough approximation, otherwise it is untouched.
+///
+/// <https://fontforge.org/docs/techref/bezier.html#converting-postscript-to-truetype>
+fn cube_to_quad_segment_ff<P, S>(
+    quad: &mut QuadBezierBuilder<P>,
+    p1: P,
+    c1: P,
+    c2: P,
+    p2: P,
+    prec: S,
+) -> bool
+where
+    P: RealPoint<Scalar = S> + Copy,
+    S: Real + Copy,
+{
+    // FontForge's algorithm tries to add evenly-spaced points along the cubic
+    // to approximate it with a quadratic.
+    //
+    // Their documentation didn't specify which metric to use when calculating
+    // the "goodness" of the approximation. We will use the `tdiv` value (which
+    // is also used in the naive algorithm) as the metric.
+    //
+    // TODO: we're calculating the `tdiv` of the original curve twice.
+    // Probably can be optimized in the future.
+
+    // Cache the parameters for each segment so we don't have to recalculate
+    // them again. Filled with dummy values for now.
+    let mut params = [(c1, c2, p2); MAX_SEGMENTS_ALLOWED];
+
+    for n_segments in 1..=MAX_SEGMENTS_ALLOWED {
+        let mut max_tdiv = S::zero();
+        // Parameters for the remaining curve segment.
+        let (mut p1, mut c1, mut c2) = (p1, c1, c2);
+        #[allow(clippy::needless_range_loop)] // False positive
+        for i in 0..n_segments {
+            // The segment we're working with
+            let (dp1, dc1, dc2, dp2) = if i == n_segments - 1 {
+                // Last segment, save one calculation
+                (p1, c1, c2, p2)
+            } else {
+                // 1 / remaining segments. i.e. (1/n) / ((n - i) / n)
+                let t_in_remain = S::one() / S::from(n_segments - i).unwrap();
+                let (c11, c12, p12, c21, c22) = divide_cube(p1, c1, c2, p2, t_in_remain);
+                (p1, c1, c2) = (p12, c21, c22);
+                (p1, c11, c12, p12)
+            };
+
+            let tdiv = tdiv(dp1, dc1, dc2, dp2, prec);
+            max_tdiv = max_tdiv.max(tdiv);
+
+            // Cache params so we don't have to recalculate them again
+            params[i] = (dc1, dc2, dp2);
+        }
+
+        if max_tdiv >= S::one() {
+            // The approximation is good enough. Revive the parameters we cached
+            // and convert them to quadratic segments.
+            for i in 0..n_segments {
+                let (dc1, dc2, dp2) = params[i];
+                let dp1 = if i == 0 { p1 } else { params[i - 1].2 };
+                let c = midpoint_approx(dp1, dc1, dc2, dp2);
+                quad.quad_to(c, dp2);
+            }
+            return true;
+        } else {
+            // The approximation is not good enough. Try with more segments.
+            continue;
+        }
+    }
+
+    false
+}
+
+/// Convert a cubic segment into quadratic segment using the more naive approach
+/// described in [this algorithm](https://stackoverflow.com/a/3334952).
+fn cube_to_quad_segment_naive<P, S>(
     quad: &mut QuadBezierBuilder<P>,
     mut p1: P,
     mut c1: P,
