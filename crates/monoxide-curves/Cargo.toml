@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 num-traits.workspace = true
+spiro.workspace = true

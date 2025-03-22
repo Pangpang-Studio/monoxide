@@ -7,6 +7,9 @@ pub use quad::{QuadBezier, QuadSegment};
 
 use num_traits::{Num, real::Real};
 
+/// Represents a spiro curve.
+pub type SpiroCurve = Vec<spiro::SpiroCP>;
+
 /// Represents a point in space.
 pub trait Point: PartialEq {
     type Scalar: Num;
