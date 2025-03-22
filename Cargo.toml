@@ -34,6 +34,11 @@ wildcard_imports = "allow"
 members = [".", "crates/monoxide-script", "crates/monoxide-ttf"]
 
 [workspace.dependencies]
+# Monoxide itself
 monoxide-script = { path = "crates/monoxide-script" }
 monoxide-ttf = { path = "crates/monoxide-ttf" }
 monoxide = { path = "." }
+# Deps
+rquickjs = { version = "0.9.0", features = ["macro"] }
+spiro = { git = "https://github.com/Pangpang-Studio/spiro.rlib.git", version = "1.0.2" }
+num-traits = "0.2.19"

@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 monoxide-ttf.workspace = true
-rquickjs = "0.9.0"
-spiro = { git = "https://github.com/Pangpang-Studio/spiro.rlib.git", version = "1.0.2" }
+rquickjs.workspace = true
+spiro.workspace = true
