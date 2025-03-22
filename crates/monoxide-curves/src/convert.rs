@@ -1,8 +1,6 @@
 use num_traits::real::Real;
 
-use crate::curve::QuadBezier;
-
-use super::{cube::CubicBezier, quad::QuadBezierBuilder, Point, RealPoint};
+use crate::{CubicBezier, CubicSegment, Point, QuadBezier, RealPoint, quad::QuadBezierBuilder};
 
 /*
 Conventions/terminology
@@ -31,10 +29,10 @@ where
 
     for (seg_start, segment) in cube.segment_iter() {
         match segment {
-            crate::curve::cube::CubicSegment::Line(end) => {
+            CubicSegment::Line(end) => {
                 quad.line_to(end);
             }
-            crate::curve::cube::CubicSegment::Curve(c1, c2, p2) => {
+            CubicSegment::Curve(c1, c2, p2) => {
                 cube_to_quad_segment(&mut quad, seg_start, c1, c2, p2, prec)
             }
         }
