@@ -1,7 +1,6 @@
 use rquickjs::{Class, Ctx};
 
 mod curves;
-mod utils;
 
 pub fn import_globals(cx: &Ctx<'_>) {
     Class::<curves::SpiroBuilder>::define(&cx.globals()).unwrap();

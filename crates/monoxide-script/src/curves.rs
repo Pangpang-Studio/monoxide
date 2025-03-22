@@ -1,7 +1,5 @@
-use rquickjs::Ctx;
+use rquickjs::Class;
 use spiro::{SpiroCP, SpiroCpTy};
-
-use crate::utils::ChainThis;
 
 #[rquickjs::class]
 #[derive(rquickjs::JsLifetime)]
@@ -29,8 +27,6 @@ impl Default for SpiroBuilder {
     }
 }
 
-type ChainSpiroBuilder<'js> = ChainThis<'js, SpiroBuilder>;
-
 #[rquickjs::methods]
 impl SpiroBuilder {
     #[qjs(constructor)]
@@ -38,102 +34,73 @@ impl SpiroBuilder {
         Self::new()
     }
 
-    pub fn corner<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::Corner))?;
-        Ok(this)
-    }
-    pub fn g4<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::G4))?;
+    pub fn corner(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::Corner);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn g2<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::G2))?;
+    pub fn g4(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::G4);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn left<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::Left))?;
+    pub fn g2(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::G2);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn right<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::Right))?;
+    pub fn left(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::Left);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn anchor<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::Anchor))?;
+    pub fn right(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::Right);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn handle<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::Handle))?;
+    pub fn anchor(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::Anchor);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn end<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::End))?;
+    pub fn handle(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::Handle);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn open<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::Open))?;
+    pub fn end(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::End);
+        drop(this_);
         Ok(this)
     }
 
-    pub fn end_open<'js>(
-        this: ChainSpiroBuilder<'js>,
-        cx: Ctx<'js>,
-        x: f64,
-        y: f64,
-    ) -> rquickjs::Result<ChainSpiroBuilder<'js>> {
-        this.with_mut(&cx, |mut_this| mut_this.push_pt(x, y, SpiroCpTy::EndOpen))?;
+    pub fn open(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::Open);
+        drop(this_);
+        Ok(this)
+    }
+
+    pub fn end_open(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        let mut this_ = this.borrow_mut();
+        this_.push_pt(x, y, SpiroCpTy::EndOpen);
+        drop(this_);
         Ok(this)
     }
 }
