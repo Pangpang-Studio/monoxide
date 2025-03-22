@@ -350,6 +350,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "monoxide-curves"
+version = "0.1.0"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "monoxide-script"
 version = "0.1.0"
 dependencies = [
@@ -366,6 +373,7 @@ dependencies = [
  "bytes",
  "fixed",
  "indexmap 2.7.1",
+ "monoxide-curves",
  "num-traits",
  "rust_decimal",
  "thiserror 2.0.11",

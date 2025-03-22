@@ -31,10 +31,16 @@ module_name_repetitions = "allow"
 wildcard_imports = "allow"
 
 [workspace]
-members = [".", "crates/monoxide-script", "crates/monoxide-ttf"]
+members = [
+    ".",
+    "crates/monoxide-curves",
+    "crates/monoxide-script",
+    "crates/monoxide-ttf",
+]
 
 [workspace.dependencies]
 # Monoxide itself
+monoxide-curves = { path = "crates/monoxide-curves" }
 monoxide-script = { path = "crates/monoxide-script" }
 monoxide-ttf = { path = "crates/monoxide-ttf" }
 monoxide = { path = "." }

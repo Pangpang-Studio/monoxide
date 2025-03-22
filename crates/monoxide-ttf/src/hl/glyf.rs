@@ -1,13 +1,12 @@
 //! High-level structures to generate glyph data.
 
-use crate::{
-    curve::QuadBezier,
-    model::{
-        fword,
-        glyf::{
-            simple::{Coord, FlagOrRepeat, OutlineFlag, SimpleGlyph, SimpleGlyphVerifyError},
-            GlyphCommon,
-        },
+use monoxide_curves::QuadBezier;
+
+use crate::model::{
+    fword,
+    glyf::{
+        simple::{Coord, FlagOrRepeat, OutlineFlag, SimpleGlyph, SimpleGlyphVerifyError},
+        GlyphCommon,
     },
 };
 

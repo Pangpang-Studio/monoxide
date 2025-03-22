@@ -2,9 +2,10 @@
 pub mod convert;
 pub mod cube;
 pub mod quad;
+pub use cube::{CubicBezier, CubicSegment};
 pub use quad::{QuadBezier, QuadSegment};
 
-use num_traits::{real::Real, Num};
+use num_traits::{Num, real::Real};
 
 /// Represents a point in space.
 pub trait Point: PartialEq {
