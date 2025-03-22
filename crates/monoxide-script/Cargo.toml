@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+monoxide-curves.workspace = true
 monoxide-ttf.workspace = true
 rquickjs.workspace = true
 spiro.workspace = true

@@ -361,6 +361,7 @@ dependencies = [
 name = "monoxide-script"
 version = "0.1.0"
 dependencies = [
+ "monoxide-curves",
  "monoxide-ttf",
  "rquickjs",
  "spiro",
