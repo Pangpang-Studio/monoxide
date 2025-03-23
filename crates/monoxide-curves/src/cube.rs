@@ -65,6 +65,10 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
         CubicBezierBuilder::new(start)
     }
 
+    pub fn segment_count(&self) -> usize {
+        self.segments.len()
+    }
+
     pub fn segment(&self, idx: usize) -> Option<(P, CubicSegment<P>)> {
         if idx >= self.segments.len() {
             return None;
@@ -147,6 +151,10 @@ impl<P: Copy> CubicBezierBuilder<P> {
     pub fn close(&mut self) -> &mut Self {
         self.bezier.closed = true;
         self
+    }
+
+    pub fn segment_count_so_far(&self) -> usize {
+        self.bezier.segments.len()
     }
 
     pub fn build(self) -> CubicBezier<P> {
