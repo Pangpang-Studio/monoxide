@@ -1,7 +1,9 @@
 //! Operations and types related to Bezier curves.
 pub mod convert;
 pub mod cube;
+pub mod point;
 pub mod quad;
+pub mod stroke;
 pub use cube::{CubicBezier, CubicSegment};
 pub use quad::{QuadBezier, QuadSegment};
 
