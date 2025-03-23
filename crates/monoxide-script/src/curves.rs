@@ -1,4 +1,4 @@
-use rquickjs::Class;
+use rquickjs::{prelude::*, Class};
 use spiro::{SpiroCP, SpiroCpTy};
 
 #[rquickjs::class]
@@ -34,73 +34,69 @@ impl SpiroBuilder {
         Self::new()
     }
 
-    pub fn corner(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::Corner);
-        drop(this_);
-        Ok(this)
+    pub fn corner(
+        this: This<Class<'_, Self>>,
+        x: f64,
+        y: f64,
+    ) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::Corner);
+        Ok(this.0)
     }
 
-    pub fn g4(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::G4);
-        drop(this_);
-        Ok(this)
+    pub fn g4(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::G4);
+        Ok(this.0)
     }
 
-    pub fn g2(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::G2);
-        drop(this_);
-        Ok(this)
+    pub fn g2(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::G2);
+        Ok(this.0)
     }
 
-    pub fn flat(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::Left);
-        drop(this_);
-        Ok(this)
+    pub fn flat(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::Left);
+        Ok(this.0)
     }
 
-    pub fn curl(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::Right);
-        drop(this_);
-        Ok(this)
+    pub fn curl(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::Right);
+        Ok(this.0)
     }
 
-    pub fn anchor(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::Anchor);
-        drop(this_);
-        Ok(this)
+    pub fn anchor(
+        this: This<Class<'_, Self>>,
+        x: f64,
+        y: f64,
+    ) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::Anchor);
+        Ok(this.0)
     }
 
-    pub fn handle(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::Handle);
-        drop(this_);
-        Ok(this)
+    pub fn handle(
+        this: This<Class<'_, Self>>,
+        x: f64,
+        y: f64,
+    ) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::Handle);
+        Ok(this.0)
     }
 
-    pub fn end(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::End);
-        drop(this_);
-        Ok(this)
+    pub fn end(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::End);
+        Ok(this.0)
     }
 
-    pub fn open(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::Open);
-        drop(this_);
-        Ok(this)
+    pub fn open(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::Open);
+        Ok(this.0)
     }
 
-    pub fn end_open(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        let mut this_ = this.borrow_mut();
-        this_.push_pt(x, y, SpiroCpTy::EndOpen);
-        drop(this_);
-        Ok(this)
+    pub fn end_open(
+        this: This<Class<'_, Self>>,
+        x: f64,
+        y: f64,
+    ) -> rquickjs::Result<Class<'_, Self>> {
+        this.borrow_mut().push_pt(x, y, SpiroCpTy::EndOpen);
+        Ok(this.0)
     }
 }
