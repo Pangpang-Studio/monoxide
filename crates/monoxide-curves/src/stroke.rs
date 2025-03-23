@@ -42,6 +42,65 @@ fn is_point_curved(ty: SpiroCpTy) -> bool {
     )
 }
 
+/// Stroke a spiro curve. Returns a single spiro curve representing the stroke.
+/// The curve might contain two separate segments if the input curve is closed.
+///
+/// The result should be fed into another pass removing self-loops.
+pub fn stroke_spiro(
+    curve: &[SpiroCP],
+    width: f64,
+    tangent_override: HashMap<usize, Tangent>,
+) -> Vec<SpiroCP> {
+    let (left, right) = stroke_spiro_raw(curve, width, tangent_override);
+
+    // Anyway, we should reverse the right curve first.
+    let right = {
+        let mut right = right;
+        right.reverse();
+        for cp in &mut right {
+            *cp = reverse_spiro_point(*cp);
+        }
+        right
+    };
+
+    // Both should be either:
+    //
+    // - [Open, ..., EndOpen], generated from an open curve. This way, we need to
+    //   replace all `Open` and `EndOpen` with `Corner`, except the first one
+    //   which should be `End`.
+    //
+    // - [End, ...], Generated from a closed curve. In this case, the two curves
+    //   are simply concatenated (the right one reversed because we need to
+    //   decrease the winding number).
+    match curve[0].ty {
+        SpiroCpTy::Open => {
+            let mut result = left;
+            let mut right = right;
+            assert!(matches!(result[0].ty, SpiroCpTy::Open));
+            result[0].ty = SpiroCpTy::End;
+            // Rewrite the last point
+            assert!(matches!(result.last().unwrap().ty, SpiroCpTy::EndOpen));
+            result.last_mut().unwrap().ty = SpiroCpTy::Corner;
+            // and those in the right curve
+            assert!(matches!(right[0].ty, SpiroCpTy::Open)); // remember we have reversed it
+            right[0].ty = SpiroCpTy::Corner;
+            assert!(matches!(right.last().unwrap().ty, SpiroCpTy::EndOpen));
+            right.last_mut().unwrap().ty = SpiroCpTy::Corner;
+
+            result.extend(right);
+            result
+        }
+
+        SpiroCpTy::End => {
+            let mut result = left;
+            result.extend(right);
+            result
+        }
+
+        x => panic!("Curve should start with Open or End, found {:?}", x),
+    }
+}
+
 // TODO: allow a variable width, and position within the stroke.
 /// Stroke a spiro curve. Returns two spiro curves of the inner and outer
 /// boundaries of the stroke. The spiro curve should be _one_ continuous curve,
@@ -298,4 +357,16 @@ fn make_line_join(
     let join_right = in_right + k1_right * in_tangent;
 
     (join_left, join_right)
+}
+
+fn reverse_spiro_point(cp: SpiroCP) -> SpiroCP {
+    let ty = match cp.ty {
+        SpiroCpTy::Left => SpiroCpTy::Right,
+        SpiroCpTy::Right => SpiroCpTy::Left,
+        SpiroCpTy::EndOpen => SpiroCpTy::Open,
+        SpiroCpTy::Open => SpiroCpTy::EndOpen,
+
+        x => x,
+    };
+    SpiroCP { ty, ..cp }
 }
