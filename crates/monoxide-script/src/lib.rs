@@ -23,8 +23,8 @@ new SpiroBuilder()
     .corner(0, 0)
     .g4(1, 1)
     .g2(2, 2)
-    .left(3, 3)
-    .right(4, 4)
+    .flat(3, 3)
+    .curl(4, 4)
     .anchor(5, 5)
             
             ",
