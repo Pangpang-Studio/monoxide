@@ -55,14 +55,14 @@ impl SpiroBuilder {
         Ok(this)
     }
 
-    pub fn left(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+    pub fn flat(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
         let mut this_ = this.borrow_mut();
         this_.push_pt(x, y, SpiroCpTy::Left);
         drop(this_);
         Ok(this)
     }
 
-    pub fn right(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
+    pub fn curl(this: Class<'_, Self>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
         let mut this_ = this.borrow_mut();
         this_.push_pt(x, y, SpiroCpTy::Right);
         drop(this_);
