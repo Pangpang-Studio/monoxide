@@ -28,6 +28,7 @@ impl<P: Copy> CubicSegment<P> {
     }
 }
 
+#[deprecated = "Use flo_curves::bezier::CubicBezier instead"]
 #[derive(Clone, Debug, PartialEq)]
 pub struct CubicBezier<P> {
     pub start: P,
