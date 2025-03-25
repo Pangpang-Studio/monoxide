@@ -1,3 +1,5 @@
+mod compat;
+
 use num_traits::Num;
 
 use super::Point;
@@ -28,7 +30,9 @@ impl<P: Copy> CubicSegment<P> {
     }
 }
 
-#[deprecated = "Use flo_curves::bezier::CubicBezier instead"]
+/// Represents a cubic bezier path. This type implements
+/// [`flo_curves::bezier::path::BezierPath`], so it can be used with the various
+/// functions provided by [flo_curves].
 #[derive(Clone, Debug, PartialEq)]
 pub struct CubicBezier<P> {
     pub start: P,
