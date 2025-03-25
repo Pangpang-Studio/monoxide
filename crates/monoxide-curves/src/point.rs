@@ -123,3 +123,47 @@ impl From<&spiro::SpiroCP> for Point2D {
         Point2D::new(spiro_cp.x, spiro_cp.y)
     }
 }
+
+impl flo_curves::Coordinate for Point2D {
+    fn from_components(components: &[f64]) -> Self {
+        Point2D::new(components[0], components[1])
+    }
+
+    fn origin() -> Self {
+        Point2D::new(0.0, 0.0)
+    }
+
+    fn len() -> usize {
+        2
+    }
+
+    fn get(&self, index: usize) -> f64 {
+        match index {
+            0 => self.x,
+            1 => self.y,
+            _ => panic!("Invalid index"),
+        }
+    }
+
+    fn from_biggest_components(p1: Self, p2: Self) -> Self {
+        let x = p1.x.max(p2.x);
+        let y = p1.y.max(p2.y);
+        Point2D::new(x, y)
+    }
+
+    fn from_smallest_components(p1: Self, p2: Self) -> Self {
+        let x = p1.x.min(p2.x);
+        let y = p1.y.min(p2.y);
+        Point2D::new(x, y)
+    }
+}
+
+impl flo_curves::Coordinate2D for Point2D {
+    fn x(&self) -> f64 {
+        self.x
+    }
+
+    fn y(&self) -> f64 {
+        self.y
+    }
+}
