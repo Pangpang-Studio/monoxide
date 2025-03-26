@@ -1,5 +1,6 @@
 use rquickjs::{Class, Ctx};
 
+mod ast;
 mod curves;
 
 pub fn import_globals(cx: &Ctx<'_>) {
