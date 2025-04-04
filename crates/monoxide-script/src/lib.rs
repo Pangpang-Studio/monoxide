@@ -1,11 +1,8 @@
 use rquickjs::{Class, Ctx};
 
-mod ast;
-mod curves;
-
-pub fn import_globals(cx: &Ctx<'_>) {
-    Class::<curves::SpiroBuilder>::define(&cx.globals()).unwrap();
-}
+pub mod ast;
+mod eval;
+mod js;
 
 #[cfg(test)]
 mod test {
@@ -16,7 +13,7 @@ mod test {
         let rt = Runtime::new().unwrap();
         let cx = Context::full(&rt).unwrap();
         cx.with(|cx| {
-            super::import_globals(&cx);
+            super::js::import_globals(&cx);
 
             cx.eval::<(), _>(
                 r"

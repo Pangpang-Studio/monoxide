@@ -1,7 +1,12 @@
 use std::{collections::BTreeMap, rc::Rc};
 
 use monoxide_curves::{point::Point2D, CubicBezier, SpiroCurve};
+use rquickjs::{
+    class::{Trace, Tracer},
+    JsLifetime,
+};
 
+#[rquickjs::class]
 #[derive(Debug, Default, Clone)]
 pub struct FontContext {
     pub glyphs: Vec<GlyphEntry>,
@@ -15,6 +20,16 @@ impl FontContext {
 
     pub fn get_glyph(&self, id: GlyphId) -> Option<&GlyphEntry> {
         self.glyphs.get(id.0)
+    }
+}
+
+unsafe impl JsLifetime<'_> for FontContext {
+    type Changed<'to> = Self;
+}
+
+impl Trace<'_> for FontContext {
+    fn trace(&self, _cx: Tracer) {
+        // No need to trace, as we don't have any JS references in this struct.
     }
 }
 
@@ -38,6 +53,12 @@ pub enum OutlineExpr {
     Spiro(SpiroCurve),
     Stroked(Rc<OutlineExpr>),
     // TODO: transformed, etc.
+}
+
+impl Default for OutlineExpr {
+    fn default() -> Self {
+        OutlineExpr::Bezier(CubicBezier::builder(Point2D::new(0., 0.)).build())
+    }
 }
 
 #[derive(Debug, Clone, Default)]
