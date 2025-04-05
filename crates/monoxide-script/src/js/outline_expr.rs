@@ -7,7 +7,7 @@ use crate::ast::OutlineExpr;
 #[derive(JsLifetime)]
 #[rquickjs::class]
 pub struct OutlineExprObject {
-    item: Rc<OutlineExpr>,
+    pub item: Rc<OutlineExpr>,
 }
 
 impl<'js> Trace<'js> for OutlineExprObject {
