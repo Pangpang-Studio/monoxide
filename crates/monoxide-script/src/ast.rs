@@ -21,6 +21,16 @@ impl FontContext {
     pub fn get_glyph(&self, id: GlyphId) -> Option<&GlyphEntry> {
         self.glyphs.get(id.0)
     }
+
+    pub fn add_glyph(&mut self, v: GlyphEntry) -> GlyphId {
+        let id = self.glyphs.len();
+        self.glyphs.push(v);
+        GlyphId(id)
+    }
+
+    pub fn assign_char(&mut self, glyph_id: GlyphId, char: char) {
+        self.cmap.insert(char, glyph_id);
+    }
 }
 
 unsafe impl JsLifetime<'_> for FontContext {
@@ -44,7 +54,7 @@ pub enum GlyphEntry {
 
 #[derive(Debug, Clone, Default)]
 pub struct SimpleGlyph {
-    pub outlines: Vec<OutlineExpr>,
+    pub outlines: Vec<Rc<OutlineExpr>>,
 }
 
 #[derive(Debug, Clone)]

@@ -1,11 +1,13 @@
 use rquickjs::{Class, Ctx, Object};
 
 mod bezier_builder;
+mod glyph_factory;
 mod outline_expr;
 mod spiro_builder;
 
-pub fn import_globals(global_object: Object<'_>) -> rquickjs::Result<()> {
-    Class::<spiro_builder::SpiroBuilder>::define(&global_object)?;
+pub fn import_globals<'js>(cx: Ctx<'js>, global_object: Object<'js>) -> rquickjs::Result<()> {
+    let factory = glyph_factory::GlyphFactory::new(cx)?;
+    global_object.set("glyph", factory)?;
     global_object.set("bezier", js_declare_bezier)?;
     global_object.set("spiro", js_declare_spiro)?;
 
