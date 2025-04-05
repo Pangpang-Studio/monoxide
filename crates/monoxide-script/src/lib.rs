@@ -1,8 +1,6 @@
-use rquickjs::{Class, Ctx};
-
 pub mod ast;
 mod eval;
-mod js;
+pub mod js;
 
 #[cfg(test)]
 mod test {
@@ -13,7 +11,7 @@ mod test {
         let rt = Runtime::new().unwrap();
         let cx = Context::full(&rt).unwrap();
         cx.with(|cx| {
-            super::js::import_globals(&cx);
+            super::js::import_globals(cx.globals()).expect("Failed to import globals");
 
             cx.eval::<(), _>(
                 r"
@@ -27,7 +25,7 @@ new SpiroBuilder()
             
             ",
             )
-            .map_err(|e| cx.catch())
+            .map_err(|_| cx.catch())
             .unwrap();
         });
     }

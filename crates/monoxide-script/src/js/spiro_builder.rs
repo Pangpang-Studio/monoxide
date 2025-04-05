@@ -1,6 +1,10 @@
 use rquickjs::{prelude::*, Class};
 use spiro::{SpiroCP, SpiroCpTy};
 
+use crate::ast::OutlineExpr;
+
+use super::outline_expr::OutlineExprObject;
+
 #[rquickjs::class]
 #[derive(rquickjs::JsLifetime)]
 pub struct SpiroBuilder {
@@ -28,6 +32,7 @@ impl Default for SpiroBuilder {
 }
 
 #[rquickjs::methods]
+#[qjs(rename_all = "camelCase")]
 impl SpiroBuilder {
     #[qjs(constructor)]
     fn ctor() -> Self {
@@ -98,5 +103,15 @@ impl SpiroBuilder {
     ) -> rquickjs::Result<Class<'_, Self>> {
         this.borrow_mut().push_pt(x, y, SpiroCpTy::EndOpen);
         Ok(this.0)
+    }
+
+    pub fn build<'js>(
+        cx: Ctx<'js>,
+        this_: This<Class<'js, Self>>,
+    ) -> rquickjs::Result<Class<'js, OutlineExprObject>> {
+        let mut this = this_.borrow_mut();
+        let expr = OutlineExpr::Spiro(std::mem::take(&mut this.points));
+        drop(this);
+        Class::instance(cx, OutlineExprObject::new(expr))
     }
 }
