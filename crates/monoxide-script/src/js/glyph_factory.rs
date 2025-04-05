@@ -4,7 +4,7 @@ use crate::ast::{FontContext, SimpleGlyph};
 
 use super::outline_expr::OutlineExprObject;
 
-#[derive(JsLifetime)]
+#[derive(JsLifetime, Debug)]
 #[rquickjs::class]
 pub struct GlyphFactory {
     value: FontContext,
@@ -26,6 +26,7 @@ impl GlyphFactory {
 }
 
 #[rquickjs::methods]
+#[qjs(rename_all = "camelCase")]
 impl GlyphFactory {
     pub fn simple<'js>(
         this_: This<Class<'js, Self>>,
@@ -48,6 +49,27 @@ impl GlyphFactory {
             .add_glyph(crate::ast::GlyphEntry::Simple(builder));
 
         Ok(Value::new_int(cx, id.0 as i32))
+    }
+
+    pub fn assign_char<'js>(
+        this_: This<Class<'js, Self>>,
+        v: i32,
+        ch: String,
+        cx: Ctx<'js>,
+    ) -> rquickjs::Result<()> {
+        let mut this = this_.borrow_mut();
+        let id = crate::ast::GlyphId(v as usize);
+        if ch.chars().count() != 1 {
+            return Err(rquickjs::Exception::throw_message(
+                &cx,
+                "Need exactly one character in assign_char",
+            ));
+        }
+        let ch = ch.chars().next().unwrap();
+
+        this.value.assign_char(id, ch);
+
+        Ok(())
     }
 }
 

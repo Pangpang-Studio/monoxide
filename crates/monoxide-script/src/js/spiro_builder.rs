@@ -1,4 +1,4 @@
-use rquickjs::{prelude::*, Class};
+use rquickjs::{class::JsClass, prelude::*, Class};
 use spiro::{SpiroCP, SpiroCpTy};
 
 use crate::ast::OutlineExpr;
@@ -16,8 +16,8 @@ impl<'js> rquickjs::class::Trace<'js> for SpiroBuilder {
 }
 
 impl SpiroBuilder {
-    pub fn new() -> Self {
-        Self { points: Vec::new() }
+    pub fn new(cx: Ctx<'_>) -> rquickjs::Result<Class<'_, SpiroBuilder>> {
+        Class::instance(cx, SpiroBuilder { points: vec![] })
     }
 
     pub fn push_pt(&mut self, x: f64, y: f64, kind: SpiroCpTy) {
@@ -25,20 +25,9 @@ impl SpiroBuilder {
     }
 }
 
-impl Default for SpiroBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 #[rquickjs::methods]
 #[qjs(rename_all = "camelCase")]
 impl SpiroBuilder {
-    #[qjs(constructor)]
-    fn ctor() -> Self {
-        Self::new()
-    }
-
     pub fn corner(
         this: This<Class<'_, Self>>,
         x: f64,
