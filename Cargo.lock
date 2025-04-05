@@ -571,6 +571,7 @@ dependencies = [
  "monoxide-curves",
  "monoxide-ttf",
  "rquickjs",
+ "serde",
  "spiro",
 ]
 
