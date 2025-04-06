@@ -226,10 +226,6 @@ glyph.assignChar(g, 'c')
         anyhow::Ok(ud.take())
     })?;
 
-    let mut glyphs = fcx
-        .cmap
-        .iter()
-        .map(|(ch, idx)| (ch, fcx.get_glyph(*idx).expect("glyph not found")));
     let playground_dir = PathBuf::from_iter([
         env!("CARGO_MANIFEST_DIR"),
         "..", // "crates"
@@ -249,6 +245,11 @@ glyph.assignChar(g, 'c')
     // Generate individual glyph pages
     let scale = Scale::default();
     let mut glyph_links = String::new();
+
+    let glyphs = fcx
+        .cmap
+        .iter()
+        .map(|(ch, idx)| (ch, fcx.get_glyph(*idx).expect("glyph not found")));
     for (&ch, glyph) in glyphs {
         let buf = String::new();
         let svg = {
@@ -268,6 +269,7 @@ glyph.assignChar(g, 'c')
                 include_str!("../assets/glyph.html.rsstr"),
                 view_box = view_box,
                 svg = svg,
+                char = ch,
             ),
         )?;
 
