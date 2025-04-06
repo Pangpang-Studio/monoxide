@@ -1,32 +1,50 @@
 <!doctype html>
 <html>
+  <head>
+    <style>
+      body {{
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+      }}
+      .center {{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }}
+      svg {{
+        height: min(80vh, 80vw);
+        width: min(80vh, 80vw);
+        border: dashed;
+      }}
+      h1 {{
+        margin: 0 0 2rem;
+        font-size: 3rem;
+      }}
+      a {{
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        color: #282828;
+        text-decoration: none;
+      }}
+      a:hover {{
+        text-decoration: underline;
+      }}
+    </style>
+  </head>
   <body>
+    <a href="../index.html">Index</a>
     <div id="render" class="center">
+      <h1>{char}</h1>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="{view_box}">
         <path
           d="{svg}"
           stroke-width=0.5%
           style="fill: none; stroke: #282828"
         />
-        <defs>
-          <style>
-            svg {{
-              height: min(80vh, 80vw);
-              width: min(80vh, 80vw);
-              border: dashed;
-            }}
-            .center {{
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 100vh;
-              margin: 0;
-            }}
-            body {{
-              margin: 0;
-            }}
-          </style>
-        </defs>
       </svg>
     </div>
   </body>
