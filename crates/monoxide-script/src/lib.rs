@@ -6,10 +6,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FontParamSettings {
-    width: f64,
-    x_height: f64,
-    descender: f64,
-    cap_height: f64,
+    pub width: f64,
+    pub x_height: f64,
+    pub descender: f64,
+    pub cap_height: f64,
 }
 
 #[cfg(test)]

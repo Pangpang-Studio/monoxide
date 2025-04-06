@@ -4,5 +4,5 @@
 
 ```console
 > pnpx vite
-> cargo run > index.html
+> cargo run -p=monoxide-playground > index.html
 ```
