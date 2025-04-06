@@ -230,20 +230,6 @@ glyph.assignChar(g, 'c')
         .cmap
         .iter()
         .map(|(ch, idx)| (ch, fcx.get_glyph(*idx).expect("glyph not found")));
-    // TODO: Implement glyph index page.
-    let (_, glyph) = glyphs.next().unwrap();
-
-    let scale = Scale::default();
-    let buf = String::new();
-    let svg = {
-        let mut pen = SvgPen { buf, scale };
-        pen.draw_glyph(glyph)?;
-        pen.finish()
-    };
-
-    let mut view_box = ViewBox::new(scale);
-    view_box.merge_glyph(glyph)?;
-
     let playground_dir = PathBuf::from_iter([
         env!("CARGO_MANIFEST_DIR"),
         "..", // "crates"
@@ -256,13 +242,48 @@ glyph.assignChar(g, 'c')
         .canonicalize()
         .map_or(Cow::Borrowed(&playground_dir), Cow::Owned);
 
+    // Create playground and char directories
     fs::create_dir_all(&*playground_dir)?;
+    fs::create_dir_all(playground_dir.join("char"))?;
+
+    // Generate individual glyph pages
+    let scale = Scale::default();
+    let mut glyph_links = String::new();
+    for (&ch, glyph) in glyphs {
+        let buf = String::new();
+        let svg = {
+            let mut pen = SvgPen { buf, scale };
+            pen.draw_glyph(glyph)?;
+            pen.finish()
+        };
+
+        let mut view_box = ViewBox::new(scale);
+        view_box.merge_glyph(glyph)?;
+
+        // Create individual glyph page
+        let ord = ch as u32;
+        fs::write(
+            playground_dir.join(format!("char/{ord}.html")),
+            format!(
+                include_str!("../assets/glyph.html.rsstr"),
+                view_box = view_box,
+                svg = svg,
+            ),
+        )?;
+
+        // Add link to index
+        writeln!(
+            glyph_links,
+            r#"<a href="char/{ord}.html" class="glyph-link">{ch}</a>"#,
+        )?;
+    }
+
+    // Generate index page
     fs::write(
         playground_dir.join("index.html"),
         format!(
-            include_str!("../assets/glyph.html.rsstr"),
-            view_box = view_box,
-            svg = svg,
+            include_str!("../assets/index.html.rsstr"),
+            glyph_links = glyph_links,
         ),
     )?;
     println!("{}", playground_dir.display());
