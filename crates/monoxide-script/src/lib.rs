@@ -62,16 +62,14 @@ mod test {
 
             cx.globals().set("print", js_print).unwrap();
 
-            let v: () = cx
-                .eval(
-                    r"
-// import { bezier, spiro, settings, glyph } from 'monoxide'
+            let m = Module::evaluate(
+                cx.clone(),
+                "font",
+                r"
+import { bezier, spiro, settings, glyph } from 'monoxide'
 
-print(glyph)
-print(glyph.assignChar)
 
 let g = glyph.simple(b => {
-print(b.add)
     b.add(
         bezier(0, 0)
             .lineTo(1, 0)
@@ -90,12 +88,15 @@ glyph.assignChar(g, 'c')
 //     .anchor(5, 5)
 //     .build()
             ",
-                )
-                .map_err(|_| cx.catch())
-                .unwrap();
+            )
+            .map_err(|_| cx.catch())
+            .unwrap();
+            let _: () = m.finish().unwrap();
 
             let ud = cx.userdata::<ContextAttachment>().unwrap();
-            dbg!(&*ud);
+            let font = ud.take();
+            assert_eq!(font.glyphs.len(), 1);
+            assert_eq!(font.cmap.len(), 1);
         });
     }
 }

@@ -1,6 +1,6 @@
 use rquickjs::{Class, Ctx, JsLifetime, Object};
 
-use crate::FontParamSettings;
+use crate::{ast::FontContext, FontParamSettings};
 
 mod bezier_builder;
 mod glyph_factory;
@@ -55,6 +55,11 @@ impl<'js> ContextAttachment<'js> {
             font_params: params,
             factory,
         })
+    }
+
+    pub fn take(&self) -> FontContext {
+        let mut fac = self.factory.borrow_mut();
+        fac.take()
     }
 }
 
