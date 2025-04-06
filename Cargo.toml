@@ -7,9 +7,6 @@ repository = "https://github.com/rami3l/monoxide"
 readme = "README.md"
 
 [dependencies]
-anyhow = "1.0.95"
-kurbo = "0.11.1"
-norad = { version = "0.14.2", features = ["kurbo"] }
 
 [build-dependencies]
 
@@ -34,6 +31,7 @@ wildcard_imports = "allow"
 members = [
     ".",
     "crates/monoxide-curves",
+    "crates/monoxide-playground",
     "crates/monoxide-script",
     "crates/monoxide-ttf",
 ]
