@@ -61,7 +61,7 @@ pub struct SimpleGlyph {
 pub enum OutlineExpr {
     Bezier(CubicBezier<Point2D>),
     Spiro(SpiroCurve),
-    Stroked(Rc<OutlineExpr>),
+    Stroked(Rc<OutlineExpr>, f64),
     // TODO: transformed, etc.
 }
 
