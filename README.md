@@ -3,6 +3,6 @@
 ## Getting Started
 
 ```console
-> pnpx vite
-> cargo run -p=monoxide-playground > index.html
+> pnpx vite $(cargo run -p=monoxide-playground)
+> cargo run -p=monoxide-playground
 ```
