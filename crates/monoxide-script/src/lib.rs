@@ -1,5 +1,5 @@
 pub mod ast;
-mod eval;
+pub mod eval;
 pub mod js;
 
 use serde::{Deserialize, Serialize};
