@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <body>
+    <div id="render" class="center">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="{view_box}">
+        <path
+          d="{svg}"
+          stroke-width=0.5%
+          style="fill: none; stroke: #282828"
+        />
+        <defs>
+          <style>
+            svg {{
+              height: min(80vh, 80vw);
+              width: min(80vh, 80vw);
+              border: dashed;
+            }}
+            .center {{
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+            }}
+            body {{
+              margin: 0;
+            }}
+          </style>
+        </defs>
+      </svg>
+    </div>
+  </body>
+</html>

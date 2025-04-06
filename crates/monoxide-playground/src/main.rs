@@ -1,6 +1,9 @@
 use std::{
+    borrow::Cow,
     fmt::{self, Write},
+    fs,
     ops::Range,
+    path::PathBuf,
 };
 
 use anyhow::{Context as _, Result, anyhow};
@@ -241,41 +244,27 @@ glyph.assignChar(g, 'c')
     let mut view_box = ViewBox::new(scale);
     view_box.merge_glyph(glyph)?;
 
-    println!(
-        r#"<!doctype html>
-<html>
-  <body>
-    <div id="render" class="center">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="{view_box}">
-        <path
-          d="{svg}"
-          stroke-width=0.5%
-          style="fill: none; stroke: #282828"
-        />
-        <defs>
-          <style>
-            svg {{
-              height: min(80vh, 80vw);
-              width: min(80vh, 80vw);
-              border: dashed;
-            }}
-            .center {{
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 100vh;
-              margin: 0;
-            }}
-            body {{
-              margin: 0;
-            }}
-          </style>
-        </defs>
-      </svg>
-    </div>
-  </body>
-</html>
-    "#
-    );
+    let playground_dir = PathBuf::from_iter([
+        env!("CARGO_MANIFEST_DIR"),
+        "..", // "crates"
+        "..", // "monoxide"
+        "target",
+        "monoxide",
+        "playground",
+    ]);
+    let playground_dir = playground_dir
+        .canonicalize()
+        .map_or(Cow::Borrowed(&playground_dir), Cow::Owned);
+
+    fs::create_dir_all(&*playground_dir)?;
+    fs::write(
+        playground_dir.join("index.html"),
+        format!(
+            include_str!("../assets/glyph.html.rsstr"),
+            view_box = view_box,
+            svg = svg,
+        ),
+    )?;
+    println!("{}", playground_dir.display());
     Ok(())
 }
