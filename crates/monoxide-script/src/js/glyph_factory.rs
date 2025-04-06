@@ -23,6 +23,10 @@ impl GlyphFactory {
             },
         )
     }
+
+    pub fn take(&mut self) -> FontContext {
+        std::mem::take(&mut self.value)
+    }
 }
 
 #[rquickjs::methods]
