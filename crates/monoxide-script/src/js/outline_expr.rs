@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use rquickjs::{class::Trace, JsLifetime};
+use rquickjs::{class::Trace, prelude::This, Class, Ctx, JsLifetime};
 
 use crate::ast::OutlineExpr;
 
@@ -19,5 +19,33 @@ impl OutlineExprObject {
         Self {
             item: Rc::new(expr),
         }
+    }
+}
+
+#[rquickjs::methods]
+impl OutlineExprObject {
+    pub fn stroked<'js>(
+        this_: This<Class<'js, Self>>,
+        width: f64,
+        cx: Ctx<'js>,
+    ) -> rquickjs::Result<Class<'js, Self>> {
+        if width <= 0. {
+            return Err(rquickjs::Exception::throw_message(
+                &cx,
+                "Cannot stroke with a width <= 0",
+            ));
+        }
+        let outline = this_.borrow().item.clone();
+        if !matches!(&*outline, OutlineExpr::Spiro(..)) {
+            return Err(rquickjs::Exception::throw_message(
+                &cx,
+                "Stroke currently only supports Spiro outlines",
+            ));
+        }
+
+        Class::instance(
+            cx,
+            OutlineExprObject::new(OutlineExpr::Stroked(outline, width)),
+        )
     }
 }
