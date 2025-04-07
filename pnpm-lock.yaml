@@ -6,4 +6,10 @@ settings:
 
 importers:
 
+  font:
+    dependencies:
+      monoxide:
+        specifier: file:../js-pkgs/monoxide
+        version: link:../js-pkgs/monoxide
+
   js-pkgs/monoxide: {}

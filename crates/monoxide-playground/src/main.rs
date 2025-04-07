@@ -8,7 +8,7 @@ use std::{
     process::Stdio,
 };
 
-use anyhow::{Context as _, Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use clap::Parser;
 use monoxide_script::{
     FontParamSettings,
@@ -16,7 +16,7 @@ use monoxide_script::{
 };
 use notify::{RecursiveMode, Watcher};
 use rquickjs::{
-    CatchResultExt, Context, Module, Runtime,
+    CatchResultExt, Module, Runtime,
     loader::{BuiltinResolver, ModuleLoader},
 };
 use tokio::process::Command;
@@ -29,10 +29,26 @@ struct Args {
     /// Optional serve mode with custom command
     #[arg(long)]
     serve: Option<Option<String>>,
+
+    /// The source directory to scan
+    source: PathBuf,
 }
 
 /// Render glyphs to HTML files in the playground directory
-fn render_glyphs(cx: &Context, playground_dir: &Path) -> Result<()> {
+fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Path) -> Result<()> {
+    // Glob all js files in source_dir
+    let mut js_files = vec![];
+    for f in glob::glob(&format!("{}/**/*.js", source_dir.display()))? {
+        let f = f?;
+        if f.components().any(|x| x.as_os_str() == "node_modules") {
+            continue;
+        }
+
+        let contents = fs::read_to_string(&f)?;
+        js_files.push((f, contents));
+    }
+
+    let cx = rquickjs::Context::full(rt).context("Can't create context")?;
     let fcx = cx.with(|cx| {
         let cx_att = ContextAttachment::new(
             cx.clone(),
@@ -46,29 +62,24 @@ fn render_glyphs(cx: &Context, playground_dir: &Path) -> Result<()> {
         .expect("Cannot create attachment");
         cx.store_userdata(cx_att).unwrap();
 
-        insert_globals(cx.clone()).unwrap();
-
-        let m = Module::evaluate(
-            cx.clone(),
-            "font",
-            r"
-import { bezier, spiro, settings, glyph } from 'monoxide'
-
-let g = glyph.simple(b => {
-    b.add(
-        bezier(0.3, 0)
-            .lineTo(0.6, 0)
-            .lineTo(1, settings.width)
-            .lineTo(0.3, 0)
-            .build()
-    )
-})
-glyph.assignChar(g, 'c')
-",
-        )
-        .catch(&cx)
-        .map_err(|e| anyhow!("uncaught JavaScript exception: {e}"))?;
-        m.finish::<()>().expect("failed to finish module");
+        let modules = js_files
+            .into_iter()
+            .map(|(path, source)| {
+                let m = Module::declare(cx.clone(), path.to_string_lossy().into_owned(), source)
+                    .catch(&cx)
+                    .map_err(|e| anyhow::anyhow!(e.to_string()))
+                    .with_context(|| format!("Cannot create module {}", path.display()))?;
+                Ok(m)
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        for it in modules {
+            let (m, p) = it
+                .eval()
+                .catch(&cx)
+                .map_err(|e| anyhow::anyhow!(e.to_string()))
+                .context("Unexpected JS exception")?;
+            p.finish::<()>().expect("failed to finish module");
+        }
 
         let ud = cx
             .userdata::<ContextAttachment>()
@@ -130,7 +141,6 @@ glyph.assignChar(g, 'c')
 async fn main() -> Result<()> {
     let args = Args::parse();
     let rt = Runtime::new()?;
-    let cx = Context::full(&rt)?;
 
     let mut module_resolver = BuiltinResolver::default();
     module_resolver.add_module("monoxide");
@@ -156,7 +166,7 @@ async fn main() -> Result<()> {
     fs::create_dir_all(playground_dir.join("char"))?;
 
     // Initial render
-    render_glyphs(&cx, &playground_dir)?;
+    render_glyphs(&rt, &args.source, &playground_dir)?;
     let Some(serve) = args.serve else {
         println!("{}", playground_dir.display());
         return Ok(());
@@ -169,7 +179,7 @@ async fn main() -> Result<()> {
             _ = tx.blocking_send(());
         }
     })?;
-    watcher.watch(Path::new("js-pkgs"), RecursiveMode::Recursive)?;
+    watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
 
     // Spawn vite process
     let mut serve = match serve {
@@ -181,7 +191,7 @@ async fn main() -> Result<()> {
         }
     };
     let mut child = serve
-        .current_dir(&*playground_dir)
+        .current_dir(dunce::simplified(&playground_dir))
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .spawn()?;
@@ -189,7 +199,7 @@ async fn main() -> Result<()> {
     // Watch for changes and re-render
     loop {
         tokio::select! {
-            _ = rx.recv() => render_glyphs(&cx, &playground_dir)?,
+            _ = rx.recv() => render_glyphs(&rt, &args.source, &playground_dir)?,
             status = child.wait() => {
                 let status = status?;
                 if !status.success() {

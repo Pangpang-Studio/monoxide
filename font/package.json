@@ -1,0 +1,9 @@
+{
+  "name": "monoxide-font",
+  "version": "1.0.0",
+  "description": "JS bindings declaration for monoxide",
+  "author": "",
+  "dependencies": {
+    "monoxide": "file:../js-pkgs/monoxide"
+  }
+}
