@@ -1,30 +1,38 @@
 mod svg;
 
-use std::{borrow::Cow, fmt::Write as _, fs, path::PathBuf};
+use std::{
+    borrow::Cow,
+    fmt::Write as _,
+    fs,
+    path::{Path, PathBuf},
+    process::Stdio,
+};
 
-use anyhow::{Context as _, Result, anyhow};
+use anyhow::{Context as _, Result, anyhow, bail};
+use clap::Parser;
 use monoxide_script::{
     FontParamSettings,
     js::{ContextAttachment, MonoxideModule, insert_globals},
 };
+use notify::{RecursiveMode, Watcher};
 use rquickjs::{
     CatchResultExt, Context, Module, Runtime,
     loader::{BuiltinResolver, ModuleLoader},
 };
+use tokio::process::Command;
 
 use crate::svg::{Scale, SvgPen, ViewBox};
 
-fn main() -> Result<()> {
-    let rt = Runtime::new()?;
-    let cx = Context::full(&rt)?;
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    /// Optional serve mode with custom command
+    #[arg(long)]
+    serve: Option<Option<String>>,
+}
 
-    let mut module_resolver = BuiltinResolver::default();
-    module_resolver.add_module("monoxide");
-
-    let mut module_loader = ModuleLoader::default();
-    module_loader.add_module("monoxide", MonoxideModule);
-    rt.set_loader(module_resolver, module_loader);
-
+/// Render glyphs to HTML files in the playground directory
+fn render_glyphs(cx: &Context, playground_dir: &Path) -> Result<()> {
     let fcx = cx.with(|cx| {
         let cx_att = ContextAttachment::new(
             cx.clone(),
@@ -67,22 +75,6 @@ glyph.assignChar(g, 'c')
             .context("failed to retrieve ContextAttachment from Ctx")?;
         anyhow::Ok(ud.take())
     })?;
-
-    let playground_dir = PathBuf::from_iter([
-        env!("CARGO_MANIFEST_DIR"),
-        "..", // "crates"
-        "..", // "monoxide"
-        "target",
-        "monoxide",
-        "playground",
-    ]);
-    let playground_dir = playground_dir
-        .canonicalize()
-        .map_or(Cow::Borrowed(&playground_dir), Cow::Owned);
-
-    // Create playground and char directories
-    fs::create_dir_all(&*playground_dir)?;
-    fs::create_dir_all(playground_dir.join("char"))?;
 
     // Generate individual glyph pages
     let scale = Scale::default();
@@ -130,6 +122,82 @@ glyph.assignChar(g, 'c')
             glyph_links = glyph_links,
         ),
     )?;
-    println!("{}", playground_dir.display());
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Args::parse();
+    let rt = Runtime::new()?;
+    let cx = Context::full(&rt)?;
+
+    let mut module_resolver = BuiltinResolver::default();
+    module_resolver.add_module("monoxide");
+
+    let mut module_loader = ModuleLoader::default();
+    module_loader.add_module("monoxide", MonoxideModule);
+    rt.set_loader(module_resolver, module_loader);
+
+    let playground_dir = PathBuf::from_iter([
+        env!("CARGO_MANIFEST_DIR"),
+        "..", // "crates"
+        "..", // "monoxide"
+        "target",
+        "monoxide",
+        "playground",
+    ]);
+    let playground_dir = playground_dir
+        .canonicalize()
+        .map_or(Cow::Borrowed(&playground_dir), Cow::Owned);
+
+    // Create playground and char directories
+    fs::create_dir_all(&*playground_dir)?;
+    fs::create_dir_all(playground_dir.join("char"))?;
+
+    // Initial render
+    render_glyphs(&cx, &playground_dir)?;
+    let Some(serve) = args.serve else {
+        println!("{}", playground_dir.display());
+        return Ok(());
+    };
+
+    // Set up file watcher
+    let (tx, mut rx) = tokio::sync::mpsc::channel(1);
+    let mut watcher = notify::recommended_watcher(move |res| {
+        if let Ok(_) = res {
+            _ = tx.blocking_send(());
+        }
+    })?;
+    watcher.watch(Path::new("js-pkgs"), RecursiveMode::Recursive)?;
+
+    // Spawn vite process
+    let mut serve = match serve {
+        None => Command::new("vite"),
+        Some(cmd) => {
+            let mut cmd = Command::new(cmd);
+            cmd.arg("vite");
+            cmd
+        }
+    };
+    let mut child = serve
+        .current_dir(&*playground_dir)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()?;
+
+    // Watch for changes and re-render
+    loop {
+        tokio::select! {
+            _ = rx.recv() => render_glyphs(&cx, &playground_dir)?,
+            status = child.wait() => {
+                let status = status?;
+                if !status.success() {
+                    bail!("dev server exited with error {status}");
+                }
+                break;
+            }
+        }
+    }
     Ok(())
 }
