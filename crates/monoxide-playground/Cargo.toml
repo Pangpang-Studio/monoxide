@@ -5,6 +5,9 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.97"
+clap = { version = "4.5.3", features = ["derive"] }
+tokio = { version = "1.36.0", features = ["full"] }
+notify = "6.1.1"
 monoxide-curves.workspace = true
 monoxide-script.workspace = true
 # TODO: Remove this direct dependency.
