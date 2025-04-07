@@ -12,3 +12,5 @@ monoxide-curves.workspace = true
 monoxide-script.workspace = true
 # TODO: Remove this direct dependency.
 rquickjs.workspace = true
+glob.workspace = true
+dunce.workspace = true
