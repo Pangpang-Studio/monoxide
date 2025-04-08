@@ -22,12 +22,14 @@ use crate::svg::{Scale, SvgPen, ViewBox};
 
 #[derive(Parser)]
 #[command(author, version, about)]
-struct Args {
-    /// Optional serve mode with custom command
+struct Playground {
+    /// Optional serve mode with custom command.
+    /// You can use this flag directly to run a dev server with `vite`,
+    /// or you can set it to run `npx vite` instead (idem for `pnpx`).
     #[arg(long)]
     serve: Option<Option<String>>,
 
-    /// The source directory to scan
+    /// The script directory to be watched.
     source: PathBuf,
 }
 
@@ -142,7 +144,7 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
+    let args = Playground::parse();
     let rt = Runtime::new()?;
 
     // let mut module_resolver = BuiltinResolver::default();
