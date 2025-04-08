@@ -17,7 +17,14 @@ interface SimpleGlyphBuilder {
 interface BezierBuilder {
   readonly brand: unique symbol
   lineTo(x: number, y: number): BezierBuilder
-  curveTo(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): BezierBuilder
+  curveTo(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    x3: number,
+    y3: number
+  ): BezierBuilder
   close(): BezierBuilder
 
   /**
