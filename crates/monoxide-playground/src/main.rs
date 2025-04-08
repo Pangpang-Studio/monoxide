@@ -62,12 +62,17 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
         .expect("Cannot create attachment");
         cx.store_userdata(cx_att).unwrap();
 
+        // Add monoxide module
+        let (_monoxide_module, p) =
+            Module::evaluate_def::<MonoxideModule, _>(cx.clone(), "monoxide")?;
+        p.finish::<()>()?;
+
         let modules = js_files
             .into_iter()
             .map(|(path, source)| {
                 let m = Module::declare(cx.clone(), path.to_string_lossy().into_owned(), source)
                     .catch(&cx)
-                    .map_err(|e| anyhow::anyhow!(e.to_string()))
+                    .map_err(|e| anyhow!("{:?}", e))
                     .with_context(|| format!("Cannot create module {}", path.display()))?;
                 Ok(m)
             })
@@ -79,6 +84,7 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
                 .map_err(|e| anyhow::anyhow!(e.to_string()))
                 .context("Unexpected JS exception")?;
             p.finish::<()>().expect("failed to finish module");
+            // m.into_declared()?;
         }
 
         let ud = cx
@@ -142,12 +148,12 @@ async fn main() -> Result<()> {
     let args = Args::parse();
     let rt = Runtime::new()?;
 
-    let mut module_resolver = BuiltinResolver::default();
-    module_resolver.add_module("monoxide");
+    // let mut module_resolver = BuiltinResolver::default();
+    // module_resolver.add_module("monoxide");
 
-    let mut module_loader = ModuleLoader::default();
-    module_loader.add_module("monoxide", MonoxideModule);
-    rt.set_loader(module_resolver, module_loader);
+    // let mut module_loader = ModuleLoader::default();
+    // module_loader.add_module("monoxide", MonoxideModule);
+    // rt.set_loader(module_resolver, module_loader);
 
     let playground_dir = PathBuf::from_iter([
         env!("CARGO_MANIFEST_DIR"),
