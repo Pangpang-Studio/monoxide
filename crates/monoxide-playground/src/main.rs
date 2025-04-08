@@ -12,13 +12,10 @@ use anyhow::{Context, Result, anyhow, bail};
 use clap::Parser;
 use monoxide_script::{
     FontParamSettings,
-    js::{ContextAttachment, MonoxideModule, insert_globals},
+    js::{ContextAttachment, MonoxideModule},
 };
 use notify::{RecursiveMode, Watcher};
-use rquickjs::{
-    CatchResultExt, Module, Runtime,
-    loader::{BuiltinResolver, ModuleLoader},
-};
+use rquickjs::{CatchResultExt, Module, Runtime};
 use tokio::process::Command;
 
 use crate::svg::{Scale, SvgPen, ViewBox};
@@ -72,16 +69,16 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
             .map(|(path, source)| {
                 let m = Module::declare(cx.clone(), path.to_string_lossy().into_owned(), source)
                     .catch(&cx)
-                    .map_err(|e| anyhow!("{:?}", e))
+                    .map_err(|e| anyhow!("{e:?}"))
                     .with_context(|| format!("Cannot create module {}", path.display()))?;
                 Ok(m)
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
         for it in modules {
-            let (m, p) = it
+            let (_m, p) = it
                 .eval()
                 .catch(&cx)
-                .map_err(|e| anyhow::anyhow!(e.to_string()))
+                .map_err(|e| anyhow!("{e:?}"))
                 .context("Unexpected JS exception")?;
             p.finish::<()>().expect("failed to finish module");
             // m.into_declared()?;
@@ -180,8 +177,8 @@ async fn main() -> Result<()> {
 
     // Set up file watcher
     let (tx, mut rx) = tokio::sync::mpsc::channel(1);
-    let mut watcher = notify::recommended_watcher(move |res| {
-        if let Ok(_) = res {
+    let mut watcher = notify::recommended_watcher(move |res: notify::Result<_>| {
+        if res.is_ok() {
             _ = tx.blocking_send(());
         }
     })?;
