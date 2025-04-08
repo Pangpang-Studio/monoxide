@@ -1,4 +1,6 @@
-interface GlyphFactory {
+declare module 'monoxide'
+
+export interface GlyphFactory {
   readonly brand: unique symbol
   simple(f: (b: SimpleGlyphBuilder) => void): GlyphEntry
 
@@ -6,7 +8,7 @@ interface GlyphFactory {
   // TODO: more complex settings, variants, etc.
 }
 
-interface SimpleGlyphBuilder {
+export interface SimpleGlyphBuilder {
   readonly brand: unique symbol
   add(o: OutlineExpr): SimpleGlyphBuilder
 }
@@ -14,7 +16,7 @@ interface SimpleGlyphBuilder {
 /**
  * A builder for bezier curves. Single-use.
  */
-interface BezierBuilder {
+export interface BezierBuilder {
   readonly brand: unique symbol
   lineTo(x: number, y: number): BezierBuilder
   curveTo(
@@ -36,7 +38,7 @@ interface BezierBuilder {
 /**
  * A builder for spiro curves. Single-use.
  */
-interface SpiroBuilder {
+export interface SpiroBuilder {
   readonly brand: unique symbol
   g4(x: number, y: number): SpiroBuilder
   g2(x: number, y: number): SpiroBuilder
@@ -57,7 +59,7 @@ interface SpiroBuilder {
 /**
  * Represents a built outline in Rust side
  */
-interface OutlineExpr {
+export interface OutlineExpr {
   readonly brand: unique symbol
 
   stroked(width: number): OutlineExpr
@@ -66,21 +68,21 @@ interface OutlineExpr {
 /**
  * Opaque type representing a glyph
  */
-interface GlyphEntry {
+export interface GlyphEntry {
   readonly brand: unique symbol
 }
 
 /**
  * Global settings of the font. For lengths, font size = 1.
  */
-interface Settings {
+export interface Settings {
   width: number
   xHeight: number
   descender: number
   capHeight: number
 }
 
-declare const settings: Settings
-declare const glyph: GlyphFactory
-declare function bezier(x: number, y: number): BezierBuilder
-declare function spiro(): SpiroBuilder
+export declare const settings: Settings
+export declare const glyph: GlyphFactory
+export declare function bezier(x: number, y: number): BezierBuilder
+export declare function spiro(): SpiroBuilder
