@@ -1,4 +1,4 @@
-import { bezier, spiro, settings, glyph } from 'monoxide'
+import { bezier, settings, glyph } from 'monoxide'
 
 let g = glyph.simple((b) => {
   b.add(
