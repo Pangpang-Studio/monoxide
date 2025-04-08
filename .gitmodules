@@ -1,3 +1,0 @@
-[submodule "vendor/flo_curves"]
-	path = crates/flo_curves
-	url = https://github.com/Pangpang-Studio/flo_curves.git
