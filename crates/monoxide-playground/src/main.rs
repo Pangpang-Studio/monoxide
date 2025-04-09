@@ -80,9 +80,12 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
             let (_m, p) = it
                 .eval()
                 .catch(&cx)
-                .map_err(|e| anyhow!("{e:?}"))
-                .context("Unexpected JS exception")?;
-            p.finish::<()>().expect("failed to finish module");
+                .map_err(|e| anyhow!("{e}"))
+                .context("unexpected JS exception")?;
+            p.finish::<()>()
+                .catch(&cx)
+                .map_err(|e| anyhow!("{e}"))
+                .context("failed to finish module")?;
             // m.into_declared()?;
         }
 
