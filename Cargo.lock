@@ -1033,7 +1033,7 @@ dependencies = [
 [[package]]
 name = "spiro"
 version = "1.0.2"
-source = "git+https://github.com/Pangpang-Studio/spiro.rlib.git#90bbf55016469a3d614b13c1daf62bd6ff9beb91"
+source = "git+https://github.com/Pangpang-Studio/spiro.rlib.git#aee164adc8d6e56224df89f56ec8c1f862b40337"
 dependencies = [
  "glifparser",
  "log",
