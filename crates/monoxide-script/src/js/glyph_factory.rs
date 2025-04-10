@@ -1,8 +1,7 @@
 use rquickjs::{class::Trace, prelude::This, Class, Ctx, Function, JsLifetime, Value};
 
-use crate::ast::{FontContext, SimpleGlyph};
-
 use super::outline_expr::OutlineExprObject;
+use crate::ast::{FontContext, SimpleGlyph};
 
 #[derive(JsLifetime, Debug)]
 #[rquickjs::class]
@@ -57,8 +56,8 @@ impl GlyphFactory {
 
     pub fn assign_char<'js>(
         this_: This<Class<'js, Self>>,
-        v: i32,
         ch: String,
+        v: i32,
         cx: Ctx<'js>,
     ) -> rquickjs::Result<()> {
         let mut this = this_.borrow_mut();
@@ -71,7 +70,7 @@ impl GlyphFactory {
         }
         let ch = ch.chars().next().unwrap();
 
-        this.value.assign_char(id, ch);
+        this.value.assign_char(ch, id);
 
         Ok(())
     }

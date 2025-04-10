@@ -4,7 +4,7 @@ export interface GlyphFactory {
   readonly brand: unique symbol
   simple(f: (b: SimpleGlyphBuilder) => void): GlyphEntry
 
-  assignChar(glyph: GlyphEntry, char: string): void
+  assignChar(char: string, glyph: GlyphEntry): void
   // TODO: more complex settings, variants, etc.
 }
 
@@ -40,6 +40,7 @@ export interface BezierBuilder {
  */
 export interface SpiroBuilder {
   readonly brand: unique symbol
+  corner(x: number, y: number): SpiroBuilder
   g4(x: number, y: number): SpiroBuilder
   g2(x: number, y: number): SpiroBuilder
   flat(x: number, y: number): SpiroBuilder
