@@ -5,7 +5,7 @@ gl.assignChar(
   gl.simple((b) => {
     b.add(
       bezier(0.3, 0)
-        .lineTo(0.3, 0)
+        .lineTo(0.6, 0)
         .lineTo(1, settings.width)
         .lineTo(0.3, 0)
         .build()
@@ -35,5 +35,12 @@ gl.assignChar(
         .g2(0.229, 0.082)
         .build()
     )
+  })
+)
+
+gl.assignChar(
+  'o',
+  gl.simple((b) => {
+    b.add(spiro().g4(0, 0.5).g4(0.5, 0).g4(1, 0.5).g4(0.5, 1).build())
   })
 )
