@@ -6,8 +6,7 @@ use std::{
 
 use anyhow::Result;
 use monoxide_curves::{CubicBezier, CubicSegment, point::Point2D};
-use monoxide_script::ast::GlyphEntry;
-use monoxide_script::eval::eval_outline;
+use monoxide_script::{ast::GlyphEntry, eval::eval_outline};
 
 pub struct SvgPen<W> {
     buf: W,
