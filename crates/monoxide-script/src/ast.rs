@@ -28,7 +28,7 @@ impl FontContext {
         GlyphId(id)
     }
 
-    pub fn assign_char(&mut self, glyph_id: GlyphId, char: char) {
+    pub fn assign_char(&mut self, char: char, glyph_id: GlyphId) {
         self.cmap.insert(char, glyph_id);
     }
 }

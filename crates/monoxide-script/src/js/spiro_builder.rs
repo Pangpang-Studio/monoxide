@@ -1,9 +1,8 @@
-use rquickjs::{class::JsClass, prelude::*, Class};
+use rquickjs::{prelude::*, Class};
 use spiro::{SpiroCP, SpiroCpTy};
 
-use crate::ast::OutlineExpr;
-
 use super::outline_expr::OutlineExprObject;
+use crate::ast::OutlineExpr;
 
 #[rquickjs::class]
 #[derive(rquickjs::JsLifetime)]
