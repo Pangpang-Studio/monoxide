@@ -5,5 +5,11 @@
   "author": "",
   "dependencies": {
     "monoxide": "file:../js-pkgs/monoxide"
+  },
+  "devDependencies": {
+    "eslint": "^9.24.0",
+    "eslint-plugin-jsdoc": "^50.6.9",
+    "prettier-plugin-jsdoc": "^1.3.2",
+    "typescript": "^5.8.3"
   }
 }

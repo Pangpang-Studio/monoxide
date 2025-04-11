@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    /* Visit https://aka.ms/tsconfig to read more about this file */
+    "lib": [
+      "ESNext"
+    ],
+    "jsx": "preserve",
+    "target": "ESNext",
+    "module": "preserve",
+    "resolveJsonModule": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    // Default rule overrides
+    "noImplicitAny": false,
+  },
+  "include": [
+    ".",
+    "eslint.config.mjs"
+  ]
+}
