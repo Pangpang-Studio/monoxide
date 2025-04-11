@@ -36,7 +36,7 @@ impl<W: Write> SvgPen<W> {
     }
 
     fn draw_start(&mut self, p: &Point2D) -> fmt::Result {
-        write!(self.buf, "M ")?;
+        write!(self.buf, "M")?;
         self.draw_point(p)
     }
 
@@ -47,11 +47,11 @@ impl<W: Write> SvgPen<W> {
     fn draw_el(&mut self, el: &CubicSegment<Point2D>) -> fmt::Result {
         match el {
             CubicSegment::Line(p) => {
-                write!(self.buf, "L ")?;
+                write!(self.buf, "L")?;
                 self.draw_point(p)
             }
             CubicSegment::Curve(p, q, r) => {
-                write!(self.buf, "C ")?;
+                write!(self.buf, "C")?;
                 for pt in [p, q, r] {
                     self.draw_point(pt)?;
                 }
