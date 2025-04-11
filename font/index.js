@@ -9,10 +9,10 @@ gl.assignChar(
         moveTo(0.3, 0),
         lineTo(0.6, 0),
         lineTo(1, settings.width),
-        lineTo(0.3, 0)
-      )
+        lineTo(0.3, 0),
+      ),
     )
-  })
+  }),
 )
 
 gl.assignChar(
@@ -34,15 +34,15 @@ gl.assignChar(
         g2(0.218, 0.308),
         g2(0.091, 0.211),
         g2(0.124, 0.111),
-        g2(0.229, 0.082)
-      )
+        g2(0.229, 0.082),
+      ),
     )
-  })
+  }),
 )
 
 gl.assignChar(
   'o',
   gl.simple((b) => {
     b.add(spiro(g4(0, 0.5), g4(0.5, 0), g4(1, 0.5), g4(0.5, 1)))
-  })
+  }),
 )
