@@ -89,12 +89,11 @@ impl Trace<'_> for SimpleGlyphBuilder {
 #[rquickjs::methods]
 impl SimpleGlyphBuilder {
     pub fn add<'js>(
-        this_: This<Class<'js, Self>>,
+        this: This<Class<'js, Self>>,
         outline: Class<'js, OutlineExprObject>,
-    ) -> rquickjs::Result<()> {
-        let mut this = this_.borrow_mut();
+    ) -> rquickjs::Result<Class<'js, Self>> {
         let outline = outline.borrow();
-        this.value.outlines.push(outline.item.clone());
-        Ok(())
+        this.borrow_mut().value.outlines.push(outline.item.clone());
+        Ok(this.0)
     }
 }
