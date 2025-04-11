@@ -24,12 +24,12 @@ use crate::svg::{Scale, SvgPen, ViewBox};
 #[command(author, version, about)]
 struct Playground {
     /// Optional serve mode with custom command.
-    /// You can use this flag directly to run a dev server with `vite`,
-    /// or you can set it to run `npx vite` instead (idem for `pnpx`).
+    /// Use this flag directly to run a dev server with `vite`, or set it to
+    /// `npx` to run `npx vite` instead (idem for `pnpx`).
     #[arg(long)]
     serve: Option<Option<String>>,
 
-    /// The script directory to be watched.
+    /// The script directory to build the glyphs from.
     source: PathBuf,
 }
 
