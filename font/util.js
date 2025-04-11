@@ -24,8 +24,8 @@ import * as mx from 'monoxide'
  */
 function instCollector(builderFactory) {
   return (...insts) => {
-    const builder = builderFactory()
-    for (const { meth, args } of insts) builder[meth](...args)
+    let builder = builderFactory()
+    for (const { meth, args } of insts) builder = builder[meth](...args)
     return builder.build()
   }
 }
