@@ -13,9 +13,7 @@ export interface SimpleGlyphBuilder {
   add(o: OutlineExpr): SimpleGlyphBuilder
 }
 
-/**
- * A builder for bezier curves. Single-use.
- */
+/** A builder for bezier curves. Single-use. */
 export interface BezierBuilder {
   readonly brand: unique symbol
   lineTo(x: number, y: number): BezierBuilder
@@ -25,19 +23,15 @@ export interface BezierBuilder {
     x2: number,
     y2: number,
     x3: number,
-    y3: number
+    y3: number,
   ): BezierBuilder
   close(): BezierBuilder
 
-  /**
-   * Get the bezier curve and invalidates this builder.
-   */
+  /** Get the bezier curve and invalidates this builder. */
   build(): OutlineExpr
 }
 
-/**
- * A builder for spiro curves. Single-use.
- */
+/** A builder for spiro curves. Single-use. */
 export interface SpiroBuilder {
   readonly brand: unique symbol
   corner(x: number, y: number): SpiroBuilder
@@ -51,31 +45,23 @@ export interface SpiroBuilder {
   open(x: number, y: number): SpiroBuilder
   endOpen(x: number, y: number): SpiroBuilder
 
-  /**
-   * Get the spiro curve and invalidates this builder.
-   */
+  /** Get the spiro curve and invalidates this builder. */
   build(): OutlineExpr
 }
 
-/**
- * Represents a built outline in Rust side
- */
+/** Represents a built outline in Rust side */
 export interface OutlineExpr {
   readonly brand: unique symbol
 
   stroked(width: number): OutlineExpr
 }
 
-/**
- * Opaque type representing a glyph
- */
+/** Opaque type representing a glyph */
 export interface GlyphEntry {
   readonly brand: unique symbol
 }
 
-/**
- * Global settings of the font. For lengths, font size = 1.
- */
+/** Global settings of the font. For lengths, font size = 1. */
 export interface Settings {
   width: number
   xHeight: number

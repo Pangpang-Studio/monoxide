@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "jsx": "preserve",
     "target": "ESNext",
     "module": "preserve",
@@ -13,10 +11,7 @@
     "strict": true,
     "skipLibCheck": true,
     // Default rule overrides
-    "noImplicitAny": false,
+    "noImplicitAny": false
   },
-  "include": [
-    ".",
-    "eslint.config.mjs"
-  ]
+  "include": [".", "eslint.config.mjs"]
 }

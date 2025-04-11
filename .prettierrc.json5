@@ -1,8 +1,6 @@
 {
-  trailingComma: 'es5',
+  trailingComma: 'all',
   semi: false,
   singleQuote: true,
-  "plugins": [
-    "prettier-plugin-jsdoc"
-  ],
+  plugins: ['prettier-plugin-jsdoc'],
 }
