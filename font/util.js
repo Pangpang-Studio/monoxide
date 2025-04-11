@@ -40,21 +40,28 @@ const instFactory =
   (...args) => ({ meth, args })
 
 /**
+ * @typedef {(...args: [number, number]) => Inst} PointInstFactory
+ * @param {string} meth
+ * @returns {PointInstFactory}
+ */
+const pointInstFactory = (meth) => instFactory(meth)
+
+/**
  * @param {SpiroInst[]} insts
  * @returns {import('monoxide').OutlineExpr}
  */
 export const spiro = instCollector(mx.spiro)
 
-export const corner = instFactory('corner')
-export const g4 = instFactory('g4')
-export const g2 = instFactory('g2')
-export const flat = instFactory('flat')
-export const curl = instFactory('curl')
-export const anchor = instFactory('anchor')
-export const handle = instFactory('handle')
-export const end = instFactory('end')
-export const open = instFactory('open')
-export const endOpen = instFactory('endOpen')
+export const corner = pointInstFactory('corner')
+export const g4 = pointInstFactory('g4')
+export const g2 = pointInstFactory('g2')
+export const flat = pointInstFactory('flat')
+export const curl = pointInstFactory('curl')
+export const anchor = pointInstFactory('anchor')
+export const handle = pointInstFactory('handle')
+export const end = pointInstFactory('end')
+export const open = pointInstFactory('open')
+export const endOpen = pointInstFactory('endOpen')
 
 /**
  * @typedef {'moveTo' | 'lineTo' | 'curveTo' | 'close'} BezierMeth
@@ -68,7 +75,15 @@ export const endOpen = instFactory('endOpen')
  */
 export const bezier = instCollector(() => ({ moveTo: mx.bezier }))
 
-export const moveTo = instFactory('moveTo')
-export const lineTo = instFactory('lineTo')
+export const moveTo = pointInstFactory('moveTo')
+export const lineTo = pointInstFactory('lineTo')
+
+/**
+ * @type {(
+ *   ...args: [number, number, number, number, number, number]
+ * ) => Inst}
+ */
 export const curveTo = instFactory('curveTo')
+
+/** @type {() => Inst} */
 export const close = instFactory('close')
