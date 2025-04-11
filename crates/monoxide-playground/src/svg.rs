@@ -110,18 +110,17 @@ impl ViewBox {
         }
     }
 
-    fn merge_point(&mut self, point: &Point2D) {
-        let sc = self.scale;
+    pub fn merge_point(&mut self, point: &Point2D) {
+        let &Point2D { x, y } = point;
 
-        let x = sc.x * point.x;
         self.xs.start = self.xs.start.min(x);
         self.xs.end = self.xs.end.max(x);
 
-        let y = sc.y * point.y;
         self.ys.start = self.ys.start.min(y);
         self.ys.end = self.ys.end.max(y);
     }
 
+    #[allow(dead_code)]
     fn merge_el(&mut self, el: &CubicSegment<Point2D>) {
         match el {
             CubicSegment::Line(p) => self.merge_point(p),
@@ -133,6 +132,7 @@ impl ViewBox {
         }
     }
 
+    #[allow(dead_code)]
     fn merge_contour(&mut self, contour: &CubicBezier<Point2D>) {
         self.merge_point(&contour.start);
         for el in &contour.segments {
@@ -140,6 +140,7 @@ impl ViewBox {
         }
     }
 
+    #[allow(dead_code)]
     pub fn merge_glyph(&mut self, glyph: &GlyphEntry) -> Result<()> {
         match glyph {
             GlyphEntry::Simple(s) => {
@@ -159,8 +160,18 @@ impl ViewBox {
 
 impl fmt::Display for ViewBox {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Range { start: x0, end: x1 } = self.xs;
-        let Range { start: y0, end: y1 } = self.ys;
-        write!(f, "{x0} {y0} {} {}", x1 - x0, y1 - y0)
+        let s = self.scale;
+        let x0 = s.x * self.xs.start;
+        let x1 = s.x * self.xs.end;
+        let y0 = s.y * self.ys.start;
+        let y1 = s.y * self.ys.end;
+        write!(
+            f,
+            "{x} {y} {dx} {dy}",
+            x = x0.min(x1),
+            y = y0.min(y1),
+            dx = (x1 - x0).abs(),
+            dy = (y1 - y0).abs(),
+        )
     }
 }

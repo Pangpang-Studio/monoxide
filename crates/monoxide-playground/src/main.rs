@@ -112,7 +112,8 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
         };
 
         let mut view_box = ViewBox::new(scale);
-        view_box.merge_glyph(glyph)?;
+        view_box.merge_point(&(0., 0.).into());
+        view_box.merge_point(&(1., 1.).into());
 
         // Create individual glyph page
         let ord = ch as u32;
