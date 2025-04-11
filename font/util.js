@@ -20,7 +20,7 @@ import * as mx from 'monoxide'
 
 /**
  * @param {() => any} builderFactory
- * @returns {(...insts: Inst[]) => import('monoxide').OutlineExpr}
+ * @returns {(...insts: Inst[]) => mx.OutlineExpr}
  */
 function instCollector(builderFactory) {
   return (...insts) => {
@@ -48,7 +48,7 @@ const pointInstFactory = (meth) => instFactory(meth)
 
 /**
  * @param {SpiroInst[]} insts
- * @returns {import('monoxide').OutlineExpr}
+ * @returns {mx.OutlineExpr}
  */
 export const spiro = instCollector(mx.spiro)
 
@@ -71,7 +71,7 @@ export const endOpen = pointInstFactory('endOpen')
 
 /**
  * @param {BezierInst[]} insts
- * @returns {import('monoxide').OutlineExpr}
+ * @returns {mx.OutlineExpr}
  */
 export const bezier = instCollector(() => ({ moveTo: mx.bezier }))
 
@@ -87,3 +87,13 @@ export const curveTo = instFactory('curveTo')
 
 /** @type {() => Inst} */
 export const close = instFactory('close')
+
+/**
+ * @param {mx.OutlineExpr[]} outlines
+ * @returns {mx.GlyphEntry}
+ */
+export function simpleGlyph(...outlines) {
+  return mx.glyph.simple((builder) => {
+    for (const outline of outlines) builder.add(outline)
+  })
+}
