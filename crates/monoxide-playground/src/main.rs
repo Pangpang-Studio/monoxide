@@ -15,7 +15,10 @@ use monoxide_script::{
     js::{ContextAttachment, MonoxideModule},
 };
 use notify::{RecursiveMode, Watcher};
-use rquickjs::{CatchResultExt, Module, Runtime};
+use rquickjs::{
+    CatchResultExt, Module, Runtime,
+    loader::{BuiltinResolver, FileResolver, ModuleLoader, ScriptLoader},
+};
 use tokio::process::Command;
 
 use crate::svg::{Scale, SvgPen, ViewBox};
@@ -151,12 +154,18 @@ async fn main() -> Result<()> {
     let args = Playground::parse();
     let rt = Runtime::new()?;
 
-    // let mut module_resolver = BuiltinResolver::default();
-    // module_resolver.add_module("monoxide");
+    let file_resolver = FileResolver::default();
+    let mut builtin_resolver = BuiltinResolver::default();
+    builtin_resolver.add_module("monoxide");
 
-    // let mut module_loader = ModuleLoader::default();
-    // module_loader.add_module("monoxide", MonoxideModule);
-    // rt.set_loader(module_resolver, module_loader);
+    let script_loader = ScriptLoader::default();
+    let mut module_loader = ModuleLoader::default();
+    module_loader.add_module("monoxide", MonoxideModule);
+
+    rt.set_loader(
+        (file_resolver, builtin_resolver),
+        (script_loader, module_loader),
+    );
 
     let playground_dir = PathBuf::from_iter([
         env!("CARGO_MANIFEST_DIR"),
