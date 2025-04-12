@@ -133,6 +133,11 @@ pub fn stroke_spiro_raw(
     // the curve on the right side of the stroke
     let mut right_curve = Vec::new();
 
+    assert_eq!(
+        curve.len(),
+        tangents.len(),
+        "`curve` and `tangents` do not have the same length"
+    );
     for (&cp, tangent) in curve.iter().zip(tangents) {
         if is_point_curved(cp.ty) {
             // This is a curved point, so it should be moved in its normal
@@ -215,6 +220,11 @@ fn calc_tangents(
     curves: Vec<CubicBezier<Point2D>>,
     indices: Vec<SpiroPointIndex>,
 ) -> Vec<Tangent> {
+    assert_eq!(
+        curve.len(),
+        indices.len(),
+        "`curve` and `indices` do not have the same length"
+    );
     let mut tangents = Vec::new();
     for (_curve, index) in curve.iter().zip(indices) {
         let cube_curve = &curves[index.curve_index];
