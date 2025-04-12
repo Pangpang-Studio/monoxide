@@ -21,6 +21,7 @@ pub fn spiro_to_cube_with_indices(
     (context.data.curves, context.data.cp_indices)
 }
 
+#[derive(Debug)]
 pub struct SpiroPointIndex {
     pub curve_index: usize,
     pub segment_index: usize,
