@@ -4,9 +4,7 @@ use std::collections::HashMap;
 
 use spiro::{SpiroCP, SpiroCpTy};
 
-use crate::convert::SpiroPointIndex;
-use crate::point::Point2D;
-use crate::{CubicBezier, CubicSegment};
+use crate::{CubicBezier, CubicSegment, convert::SpiroPointIndex, point::Point2D};
 
 /// Represent the in and out tangent at a control point. Both tangents are
 /// represented in the out direction.
@@ -66,25 +64,25 @@ pub fn stroke_spiro(
     // Both should be either:
     //
     // - [Open, ..., EndOpen], generated from an open curve. This way, we need to
-    //   replace all `Open` and `EndOpen` with `Corner`, except the first one
-    //   which should be `End`.
+    //   replace all `Open` and `EndOpen` with `Corner`, except the first one which
+    //   should be `End`.
     //
-    // - [End, ...], Generated from a closed curve. In this case, the two curves
-    //   are simply concatenated (the right one reversed because we need to
-    //   decrease the winding number).
+    // - [End, ...], Generated from a closed curve. In this case, the two curves are
+    //   simply concatenated (the right one reversed because we need to decrease the
+    //   winding number).
     match curve[0].ty {
         SpiroCpTy::Open => {
             let mut result = left;
             let mut right = right;
-            assert!(matches!(result[0].ty, SpiroCpTy::Open));
+            assert_eq!(result[0].ty, SpiroCpTy::Open);
             result[0].ty = SpiroCpTy::End;
             // Rewrite the last point
-            assert!(matches!(result.last().unwrap().ty, SpiroCpTy::EndOpen));
+            assert_eq!(result.last().unwrap().ty, SpiroCpTy::EndOpen);
             result.last_mut().unwrap().ty = SpiroCpTy::Corner;
             // and those in the right curve
-            assert!(matches!(right[0].ty, SpiroCpTy::Open)); // remember we have reversed it
+            assert_eq!(right[0].ty, SpiroCpTy::Open); // remember we have reversed it
             right[0].ty = SpiroCpTy::Corner;
-            assert!(matches!(right.last().unwrap().ty, SpiroCpTy::EndOpen));
+            assert_eq!(right.last().unwrap().ty, SpiroCpTy::EndOpen);
             right.last_mut().unwrap().ty = SpiroCpTy::Corner;
 
             result.extend(right);
