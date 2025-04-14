@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use monoxide_curves::{point::Point2D, CubicBezier};
+use monoxide_curves::{debug::CurveDebugger, point::Point2D, CubicBezier};
 use monoxide_ttf::{
     hl,
     model::{
@@ -32,7 +32,7 @@ pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::F
             crate::ast::GlyphEntry::Simple(simple_glyph) => {
                 let mut outlines = vec![];
                 for it in &simple_glyph.outlines {
-                    eval_outline(it, &mut outlines);
+                    eval_outline(it, &mut outlines, &mut ());
                 }
                 let quads = outlines
                     .into_iter()
@@ -194,18 +194,35 @@ pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::F
     }
 }
 
-pub fn eval_outline(expr: &OutlineExpr, out: &mut Vec<CubicBezier<Point2D>>) {
+pub fn eval_outline(
+    expr: &OutlineExpr,
+    out: &mut Vec<CubicBezier<Point2D>>,
+    dbg: &mut impl CurveDebugger,
+) {
     // TODO: remove inout param in `out`
     match expr {
         OutlineExpr::Bezier(cubic_bezier) => out.push(cubic_bezier.clone()),
         OutlineExpr::Spiro(spiro_cps) => {
+            // Write points to the debugger
+            for cp in spiro_cps.iter() {
+                dbg.point(
+                    monoxide_curves::debug::DebugPointKind::Curve,
+                    Point2D::new(cp.x, cp.y),
+                    "spiro",
+                );
+            }
+
             let bez = monoxide_curves::convert::spiro_to_cube(spiro_cps);
             out.extend_from_slice(&bez);
         }
         OutlineExpr::Stroked(outline_expr, width) => match &**outline_expr {
             OutlineExpr::Spiro(spiro_cps) => {
-                let oc =
-                    monoxide_curves::stroke::stroke_spiro(spiro_cps, *width, Default::default());
+                let oc = monoxide_curves::stroke::stroke_spiro(
+                    spiro_cps,
+                    *width,
+                    Default::default(),
+                    dbg,
+                );
                 let bz = monoxide_curves::convert::spiro_to_cube(&oc);
                 out.extend_from_slice(&bz);
             }
