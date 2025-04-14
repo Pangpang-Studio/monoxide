@@ -12,6 +12,15 @@ pub fn spiro_to_cube(spiro: &[SpiroCP]) -> Vec<CubicBezier<Point2D>> {
     context.data.curves
 }
 
+/// Convert a spiro curve into a cubic bezier curve, and also return the
+/// indices of the spiro control points within the bezier curves.
+///
+/// The indices are numbered in the order they were emitted, with two parts:
+/// the curve index and the segment index. The curve index is the index of
+/// the curve within the curve vector, starting at 0. The segment index
+/// is the index of the segment within the curve, with 0 representing the
+/// starting point of the curve, and subsequent ones representing _segments_,
+/// starting from 1.
 pub fn spiro_to_cube_with_indices(
     spiro: &[SpiroCP],
 ) -> (Vec<CubicBezier<Point2D>>, Vec<SpiroPointIndex>) {
