@@ -4,9 +4,7 @@ use std::collections::HashMap;
 
 use spiro::{SpiroCP, SpiroCpTy};
 
-use crate::{
-    CubicBezier, CubicSegment, convert::SpiroPointIndex, debug::CurveDebugger, point::Point2D,
-};
+use crate::{CubicBezier, CubicSegment, debug::CurveDebugger, point::Point2D};
 
 /// Represent the in and out tangent at a control point. Both tangents are
 /// represented in the out direction.
@@ -32,7 +30,7 @@ impl Tangent {
 
 /// Test if two normalized tangents are approximately the same direction.
 fn approx_eq(tan1: Point2D, tan2: Point2D) -> bool {
-    tan1.dot(tan2) > 0.9
+    tan1.dot(tan2) > 0.99
 }
 
 fn is_point_curved(ty: SpiroCpTy) -> bool {
@@ -42,8 +40,67 @@ fn is_point_curved(ty: SpiroCpTy) -> bool {
     )
 }
 
+fn is_single_piece(curve: &[SpiroCP]) -> bool {
+    if curve.is_empty() {
+        return false; // No curve
+    }
+
+    let start_point = curve[0].ty;
+    match start_point {
+        SpiroCpTy::End | SpiroCpTy::EndOpen => {
+            // End at the start of the curve
+            return false;
+        }
+        SpiroCpTy::Open => {
+            // Open curve
+            if curve
+                .iter()
+                .skip(1)
+                .any(|cp| cp.ty == SpiroCpTy::End || cp.ty == SpiroCpTy::Open)
+            {
+                return false;
+            }
+            if curve[..curve.len() - 1]
+                .iter()
+                .any(|cp| cp.ty == SpiroCpTy::EndOpen)
+            {
+                return false;
+            }
+            if curve.last().unwrap().ty != SpiroCpTy::EndOpen {
+                return false;
+            }
+        }
+        _ => {
+            // Closed curve
+            if curve
+                .iter()
+                .any(|cp| cp.ty == SpiroCpTy::EndOpen || cp.ty == SpiroCpTy::Open)
+            {
+                return false;
+            }
+            if curve[..curve.len() - 1]
+                .iter()
+                .any(|cp| cp.ty == SpiroCpTy::End)
+            {
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
+/// The result of the stroke operation. It can be either a single spiro curve,
+/// or two curves if the input curve is closed.
+#[derive(Debug, Clone)]
+pub enum StrokeResult {
+    One(Vec<SpiroCP>),
+    Two(Vec<SpiroCP>, Vec<SpiroCP>),
+}
+
 /// Stroke a spiro curve. Returns a single spiro curve representing the stroke.
-/// The curve might contain two separate segments if the input curve is closed.
+/// The curve might contain more than one segment if the input curve is closed,
+/// or has multiple disconnected parts.
 ///
 /// The result should be fed into another pass removing self-loops.
 pub fn stroke_spiro(
@@ -51,8 +108,13 @@ pub fn stroke_spiro(
     width: f64,
     tangent_override: HashMap<usize, Tangent>,
     dbg: &mut impl CurveDebugger,
-) -> Vec<SpiroCP> {
-    let (left, right) = stroke_spiro_raw(curve, width, tangent_override, dbg);
+) -> StrokeResult {
+    if !is_single_piece(curve) {
+        panic!("Spiro curve is not valid: not single piece");
+    }
+
+    let is_closed = curve[0].ty != SpiroCpTy::Open;
+    let (left, right) = stroke_spiro_raw(curve, is_closed, width, tangent_override, dbg);
 
     // Anyway, we should reverse the right curve first.
     let right = {
@@ -70,35 +132,73 @@ pub fn stroke_spiro(
     //   replace all `Open` and `EndOpen` with `Corner`, except the first one which
     //   should be `End`.
     //
-    // - [End, ...], Generated from a closed curve. In this case, the two curves are
+    // - [...], Generated from a closed curve. In this case, the two curves are
     //   simply concatenated (the right one reversed because we need to decrease the
     //   winding number).
     match curve[0].ty {
         SpiroCpTy::Open => {
             let mut result = left;
             let mut right = right;
-            assert_eq!(result[0].ty, SpiroCpTy::Open);
-            result[0].ty = SpiroCpTy::End;
+            // assert!(matches!(result[0].ty, SpiroCpTy::Open));
+            result[0].ty = SpiroCpTy::Corner;
             // Rewrite the last point
-            assert_eq!(result.last().unwrap().ty, SpiroCpTy::EndOpen);
+            // assert!(matches!(result.last().unwrap().ty, SpiroCpTy::EndOpen));
             result.last_mut().unwrap().ty = SpiroCpTy::Corner;
             // and those in the right curve
-            assert_eq!(right[0].ty, SpiroCpTy::Open); // remember we have reversed it
+            // remember we have reversed it
+            // assert!(matches!(right[0].ty, SpiroCpTy::Open));
             right[0].ty = SpiroCpTy::Corner;
-            assert_eq!(right.last().unwrap().ty, SpiroCpTy::EndOpen);
+            // assert!(matches!(right.last().unwrap().ty, SpiroCpTy::EndOpen));
             right.last_mut().unwrap().ty = SpiroCpTy::Corner;
 
             result.extend(right);
-            result
+
+            StrokeResult::One(result)
+        }
+        _ => StrokeResult::Two(left, right),
+    }
+}
+
+#[allow(dead_code)]
+fn debug_spiro_points(
+    cube_curve: &CubicBezier<Point2D>,
+    spiro_indices: &[usize],
+    dbg: &mut impl CurveDebugger,
+) {
+    let mut spiro_index = 0;
+    // indices are segment indices
+    for (idx, (start, seg)) in cube_curve.segment_iter().enumerate() {
+        if idx == 0 {
+            if spiro_indices[spiro_index] == 0 {
+                dbg.point(crate::debug::DebugPointKind::Curve, start, "spiro(0)");
+            }
+            spiro_index += 1;
         }
 
-        SpiroCpTy::End => {
-            let mut result = left;
-            result.extend(right);
-            result
-        }
+        // start is irrelevant for the rest of the segments
+        let spiro_point_idx = if spiro_indices[spiro_index] == idx + 1 {
+            spiro_index += 1;
+            Some(spiro_index - 1)
+        } else {
+            None
+        };
+        let tag = match spiro_point_idx {
+            Some(idx) => format!("spiro({})", idx),
+            None => String::new(),
+        };
 
-        x => panic!("Curve should start with Open or End, found {:?}", x),
+        match seg {
+            CubicSegment::Line(end) => {
+                dbg.point(crate::debug::DebugPointKind::Curve, end, &tag);
+            }
+            CubicSegment::Curve(p1, p2, p3) => {
+                dbg.point(crate::debug::DebugPointKind::Control, p1, "");
+                dbg.point(crate::debug::DebugPointKind::Control, p2, "");
+                dbg.point(crate::debug::DebugPointKind::Curve, p3, &tag);
+                dbg.line(start, p1, "");
+                dbg.line(p2, p3, "");
+            }
+        }
     }
 }
 
@@ -110,6 +210,7 @@ pub fn stroke_spiro(
 /// The result should be fed into another pass removing self-loops.
 pub fn stroke_spiro_raw(
     curve: &[SpiroCP],
+    is_closed: bool,
     width: f64,
     tangent_override: HashMap<usize, Tangent>,
     dbg: &mut impl CurveDebugger,
@@ -121,8 +222,33 @@ pub fn stroke_spiro_raw(
     // the curve into bezier segments and extract the normal from them.
     let (curves, indices) = crate::convert::spiro_to_cube_with_indices(curve);
 
+    // There will be only one curve, since we know the spiro curve is a single
+    // piece.
+    let cubic = curves.into_iter().next().unwrap();
+    // And we can transform the indices into a vector of raw indices too
+    let mut indices = indices
+        .into_iter()
+        .map(|x| x.segment_index)
+        .collect::<Vec<_>>();
+
+    // Strip out the `End` node for closed curves
+    let curve = if curve.last().unwrap().ty == SpiroCpTy::End {
+        &curve[..curve.len() - 1]
+    } else {
+        curve
+    };
+
+    if !is_closed {
+        // open curves don't have the last point logged, so we add it
+        // manually.
+        let last_index = cubic.segment_count();
+        indices.push(last_index);
+    }
+
+    // debug_spiro_points(&cubic, &indices, dbg);
+
     // Calculate tangent for each control point.
-    let mut tangents = calc_tangents(curve, curves, indices);
+    let mut tangents = calc_tangents(curve, &cubic, &indices);
     for (index, override_) in tangent_override {
         tangents[index] = tangents[index].with_override(&override_);
     }
@@ -150,6 +276,9 @@ pub fn stroke_spiro_raw(
             let tangent = tangent.in_.expect("curved point should have in tangent");
             let (left, right) =
                 move_point_normal_both(cp.into(), tangent, left_offset, right_offset);
+
+            dbg.line(cp.into(), right, "");
+
             push_point(left, right, cp, &mut left_curve, &mut right_curve);
         } else {
             // This is not a curved point. If the in and out tangents are
@@ -191,6 +320,8 @@ pub fn stroke_spiro_raw(
                 } => move_point_normal_both(cp.into(), out, left_offset, right_offset),
             };
 
+            dbg.line(cp.into(), right, "");
+
             push_point(left, right, cp, &mut left_curve, &mut right_curve);
         }
     }
@@ -221,8 +352,8 @@ fn push_point(
 /// normalized tangent vectors, one for each control point.
 fn calc_tangents(
     curve: &[SpiroCP],
-    curves: Vec<CubicBezier<Point2D>>,
-    indices: Vec<SpiroPointIndex>,
+    cube_curve: &CubicBezier<Point2D>,
+    indices: &[usize],
 ) -> Vec<Tangent> {
     assert_eq!(
         curve.len(),
@@ -230,15 +361,10 @@ fn calc_tangents(
         "`curve` and `indices` do not have the same length"
     );
     let mut tangents = Vec::new();
-    for (_curve, index) in curve.iter().zip(indices) {
-        let cube_curve = &curves[index.curve_index];
 
-        let out_seg = if index.segment_index < cube_curve.segments.len() {
-            Some(
-                cube_curve
-                    .segment(index.segment_index)
-                    .expect("segment exists"),
-            )
+    for &index in indices {
+        let out_seg = if index < cube_curve.segments.len() {
+            Some(cube_curve.segment(index).expect("segment exists"))
         } else if cube_curve.closed {
             Some(
                 cube_curve
@@ -255,12 +381,8 @@ fn calc_tangents(
         }
         .map(Point2D::normalize);
 
-        let in_seg = if index.segment_index != 0 {
-            Some(
-                cube_curve
-                    .segment(index.segment_index - 1)
-                    .expect("segment exists"),
-            )
+        let in_seg = if index != 0 {
+            Some(cube_curve.segment(index - 1).expect("segment exists"))
         } else if cube_curve.closed {
             Some(
                 cube_curve

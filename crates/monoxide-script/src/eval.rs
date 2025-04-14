@@ -223,8 +223,18 @@ pub fn eval_outline(
                     Default::default(),
                     dbg,
                 );
-                let bz = monoxide_curves::convert::spiro_to_cube(&oc);
-                out.extend_from_slice(&bz);
+                match oc {
+                    monoxide_curves::stroke::StrokeResult::One(spiro_cps) => {
+                        let bz = monoxide_curves::convert::spiro_to_cube(&spiro_cps);
+                        out.extend_from_slice(&bz);
+                    }
+                    monoxide_curves::stroke::StrokeResult::Two(spiro_cps, spiro_cps1) => {
+                        let bz1 = monoxide_curves::convert::spiro_to_cube(&spiro_cps);
+                        let bz2 = monoxide_curves::convert::spiro_to_cube(&spiro_cps1);
+                        out.extend_from_slice(&bz1);
+                        out.extend_from_slice(&bz2);
+                    }
+                }
             }
             other => {
                 panic!("Not strokable for now: {:?}", other)
