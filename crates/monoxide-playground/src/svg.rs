@@ -91,7 +91,7 @@ impl<W: Write> SvgPen<W> {
             GlyphEntry::Simple(s) => {
                 for outline in &s.outlines {
                     let mut contours = vec![];
-                    eval_outline(outline, &mut contours);
+                    eval_outline(outline, &mut contours, dbg);
                     for contour in &contours {
                         self.draw_contour(contour, dbg)?;
                     }
@@ -161,7 +161,7 @@ impl ViewBox {
             GlyphEntry::Simple(s) => {
                 for outline in &s.outlines {
                     let mut contours = vec![];
-                    eval_outline(outline, &mut contours);
+                    eval_outline(outline, &mut contours, &mut ());
                     for contour in &contours {
                         self.merge_contour(contour);
                     }

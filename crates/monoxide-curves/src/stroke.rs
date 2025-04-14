@@ -4,7 +4,9 @@ use std::collections::HashMap;
 
 use spiro::{SpiroCP, SpiroCpTy};
 
-use crate::{CubicBezier, CubicSegment, convert::SpiroPointIndex, point::Point2D};
+use crate::{
+    CubicBezier, CubicSegment, convert::SpiroPointIndex, debug::CurveDebugger, point::Point2D,
+};
 
 /// Represent the in and out tangent at a control point. Both tangents are
 /// represented in the out direction.
@@ -48,8 +50,9 @@ pub fn stroke_spiro(
     curve: &[SpiroCP],
     width: f64,
     tangent_override: HashMap<usize, Tangent>,
+    dbg: &mut impl CurveDebugger,
 ) -> Vec<SpiroCP> {
-    let (left, right) = stroke_spiro_raw(curve, width, tangent_override);
+    let (left, right) = stroke_spiro_raw(curve, width, tangent_override, dbg);
 
     // Anyway, we should reverse the right curve first.
     let right = {
@@ -109,6 +112,7 @@ pub fn stroke_spiro_raw(
     curve: &[SpiroCP],
     width: f64,
     tangent_override: HashMap<usize, Tangent>,
+    dbg: &mut impl CurveDebugger,
 ) -> (Vec<SpiroCP>, Vec<SpiroCP>) {
     assert!(!curve.is_empty(), "curve should not be empty");
 
