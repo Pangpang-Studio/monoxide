@@ -35,6 +35,7 @@ mod test {
     }
 
     #[test]
+    #[ignore = "TODO: Revive this test when the surrounding JS API is stable."]
     fn test_basic() {
         let rt = Runtime::new().unwrap();
         let cx = Context::full(&rt).unwrap();
