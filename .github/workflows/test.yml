@@ -1,0 +1,29 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux-rust-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # - uses: Swatinem/rust-cache@v2
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Test native build
+        run: cargo build --verbose --locked
+
+      - name: Run simple tests
+        run: cargo test --workspace
+
+      # - name: Run heavy tests
+      #   run: cargo test --workspace -- --ignored
