@@ -47,17 +47,10 @@ fn is_single_piece(curve: &[SpiroCP]) -> bool {
 
     let start_point = curve[0].ty;
     match start_point {
-        SpiroCpTy::End | SpiroCpTy::EndOpen => {
-            // End at the start of the curve
-            return false;
-        }
+        SpiroCpTy::EndOpen => return false, // End at the start of the curve
         SpiroCpTy::Open => {
             // Open curve
-            if curve
-                .iter()
-                .skip(1)
-                .any(|cp| cp.ty == SpiroCpTy::End || cp.ty == SpiroCpTy::Open)
-            {
+            if curve.iter().skip(1).any(|cp| cp.ty == SpiroCpTy::Open) {
                 return false;
             }
             if curve[..curve.len() - 1]
@@ -75,12 +68,6 @@ fn is_single_piece(curve: &[SpiroCP]) -> bool {
             if curve
                 .iter()
                 .any(|cp| cp.ty == SpiroCpTy::EndOpen || cp.ty == SpiroCpTy::Open)
-            {
-                return false;
-            }
-            if curve[..curve.len() - 1]
-                .iter()
-                .any(|cp| cp.ty == SpiroCpTy::End)
             {
                 return false;
             }
@@ -230,13 +217,6 @@ pub fn stroke_spiro_raw(
         .into_iter()
         .map(|x| x.segment_index)
         .collect::<Vec<_>>();
-
-    // Strip out the `End` node for closed curves
-    let curve = if curve.last().unwrap().ty == SpiroCpTy::End {
-        &curve[..curve.len() - 1]
-    } else {
-        curve
-    };
 
     if !is_closed {
         // open curves don't have the last point logged, so we add it

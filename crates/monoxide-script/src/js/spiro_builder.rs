@@ -74,11 +74,6 @@ impl SpiroBuilder {
         Ok(this.0)
     }
 
-    pub fn end(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
-        this.borrow_mut().push_pt(x, y, SpiroCpTy::End);
-        Ok(this.0)
-    }
-
     pub fn open(this: This<Class<'_, Self>>, x: f64, y: f64) -> rquickjs::Result<Class<'_, Self>> {
         this.borrow_mut().push_pt(x, y, SpiroCpTy::Open);
         Ok(this.0)

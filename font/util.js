@@ -10,7 +10,6 @@ import * as mx from 'monoxide'
  *   | 'curl'
  *   | 'anchor'
  *   | 'handle'
- *   | 'end'
  *   | 'open'
  *   | 'endOpen'} SpiroMeth
  *
@@ -59,7 +58,6 @@ export const flat = pointInstFactory('flat')
 export const curl = pointInstFactory('curl')
 export const anchor = pointInstFactory('anchor')
 export const handle = pointInstFactory('handle')
-export const end = pointInstFactory('end')
 export const open = pointInstFactory('open')
 export const endOpen = pointInstFactory('endOpen')
 
