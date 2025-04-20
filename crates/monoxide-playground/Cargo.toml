@@ -14,3 +14,4 @@ monoxide-script.workspace = true
 rquickjs.workspace = true
 glob.workspace = true
 dunce.workspace = true
+path-slash.workspace = true # for windows paths
