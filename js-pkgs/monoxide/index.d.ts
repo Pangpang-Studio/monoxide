@@ -41,7 +41,6 @@ export interface SpiroBuilder {
   curl(x: number, y: number): SpiroBuilder
   anchor(x: number, y: number): SpiroBuilder
   handle(x: number, y: number): SpiroBuilder
-  end(x: number, y: number): SpiroBuilder
   open(x: number, y: number): SpiroBuilder
   endOpen(x: number, y: number): SpiroBuilder
 
