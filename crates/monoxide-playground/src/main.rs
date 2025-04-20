@@ -15,6 +15,7 @@ use monoxide_script::{
     js::{ContextAttachment, MonoxideModule},
 };
 use notify::{RecursiveMode, Watcher};
+use path_slash::PathExt;
 use rquickjs::{
     CatchResultExt, Module, Runtime,
     loader::{BuiltinResolver, FileResolver, ModuleLoader, ScriptLoader},
@@ -72,7 +73,7 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
         let modules = js_files
             .into_iter()
             .map(|(path, source)| {
-                let m = Module::declare(cx.clone(), path.to_string_lossy().into_owned(), source)
+                let m = Module::declare(cx.clone(), path.to_slash_lossy().into_owned(), source)
                     .catch(&cx)
                     .map_err(|e| anyhow!("{e:?}"))
                     .with_context(|| format!("Cannot create module {}", path.display()))?;
