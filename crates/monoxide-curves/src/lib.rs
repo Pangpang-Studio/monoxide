@@ -1,6 +1,7 @@
 //! Operations and types related to Bezier curves.
 pub mod convert;
 pub mod cube;
+pub mod debug;
 pub mod point;
 pub mod quad;
 pub mod stroke;

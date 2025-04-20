@@ -45,6 +45,7 @@
           stroke-width=0.5%
           style="fill: none; stroke: #282828"
         />
+        {dbg}
       </svg>
     </div>
   </body>

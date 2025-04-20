@@ -20,6 +20,7 @@ use rquickjs::{
     CatchResultExt, Module, Runtime,
     loader::{BuiltinResolver, FileResolver, ModuleLoader, ScriptLoader},
 };
+use svg::SvgDebugPrinter;
 use tokio::process::Command;
 
 use crate::svg::{Scale, SvgPen, ViewBox};
@@ -109,9 +110,10 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
         .map(|(ch, idx)| (ch, fcx.get_glyph(*idx).expect("glyph not found")));
     for (&ch, glyph) in glyphs {
         let buf = String::new();
+        let mut dbg = SvgDebugPrinter::new(scale);
         let svg = {
             let mut pen = SvgPen::new(buf, scale);
-            pen.draw_glyph(glyph)?;
+            pen.draw_glyph(glyph, &mut dbg)?;
             pen.finish()
         };
 
@@ -128,6 +130,7 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
                 view_box = view_box,
                 svg = svg,
                 char = ch,
+                dbg = dbg.finish()
             ),
         )?;
 

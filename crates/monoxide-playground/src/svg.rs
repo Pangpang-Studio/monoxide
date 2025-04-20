@@ -5,7 +5,11 @@ use std::{
 };
 
 use anyhow::Result;
-use monoxide_curves::{CubicBezier, CubicSegment, point::Point2D};
+use monoxide_curves::{
+    CubicBezier, CubicSegment,
+    debug::{CurveDebugger, DebugPointKind},
+    point::Point2D,
+};
 use monoxide_script::{ast::GlyphEntry, eval::eval_outline};
 
 pub struct SvgPen<W> {
@@ -44,10 +48,11 @@ impl<W: Write> SvgPen<W> {
         writeln!(self.buf, "Z")
     }
 
-    fn draw_el(&mut self, el: &CubicSegment<Point2D>) -> fmt::Result {
+    fn draw_el(&mut self, el: &CubicSegment<Point2D>, dbg: &mut impl CurveDebugger) -> fmt::Result {
         match el {
             CubicSegment::Line(p) => {
                 write!(self.buf, "L")?;
+                dbg.point(DebugPointKind::Corner, *p, "");
                 self.draw_point(p)
             }
             CubicSegment::Curve(p, q, r) => {
@@ -55,15 +60,25 @@ impl<W: Write> SvgPen<W> {
                 for pt in [p, q, r] {
                     self.draw_point(pt)?;
                 }
+                dbg.point(DebugPointKind::Control, *p, "");
+                dbg.point(DebugPointKind::Control, *q, "");
+                dbg.point(DebugPointKind::Corner, *r, "");
+
                 Ok(())
             }
         }
     }
 
-    fn draw_contour(&mut self, contour: &CubicBezier<Point2D>) -> fmt::Result {
+    fn draw_contour(
+        &mut self,
+        contour: &CubicBezier<Point2D>,
+        dbg: &mut impl CurveDebugger,
+    ) -> fmt::Result {
         self.draw_start(&contour.start)?;
+        dbg.point(DebugPointKind::Corner, contour.start, "start");
+
         for el in &contour.segments {
-            self.draw_el(el)?
+            self.draw_el(el, dbg)?
         }
         if contour.closed {
             self.draw_close()?;
@@ -71,14 +86,14 @@ impl<W: Write> SvgPen<W> {
         Ok(())
     }
 
-    pub fn draw_glyph(&mut self, glyph: &GlyphEntry) -> Result<()> {
+    pub fn draw_glyph(&mut self, glyph: &GlyphEntry, dbg: &mut impl CurveDebugger) -> Result<()> {
         match glyph {
             GlyphEntry::Simple(s) => {
                 for outline in &s.outlines {
                     let mut contours = vec![];
                     eval_outline(outline, &mut contours);
                     for contour in &contours {
-                        self.draw_contour(contour)?;
+                        self.draw_contour(contour, dbg)?;
                     }
                 }
                 Ok(())
@@ -173,5 +188,106 @@ impl fmt::Display for ViewBox {
             dx = (x1 - x0).abs(),
             dy = (y1 - y0).abs(),
         )
+    }
+}
+
+pub struct SvgDebugPrinter {
+    buf: String,
+    scale: Scale,
+}
+
+impl SvgDebugPrinter {
+    pub fn new(scale: Scale) -> Self {
+        Self {
+            buf: String::new(),
+            scale,
+        }
+    }
+
+    pub fn finish(self) -> String {
+        self.buf
+    }
+}
+
+impl CurveDebugger for SvgDebugPrinter {
+    fn point(&mut self, kind: DebugPointKind, at: Point2D, tag: &str) {
+        let sc = self.scale;
+        let x = sc.x * at.x;
+        let y = sc.y * at.y;
+        let size = 0.01;
+
+        let element = match kind {
+            DebugPointKind::Corner => format!(
+                r#"<rect x="{}" y="{}" width="{}" height="{}" fill="white" stroke="black" stroke-width="0.003" />"#,
+                x - size / 2.0,
+                y - size / 2.0,
+                size,
+                size
+            ),
+            DebugPointKind::Curve => format!(
+                r#"<circle cx="{}" cy="{}" r="{}" fill="white" stroke="black" stroke-width="0.003" />"#,
+                x,
+                y,
+                size / 2.0
+            ),
+            DebugPointKind::Control => format!(
+                r#"<circle cx="{}" cy="{}" r="{}" fill="white" stroke="blue" stroke-width="0.003" />"#,
+                x,
+                y,
+                size / 2.0
+            ),
+            DebugPointKind::Misc => format!(
+                r#"<circle cx="{}" cy="{}" r="{}" fill="white" stroke="gray" stroke-width="0.003" />"#,
+                x,
+                y,
+                size / 2.0
+            ),
+        };
+        // Add tag text to the right of the point
+        let text = if !tag.is_empty() {
+            format!(
+                r#"<text x="{}" y="{}" font-size="0.01" fill="black" text-anchor="start" dominant-baseline="middle">{}</text>"#,
+                x + size,
+                y,
+                tag
+            )
+        } else {
+            String::new()
+        };
+
+        writeln!(self.buf, "{}", element).unwrap();
+        if !text.is_empty() {
+            writeln!(self.buf, "{}", text).unwrap();
+        }
+    }
+
+    fn line(&mut self, from: Point2D, to: Point2D, tag: &str) {
+        let sc = self.scale;
+        let x1 = sc.x * from.x;
+        let y1 = sc.y * from.y;
+        let x2 = sc.x * to.x;
+        let y2 = sc.y * to.y;
+
+        let line = format!(
+            r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="gray" stroke-width="0.003" />"#,
+            x1, y1, x2, y2
+        );
+
+        // Add tag as text near the middle of the line if present
+        let text = if !tag.is_empty() {
+            let mid_x = (x1 + x2) / 2.0;
+            let mid_y = (y1 + y2) / 2.0;
+            format!(
+                r#"<text x="{}" y="{}" font-size="0.01" fill="black" text-anchor="middle" dominant-baseline="hanging">{}</text>"#,
+                mid_x, mid_y, tag
+            )
+        } else {
+            String::new()
+        };
+
+        writeln!(self.buf, "{}", line).unwrap();
+        if !text.is_empty() {
+            writeln!(self.buf, "{}", text).unwrap();
+        }
     }
 }
