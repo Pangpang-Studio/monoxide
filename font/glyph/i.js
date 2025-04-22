@@ -1,5 +1,5 @@
 import { settings } from 'monoxide'
-import { endOpen, g4, open, simpleGlyph, spiro } from '../util'
+import { endOpen, g4, open, simpleGlyph, spiro } from '../outline'
 
 /**
  * Renders a rectangle that is formed by drawing a line between points (x0, y0)
