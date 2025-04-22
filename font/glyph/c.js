@@ -1,5 +1,5 @@
 import { settings } from 'monoxide'
-import { bezier, lineTo, moveTo, simpleGlyph } from '../util'
+import { bezier, lineTo, moveTo, simpleGlyph } from '../outline'
 
 export const c = simpleGlyph(
   bezier(

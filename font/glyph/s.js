@@ -1,4 +1,4 @@
-import { corner, endOpen, g2, open, simpleGlyph, spiro } from '../util'
+import { corner, endOpen, g2, open, simpleGlyph, spiro } from '../outline'
 
 export const s = simpleGlyph(
   spiro(
