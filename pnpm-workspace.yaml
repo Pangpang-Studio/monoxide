@@ -1,3 +1,4 @@
 packages:
   - 'js-pkgs/monoxide'
   - 'font'
+  - 'tools/playground'
