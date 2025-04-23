@@ -1,9 +1,21 @@
+import js from '@eslint/js'
 import jsdoc from 'eslint-plugin-jsdoc'
+import simpleImportSort from 'eslint-plugin-simple-import-sort'
 
 const config = [
-  // configuration included in plugin
+  js.configs.recommended,
+
+  {
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      'simple-import-sort/imports': 'warn',
+      'simple-import-sort/exports': 'warn',
+    },
+  },
+
   jsdoc.configs['flat/recommended'],
-  // other configuration objects...
   {
     files: ['**/*.js'],
     plugins: {

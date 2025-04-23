@@ -1,4 +1,5 @@
 import { settings } from 'monoxide'
+
 import { endOpen, g4, open, simpleGlyph, spiro } from '../outline'
 
 /**
