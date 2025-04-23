@@ -1,4 +1,5 @@
 mod svg;
+mod web;
 
 use std::{
     borrow::Cow,
@@ -193,6 +194,9 @@ async fn main() -> Result<()> {
         println!("{}", playground_dir.display());
         return Ok(());
     };
+
+    web::start_web_server().await;
+    return Ok(());
 
     // Set up file watcher
     let (tx, mut rx) = tokio::sync::mpsc::channel(1);
