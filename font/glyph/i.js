@@ -1,13 +1,14 @@
 import { settings } from 'monoxide'
 
-import { simpleGlyph } from '../outline'
-import { rect, ring } from '../shape'
+import { corner, endOpen, open, simpleGlyph, spiro } from '../outline'
+import { ring } from '../shape'
 
 /** @import {Point} from '../shape' */
 
 const { width, descender, xHeight } = settings
 const mid = 0.5 * width
-const strokeWidth = 0.17 * width
+const strokeW = 0.17 * width
+const halfStrokeW = 0.5 * strokeW
 
 /** @type {Point} */
 const iStrokeBot = [mid, descender]
@@ -18,18 +19,15 @@ const iStrokeTop = [mid, xHeight]
 const iStrokeHeight = iStrokeTop[1] - iStrokeBot[1]
 
 export const i = simpleGlyph(
-  rect(...iStrokeBot, ...iStrokeTop, strokeWidth),
-  rect(
-    iStrokeTop[0] - 0.5 * strokeWidth,
-    iStrokeTop[1] - 0.5 * strokeWidth,
-    iStrokeTop[0] - 0.35 * iStrokeHeight,
-    iStrokeTop[1] - 0.5 * strokeWidth,
-    strokeWidth,
-  ),
+  spiro(
+    open(mid, descender),
+    corner(mid, xHeight - halfStrokeW),
+    endOpen(mid - 0.35 * iStrokeHeight, xHeight - halfStrokeW),
+  ).stroked(strokeW),
   ring(
-    iStrokeTop[0] - 0.75 * strokeWidth,
-    iStrokeTop[1] + 1 * strokeWidth,
-    iStrokeTop[0] + 0.75 * strokeWidth,
-    iStrokeTop[1] + 2.5 * strokeWidth,
+    mid - 0.75 * strokeW,
+    xHeight + 1 * strokeW,
+    mid + 0.75 * strokeW,
+    xHeight + 2.5 * strokeW,
   ),
 )
