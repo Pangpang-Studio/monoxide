@@ -1,3 +1,4 @@
+mod model;
 mod svg;
 mod web;
 
@@ -156,6 +157,7 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    tracing_subscriber::fmt().init();
     let args = Playground::parse();
     let rt = Runtime::new()?;
 
@@ -184,20 +186,6 @@ async fn main() -> Result<()> {
         .canonicalize()
         .map_or(Cow::Borrowed(&playground_dir), Cow::Owned);
 
-    // Create playground and char directories
-    fs::create_dir_all(&*playground_dir)?;
-    fs::create_dir_all(playground_dir.join("char"))?;
-
-    // Initial render
-    render_glyphs(&rt, &args.source, &playground_dir)?;
-    let Some(serve) = args.serve else {
-        println!("{}", playground_dir.display());
-        return Ok(());
-    };
-
-    web::start_web_server().await;
-    return Ok(());
-
     // Set up file watcher
     let (tx, mut rx) = tokio::sync::mpsc::channel(1);
     let mut watcher = notify::recommended_watcher(move |res: notify::Result<_>| {
@@ -207,33 +195,14 @@ async fn main() -> Result<()> {
     })?;
     watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
 
-    // Spawn vite process
-    let mut serve = match serve {
-        None => Command::new("vite"),
-        Some(cmd) => {
-            let mut cmd = Command::new(cmd);
-            cmd.arg("vite");
-            cmd
-        }
-    };
-    let mut child = serve
-        .current_dir(dunce::simplified(&playground_dir))
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .spawn()?;
+    tokio::spawn(web::start_web_server());
+
+    // Initial render
+    render_glyphs(&rt, &args.source, &playground_dir)?;
 
     // Watch for changes and re-render
     loop {
-        tokio::select! {
-            _ = rx.recv() => render_glyphs(&rt, &args.source, &playground_dir)?,
-            status = child.wait() => {
-                let status = status?;
-                if !status.success() {
-                    bail!("dev server exited with error {status}");
-                }
-                break;
-            }
-        }
+        rx.recv().await;
+        render_glyphs(&rt, &args.source, &playground_dir)?;
     }
-    Ok(())
 }

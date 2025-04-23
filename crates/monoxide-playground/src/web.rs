@@ -1,8 +1,6 @@
 use axum::{Router, extract::Request, routing::any};
 
 pub async fn start_web_server() {
-    tracing_subscriber::fmt().init();
-
     let rev_proxy = axum_reverse_proxy::ReverseProxy::new("/", "http://localhost:5173");
 
     let app = Router::new()

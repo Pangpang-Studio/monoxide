@@ -19,3 +19,4 @@ axum = "0.8.3"
 tracing-subscriber = "0.3.19"
 tracing = "0.1.41"
 axum-reverse-proxy = "0.8.0"
+serde = { workspace = true, features = ["derive"] }
