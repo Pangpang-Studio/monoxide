@@ -1223,6 +1223,7 @@ dependencies = [
  "notify",
  "path-slash",
  "rquickjs",
+ "serde",
  "tokio",
  "tracing",
  "tracing-subscriber",
