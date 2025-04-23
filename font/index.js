@@ -1,8 +1,9 @@
 import { glyph } from 'monoxide'
-import { S, s } from './glyph/s'
+
 import { c } from './glyph/c'
 import { i } from './glyph/i'
 import { o } from './glyph/o'
+import { S, s } from './glyph/s'
 
 const glyphs = {
   S,
