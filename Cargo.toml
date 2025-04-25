@@ -33,7 +33,7 @@ members = [
     "crates/monoxide-curves",
     "crates/monoxide-playground",
     "crates/monoxide-script",
-    "crates/monoxide-ttf",
+    "crates/monoxide-ttf", "xtask",
 ]
 
 [workspace.dependencies]
