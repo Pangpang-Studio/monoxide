@@ -38,6 +38,14 @@ struct Playground {
 
     /// The script directory to build the glyphs from.
     source: PathBuf,
+
+    #[clap(subcommand)]
+    cmd: Option<Subcommand>,
+}
+
+#[derive(clap::Parser)]
+enum Subcommand {
+    Serve(web::ServerCommand),
 }
 
 /// Render glyphs to HTML files in the playground directory
@@ -97,7 +105,7 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
         }
 
         let ud = cx
-            .userdata::<ContextAttachment>()
+            .userdata::<ContextAttachment<'_>>()
             .context("failed to retrieve ContextAttachment from Ctx")?;
         anyhow::Ok(ud.take())
     })?;
@@ -157,8 +165,24 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt().init();
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env()
+                .add_directive(tracing_subscriber::filter::LevelFilter::INFO.into()),
+        )
+        .init();
+
     let args = Playground::parse();
+
+    // TODO: organize logic
+    if let Some(cmd) = args.cmd {
+        match cmd {
+            Subcommand::Serve(cmd) => web::start_web_server(cmd)
+                .await
+                .expect("Failed to start web server"),
+        }
+    }
+
     let rt = Runtime::new()?;
 
     let file_resolver = FileResolver::default();
@@ -194,8 +218,6 @@ async fn main() -> Result<()> {
         }
     })?;
     watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
-
-    tokio::spawn(web::start_web_server());
 
     // Initial render
     render_glyphs(&rt, &args.source, &playground_dir)?;
