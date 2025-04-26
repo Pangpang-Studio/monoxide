@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.97"
-clap = { version = "4.5.3", features = ["derive"] }
+clap.workspace = true
 tokio = { version = "1.36.0", features = ["full"] }
 notify = "8.0.0"
 monoxide-curves.workspace = true
@@ -14,9 +14,10 @@ monoxide-script.workspace = true
 rquickjs.workspace = true
 glob.workspace = true
 dunce.workspace = true
-path-slash.workspace = true   # for windows paths
+path-slash.workspace = true                         # for windows paths
 axum = "0.8.3"
-tracing-subscriber = "0.3.19"
-tracing = "0.1.41"
+tracing-subscriber.workspace = true
+tracing.workspace = true
 axum-reverse-proxy = "0.8.0"
 serde = { workspace = true, features = ["derive"] }
+tower-http = { version = "0.6", features = ["fs"] }
