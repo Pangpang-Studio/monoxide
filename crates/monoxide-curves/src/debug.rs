@@ -12,7 +12,8 @@ pub enum DebugPointKind {
 
 /// A trait for debugging the generation of curves and such.
 ///
-/// A no-op implementation is provided for `()` for cases when you don't want it.
+/// A no-op implementation is provided for `()` for cases when you don't want
+/// it.
 pub trait CurveDebugger {
     /// Print a debug point of the given kind
     fn point(&mut self, kind: DebugPointKind, at: Point2D, tag: &str);
@@ -22,5 +23,6 @@ pub trait CurveDebugger {
 
 impl CurveDebugger for () {
     fn point(&mut self, _: DebugPointKind, _: Point2D, _: &str) {}
+
     fn line(&mut self, _: Point2D, _: Point2D, _: &str) {}
 }

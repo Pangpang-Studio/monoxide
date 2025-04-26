@@ -3,14 +3,13 @@ mod lang_id_ms;
 use std::collections::HashMap;
 
 use bytes::{BufMut, BytesMut};
+pub use lang_id_ms::MSLangID;
 use widestring::U16String;
 
 use super::{
     encoding::{PlatformId, UnicodePlatformEncoding},
     ITable,
 };
-
-pub use lang_id_ms::MSLangID;
 
 /// The version of the name table. Only version 1 is supported by this library.
 const NAME_TABLE_VERSION: u16 = 0;

@@ -15,7 +15,8 @@ pub fn glyf_to_maxp(glyf: &glyf::Table) -> maxp::TableV1 {
             glyf::Glyph::Simple(glyph) => {
                 maxp.max_points = maxp.max_points.max(glyph.n_points() as u16);
                 maxp.max_contours = maxp.max_contours.max(glyph.n_contours() as u16);
-                // TODO: zones, twilight points, storage, func defs, instruction defs, stack elements
+                // TODO: zones, twilight points, storage, func defs, instruction defs, stack
+                // elements
                 maxp.max_size_of_instructions = maxp
                     .max_size_of_instructions
                     .max(glyph.instructions.len() as u16);

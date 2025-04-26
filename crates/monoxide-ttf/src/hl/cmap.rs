@@ -1,4 +1,5 @@
-//! A higher-level representation of the character mapping within the `cmap` table.
+//! A higher-level representation of the character mapping within the `cmap`
+//! table.
 //!
 //! Code creating `cmap` table records should use types in this module, and then
 //! convert it to various other formats using their respective modules, instead

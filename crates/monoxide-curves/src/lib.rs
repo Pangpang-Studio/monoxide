@@ -6,9 +6,8 @@ pub mod point;
 pub mod quad;
 pub mod stroke;
 pub use cube::{CubicBezier, CubicSegment};
-pub use quad::{QuadBezier, QuadSegment};
-
 use num_traits::{Num, real::Real};
+pub use quad::{QuadBezier, QuadSegment};
 
 /// Represents a spiro curve.
 pub type SpiroCurve = Vec<spiro::SpiroCP>;

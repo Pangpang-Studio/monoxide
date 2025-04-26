@@ -8,7 +8,8 @@ struct Segment {
     end_code: u16,
     /// The starting character code for the segment.
     start_code: u16,
-    /// The delta value to be added to the character code to get the glyph index.
+    /// The delta value to be added to the character code to get the glyph
+    /// index.
     id_delta: i16,
     /// The offset into the glyph index array or 0 if the idDelta value is used.
     ///

@@ -1,15 +1,15 @@
 use bytes::BufMut;
 
-/// An implementation of [`bytes::BufMut`] that only keeps track of the size of the buffer,
-/// not the actual contents.
+/// An implementation of [`bytes::BufMut`] that only keeps track of the size of
+/// the buffer, not the actual contents.
 ///
-/// With sufficient compiler optimizations, this can be used to calculate the written size
-/// of a buffer without actually writing the contents.
+/// With sufficient compiler optimizations, this can be used to calculate the
+/// written size of a buffer without actually writing the contents.
 ///
-/// In rare cases where the function [`Self::chunk_mut`] is called, this type will panic,
-/// since there is _no_ underlying buffer to write to. Most of the time, this should not be
-/// a problem, since users of this type should usually just call high-level ones like
-/// [`Self::put_slice`] or [`Self::put_bytes`].
+/// In rare cases where the function [`Self::chunk_mut`] is called, this type
+/// will panic, since there is _no_ underlying buffer to write to. Most of the
+/// time, this should not be a problem, since users of this type should usually
+/// just call high-level ones like [`Self::put_slice`] or [`Self::put_bytes`].
 pub struct SizeOnlyBufWriter {
     size: usize,
 }

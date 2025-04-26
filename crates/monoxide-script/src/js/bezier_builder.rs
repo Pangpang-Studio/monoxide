@@ -1,9 +1,8 @@
 use monoxide_curves::{cube::CubicBezierBuilder, point::Point2D};
 use rquickjs::{class::Trace, prelude::This, Class, Ctx, JsLifetime};
 
-use crate::ast::OutlineExpr;
-
 use super::outline_expr::OutlineExprObject;
+use crate::ast::OutlineExpr;
 
 #[rquickjs::class]
 #[derive(JsLifetime)]

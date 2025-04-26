@@ -3,9 +3,8 @@ use flo_curves::{
     bezier::path::{BezierPath, BezierPathFactory},
 };
 
-use crate::point::Point2D;
-
 use super::{CubicBezier, CubicSegment};
+use crate::point::Point2D;
 
 impl Geo for CubicBezier<Point2D> {
     type Point = Point2D;

@@ -90,7 +90,8 @@ impl ITable for Table {
         writer.put_u32(MAGIC_NUMBER);
         writer.put_u16(self.flags.bits());
         writer.put_u16(self.units_per_em);
-        // 	Number of seconds since 12:00 midnight that started January 1st, 1904, in GMT/UTC time zone.
+        // 	Number of seconds since 12:00 midnight that started January 1st, 1904, in
+        // GMT/UTC time zone.
         writer.put_u64(
             self.created
                 .duration_since(time_offset_base)

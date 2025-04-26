@@ -1,9 +1,8 @@
 use bytes::BufMut;
 use thiserror::Error;
 
-use crate::model::{f2dot14, fword};
-
 use super::GlyphCommon;
+use crate::model::{f2dot14, fword};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Args {
