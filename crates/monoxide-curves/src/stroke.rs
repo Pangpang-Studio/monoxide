@@ -126,16 +126,15 @@ pub fn stroke_spiro(
         SpiroCpTy::Open => {
             let mut result = left;
             let mut right = right;
-            // assert!(matches!(result[0].ty, SpiroCpTy::Open));
+            debug_assert_eq!(result[0].ty, SpiroCpTy::Open);
             result[0].ty = SpiroCpTy::Corner;
             // Rewrite the last point
-            // assert!(matches!(result.last().unwrap().ty, SpiroCpTy::EndOpen));
+            debug_assert_eq!(result.last().unwrap().ty, SpiroCpTy::EndOpen);
             result.last_mut().unwrap().ty = SpiroCpTy::Corner;
-            // and those in the right curve
-            // remember we have reversed it
-            // assert!(matches!(right[0].ty, SpiroCpTy::Open));
+            // and those in the right curve (remember we have reversed it)
+            debug_assert_eq!(right[0].ty, SpiroCpTy::Open);
             right[0].ty = SpiroCpTy::Corner;
-            // assert!(matches!(right.last().unwrap().ty, SpiroCpTy::EndOpen));
+            debug_assert_eq!(right.last().unwrap().ty, SpiroCpTy::EndOpen);
             right.last_mut().unwrap().ty = SpiroCpTy::Corner;
 
             result.extend(right);
