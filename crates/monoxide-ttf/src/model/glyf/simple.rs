@@ -157,7 +157,8 @@ pub struct SimpleGlyph {
     // pub n_countours: u16, // encoded in the 1st field, as positive number
     pub common: GlyphCommon,
     /// Array of last points of each contour; array entries are point indices.
-    /// The total number of points is determined by the last entry in this field.
+    /// The total number of points is determined by the last entry in this
+    /// field.
     pub end_points_of_countours: Vec<u16>,
     pub instructions: Vec<u8>,
     pub flags: Vec<FlagOrRepeat>,

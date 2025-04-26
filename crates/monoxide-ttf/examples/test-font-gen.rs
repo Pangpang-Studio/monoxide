@@ -16,8 +16,9 @@ use monoxide_ttf::{
 };
 
 fn main() {
-    // Here we create a very simple test font that maps the entire Unicode Basic Multilingual Plane
-    // to a single glyph that is a square with side length 1024 units.
+    // Here we create a very simple test font that maps the entire Unicode Basic
+    // Multilingual Plane to a single glyph that is a square with side length
+    // 1024 units.
 
     let head = head::Table {
         font_revision: 0,

@@ -8,12 +8,12 @@
 //! The following quote comes from Microsoft's OpenType specification:
 //!
 //! > Of the seven available formats, not all are commonly used today. Formats 4
-//! > or 12 are appropriate for most new fonts, depending on the Unicode character
-//! > repertoire supported. Format 14 is used in many applications for support of
-//! > Unicode variation sequences. Some platforms also make use for format 13 for
-//! > a last-resort fallback font. Other subtable formats are not recommended for
-//! > use in new fonts. Application developers, however, should anticipate that
-//! > any of the formats may be used in fonts.
+//! > or 12 are appropriate for most new fonts, depending on the Unicode
+//! > character repertoire supported. Format 14 is used in many applications for
+//! > support of Unicode variation sequences. Some platforms also make use for
+//! > format 13 for a last-resort fallback font. Other subtable formats are not
+//! > recommended for use in new fonts. Application developers, however, should
+//! > anticipate that any of the formats may be used in fonts.
 //!
 //! <https://learn.microsoft.com/zh-cn/typography/opentype/spec/cmap>
 

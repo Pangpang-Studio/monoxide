@@ -122,8 +122,9 @@ pub struct QuadBezierPointIter<'a, P> {
     curve: &'a QuadBezier<P>,
     /// Start point is seg 0, segments start from 1
     current_segment: usize,
-    /// Whether the upcoming point is the off-curve point of the current segment.
-    /// The off-curve should be outputted before the on-curve point.
+    /// Whether the upcoming point is the off-curve point of the current
+    /// segment. The off-curve should be outputted before the on-curve
+    /// point.
     is_off_curve: bool,
 }
 
