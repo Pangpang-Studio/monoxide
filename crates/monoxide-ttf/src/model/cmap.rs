@@ -20,7 +20,7 @@
 pub mod fmt12;
 pub mod fmt4;
 
-use super::encoding::{EncodingRecord, PlatformId};
+use super::encoding::EncodingRecord;
 
 /// Representing a subtable for a specific platform and encoding.
 pub enum Subtable {
