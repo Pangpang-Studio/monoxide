@@ -431,7 +431,7 @@ fn make_line_join(
     right points along their tangents to meet at a point. That is, to
     solve:
 
-        k1 * in_tangent + in_left == k2 * out_tangent + out_left
+        k1 * in_tangent + in_left == -k2 * out_tangent + out_left
         (same for right side)
 
     Splitting the x and y components, we get the following linear equations:
@@ -439,33 +439,35 @@ fn make_line_join(
         [ (A)
             in_tangent.x,  -out_tangent.x;
             in_tangent.y,  -out_tangent.y;
-        ] * [k1; k2] == [ (B)
+        ] * [k1; -k2] == [ (B)
             out_left.x - in_left.x;
             out_left.y - in_left.y;
         ]
 
     Since in_tangent.x != out_tangent.x and in_tangent.y != out_tangent.y, the
     matrix is invertible, and we can solve for k1 and k2. Actually, we can just
-    solve for k1, since our result can only depend on one of them. Additionally,
-    for the right side, k1_right == -(right_offset/left_offset) * k1_left,
-    so we won't need to solve for the right side separately.
+    solve for k1, since our result can only depend on one of them.
 
-    According to Cramer's rule, k1 = det(A1) / det(A), where A1 is A with the
-    first column replaced by B.
+    According to Cramer's rule, for the following equation:
 
-        det(A1) = (in_tangent.x * (out_left.y - in_left.y) - in_tangent.y * (out_left.x - in_left.x))
-        det(A) = in_tangent.x * -out_tangent.y - in_tangent.y * -out_tangent.x
-
-    And we get our results.
+        [a1, b1; a2, b2] * [x; y] = [c1; c2]
     */
 
-    let det_a = in_tangent.x * -out_tangent.y - in_tangent.y * -out_tangent.x;
-    let det_a1 = in_tangent.x * (out_left.y - in_left.y) - in_tangent.y * (out_left.x - in_left.x);
+    let a1 = in_tangent.x;
+    let b1 = -out_tangent.x;
+    let a2 = in_tangent.y;
+    let b2 = -out_tangent.y;
+    let c1 = out_left.x - in_left.x;
+    let c2 = out_left.y - in_left.y;
 
-    let k1_left = det_a1 / det_a;
-    // And our join point is just (k1 * in_tangent + in_left)
+    // ... the solution for x is:
+    let k1_left = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
+
+    // And our join point on the left side is just:
     let join_left = in_left + k1_left * in_tangent;
 
+    // Additionally, for the right side, k1 can be directly derived from that
+    // of the left side:
     let k1_right = -(right_offset / left_offset) * k1_left;
     let join_right = in_right + k1_right * in_tangent;
 
