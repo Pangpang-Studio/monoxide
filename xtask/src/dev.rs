@@ -241,11 +241,12 @@ const RETRY_COUNT: usize = 10;
 /// If start of webui fails, it will retry to start it on a different port.
 fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u16, Child)> {
     for i in 0..RETRY_COUNT {
+        let port = start_port + i as u16;
         let mut cmd = std::process::Command::new(pnpm);
         cmd.arg("dev")
             .arg("--host=127.0.0.1")
             .arg("--cors")
-            .arg(format!("--port={}", (start_port + i as u16)))
+            .arg(format!("--port={}", port))
             .arg("--strictPort")
             .current_dir(dir)
             .stdout(std::process::Stdio::inherit())
@@ -264,6 +265,9 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
                 "Failed to start webui on port {}. Return status {}. Retrying...",
                 start_port, status
             );
+            continue;
+        } else {
+            return Ok((port, child));
         }
     }
 
