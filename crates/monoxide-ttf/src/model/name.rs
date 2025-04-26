@@ -6,7 +6,7 @@ use bytes::{BufMut, BytesMut};
 use widestring::U16String;
 
 use super::{
-    encoding::{self, PlatformId, UnicodePlatformEncoding},
+    encoding::{PlatformId, UnicodePlatformEncoding},
     ITable,
 };
 
