@@ -1,7 +1,7 @@
 import { settings } from 'monoxide'
 
 import { corner, endOpen, open, simpleGlyph, spiro } from '../outline'
-import { ring } from '../shape'
+import { ringAt } from '../shape'
 
 /** @import {Point} from '../shape' */
 
@@ -22,12 +22,7 @@ export const i = simpleGlyph(
   spiro(
     open(mid, descender),
     corner(mid, xHeight - halfStrokeW),
-    endOpen(mid - 0.35 * iStrokeHeight, xHeight - halfStrokeW),
+    endOpen(mid - 0.4 * iStrokeHeight, xHeight - halfStrokeW),
   ).stroked(strokeW),
-  ring(
-    mid - 0.75 * strokeW,
-    xHeight + 1 * strokeW,
-    mid + 0.75 * strokeW,
-    xHeight + 2.5 * strokeW,
-  ),
+  ringAt(mid, xHeight + 1.5 * strokeW, 0.65 * strokeW),
 )
