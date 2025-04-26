@@ -1,4 +1,6 @@
 use std::{
+    net::SocketAddrV4,
+    ops::ControlFlow,
     path::Path,
     process::Child,
     sync::{Arc, Mutex},
@@ -7,6 +9,8 @@ use std::{
 use tracing::{info, warn};
 
 use crate::{CARGO, workspace_root};
+use std::io;
+use std::net::TcpStream;
 
 #[derive(clap::Parser)]
 pub struct DevCommand {
@@ -46,6 +50,8 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
         .lock()
         .unwrap_or_else(|_| panic!("Failed to lock mutex! Please manually kill the process."));
 
+    tracing::error!("Performing graceful shutdown...");
+
     if let Some(mut child) = st.webui_child.take() {
         info!("Killing webui child process...");
         let _ = child.kill();
@@ -68,7 +74,7 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
         info!("No playground child process to kill.");
     }
 
-    info!("Exiting...");
+    info!("Until next time!");
     std::process::exit(0);
 }
 
@@ -93,7 +99,7 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
     {
         let st = shutdown_state.clone();
         ctrlc::set_handler(move || {
-            info!("Ctrl-C received, shutting down...");
+            tracing::warn!("Ctrl-C received, shutting down...");
             graceful_shutdown(&st);
         })
         .expect("Failed to set Ctrl-C handler");
@@ -141,6 +147,20 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
         st.playground_child = Some(playground_child);
     }
 
+    // Wait for the servers to come online
+    loop {
+        if check_exit_status(&shutdown_state) {
+            anyhow::bail!("One of the servers exited. Exiting...");
+        }
+        let online = is_port_online(cmd.port).unwrap_or(false);
+        if online {
+            break;
+        } else {
+            info!("Waiting for playground server on port {}...", cmd.port);
+        }
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+
     info!("All servers started successfully!");
     info!("");
     warn!(
@@ -152,26 +172,34 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
 
     // Exit if either server exits.
     loop {
-        let mut st = shutdown_state.lock().unwrap();
-        if let Some(ref mut child) = st.webui_child {
-            if let Some(status) = child.try_wait().unwrap() {
-                println!("Webui server exited with status {}. Exiting...", status);
-                break;
-            }
-        }
-        if let Some(ref mut child) = st.playground_child {
-            if let Some(status) = child.try_wait().unwrap() {
-                println!(
-                    "Playground server exited with status {}. Exiting...",
-                    status
-                );
-                break;
-            }
+        if check_exit_status(&shutdown_state) {
+            break;
         }
         std::thread::sleep(std::time::Duration::from_secs(1));
     }
 
     Ok(())
+}
+
+/// Check if the webui or playground server has exited. If so, return true
+fn check_exit_status(shutdown_state: &Arc<Mutex<ShutdownState>>) -> bool {
+    let mut st = shutdown_state.lock().unwrap();
+    if let Some(ref mut child) = st.webui_child {
+        if let Some(status) = child.try_wait().unwrap() {
+            tracing::error!("Webui server exited with status {}. Exiting...", status);
+            return true;
+        }
+    }
+    if let Some(ref mut child) = st.playground_child {
+        if let Some(status) = child.try_wait().unwrap() {
+            tracing::error!(
+                "Playground server exited with status {}. Exiting...",
+                status
+            );
+            return true;
+        }
+    }
+    false
 }
 
 fn start_playground(
@@ -248,26 +276,55 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
             .arg("--cors")
             .arg(format!("--port={}", port))
             .arg("--strictPort")
+            .arg("--clearScreen=false")
             .current_dir(dir)
             .stdout(std::process::Stdio::inherit())
             .stderr(std::process::Stdio::inherit());
 
         let mut child = cmd.spawn().expect("Failed to run pnpm dev");
-        // Wait a little while for the server to start
-        std::thread::sleep(std::time::Duration::from_secs(1));
-        // check if the server is running
-        let status = child
-            .try_wait()
-            .expect("Failed to check if pnpm dev is running");
 
-        if let Some(status) = status {
-            println!(
-                "Failed to start webui on port {}. Return status {}. Retrying...",
-                start_port, status
+        // Give the server a little time to start
+        let start_timeout = 10;
+
+        let mut is_online = false;
+        for _ in 0..start_timeout {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            // check if the server is running
+            let status = child
+                .try_wait()
+                .expect("Failed to check if pnpm dev is running");
+
+            if let Some(status) = status {
+                warn!(
+                    "Failed to start webui on port {}. Return status {}. Retrying...",
+                    start_port, status
+                );
+                is_online = false;
+                break;
+            }
+
+            let online = is_port_online(port).unwrap_or(false);
+            if online {
+                is_online = true;
+                break;
+            } else {
+                info!("Webui not online yet on port {}. Retrying...", port);
+            }
+        }
+
+        if is_online {
+            info!("Webui dev server started on port {}", port);
+            return Ok((port, child));
+        } else {
+            // If the server is not online, kill the child process
+            // and try the next port
+            let _ = child.kill();
+            let _ = child.wait().expect("Failed to wait for pnpm dev process");
+            warn!(
+                "Webui server not online after {} seconds. Retrying on port {}...",
+                start_timeout, port
             );
             continue;
-        } else {
-            return Ok((port, child));
         }
     }
 
@@ -277,4 +334,26 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
         start_port,
         start_port + RETRY_COUNT as u16 - 1
     ))
+}
+
+/// Check if the given port is online by attempting a single connection.
+/// Returns Ok(true) if connection succeeds, Ok(false) if it fails with
+/// ConnectionRefused or TimedOut, and Err for other IO errors.
+fn is_port_online(port: u16) -> anyhow::Result<bool> {
+    let addr = SocketAddrV4::new([127, 0, 0, 1].into(), port);
+    // Use a short timeout to avoid blocking for long
+    match TcpStream::connect_timeout(&addr.into(), std::time::Duration::from_millis(200)) {
+        Ok(_) => Ok(true), // Connection successful
+        Err(e)
+            if e.kind() == io::ErrorKind::ConnectionRefused
+                || e.kind() == io::ErrorKind::TimedOut =>
+        {
+            Ok(false) // Port not listening or connection timed out
+        }
+        Err(e) => {
+            // Other unexpected error
+            warn!("Unexpected error checking port {}: {}", port, e);
+            Err(e.into())
+        }
+    }
 }
