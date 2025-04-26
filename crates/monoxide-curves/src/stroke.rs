@@ -22,8 +22,8 @@ impl Tangent {
     /// override is used.
     fn with_override(&self, override_: &Tangent) -> Tangent {
         Tangent {
-            in_: self.in_.and_then(|x| override_.in_.or(Some(x))),
-            out: self.out.and_then(|x| override_.out.or(Some(x))),
+            in_: self.in_.map(|x| override_.in_.unwrap_or(x)),
+            out: self.out.map(|x| override_.out.unwrap_or(x)),
         }
     }
 }
@@ -41,40 +41,18 @@ fn is_point_curved(ty: SpiroCpTy) -> bool {
 }
 
 fn is_single_piece(curve: &[SpiroCP]) -> bool {
-    if curve.is_empty() {
-        return false; // No curve
-    }
+    use SpiroCpTy::*;
 
-    let start_point = curve[0].ty;
-    match start_point {
-        SpiroCpTy::EndOpen => return false, // End at the start of the curve
-        SpiroCpTy::Open => {
-            // Open curve
-            if curve.iter().skip(1).any(|cp| cp.ty == SpiroCpTy::Open) {
-                return false;
-            }
-            if curve[..curve.len() - 1]
-                .iter()
-                .any(|cp| cp.ty == SpiroCpTy::EndOpen)
-            {
-                return false;
-            }
-            if curve.last().unwrap().ty != SpiroCpTy::EndOpen {
-                return false;
-            }
-        }
-        _ => {
-            // Closed curve
-            if curve
-                .iter()
-                .any(|cp| cp.ty == SpiroCpTy::EndOpen || cp.ty == SpiroCpTy::Open)
-            {
-                return false;
-            }
-        }
+    match curve {
+        [] => false, // No curve
+        [
+            SpiroCP { ty: Open, .. },
+            open @ ..,
+            SpiroCP { ty: EndOpen, .. },
+        ] => !open.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
+        [SpiroCP { ty: Open, .. }, ..] | [SpiroCP { ty: EndOpen, .. }, ..] => false,
+        closed => !closed.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
     }
-
-    true
 }
 
 /// The result of the stroke operation. It can be either a single spiro curve,
@@ -101,48 +79,40 @@ pub fn stroke_spiro(
     }
 
     let is_closed = curve[0].ty != SpiroCpTy::Open;
-    let (left, right) = stroke_spiro_raw(curve, is_closed, width, tangent_override, dbg);
+    let (left, mut right) = stroke_spiro_raw(curve, is_closed, width, tangent_override, dbg);
 
     // Anyway, we should reverse the right curve first.
-    let right = {
-        let mut right = right;
-        right.reverse();
-        for cp in &mut right {
-            *cp = reverse_spiro_point(*cp);
-        }
-        right
-    };
-
-    // Both should be either:
-    //
-    // - [Open, ..., EndOpen], generated from an open curve. This way, we need to
-    //   replace all `Open` and `EndOpen` with `Corner`, except the first one which
-    //   should be `End`.
-    //
-    // - [...], Generated from a closed curve. In this case, the two curves are
-    //   simply concatenated (the right one reversed because we need to decrease the
-    //   winding number).
-    match curve[0].ty {
-        SpiroCpTy::Open => {
-            let mut result = left;
-            let mut right = right;
-            debug_assert_eq!(result[0].ty, SpiroCpTy::Open);
-            result[0].ty = SpiroCpTy::Corner;
-            // Rewrite the last point
-            debug_assert_eq!(result.last().unwrap().ty, SpiroCpTy::EndOpen);
-            result.last_mut().unwrap().ty = SpiroCpTy::Corner;
-            // and those in the right curve (remember we have reversed it)
-            debug_assert_eq!(right[0].ty, SpiroCpTy::Open);
-            right[0].ty = SpiroCpTy::Corner;
-            debug_assert_eq!(right.last().unwrap().ty, SpiroCpTy::EndOpen);
-            right.last_mut().unwrap().ty = SpiroCpTy::Corner;
-
-            result.extend(right);
-
-            StrokeResult::One(result)
-        }
-        _ => StrokeResult::Two(left, right),
+    right.reverse();
+    for cp in &mut right {
+        *cp = reverse_spiro_point(*cp);
     }
+
+    // Both `left` and `right` should be either:
+    //
+    // - A closed curve. In this case, the two curves are simply concatenated (the
+    //   right one reversed because we need to decrease the winding number).
+    if is_closed {
+        return StrokeResult::Two(left, right);
+    }
+
+    // - [Open, ..., EndOpen], i.e. an open curve. In this case, we need to replace
+    //   all `Open` and `EndOpen` with `Corner`, except the first one which should
+    //   be `End`.
+    let mut result = left;
+    debug_assert_eq!(result[0].ty, SpiroCpTy::Open);
+    result[0].ty = SpiroCpTy::Corner;
+    // Rewrite the last point
+    debug_assert_eq!(result.last().unwrap().ty, SpiroCpTy::EndOpen);
+    result.last_mut().unwrap().ty = SpiroCpTy::Corner;
+    // and those in the right curve (remember we have reversed it)
+    debug_assert_eq!(right[0].ty, SpiroCpTy::Open);
+    right[0].ty = SpiroCpTy::Corner;
+    debug_assert_eq!(right.last().unwrap().ty, SpiroCpTy::EndOpen);
+    right.last_mut().unwrap().ty = SpiroCpTy::Corner;
+
+    result.extend(right);
+
+    StrokeResult::One(result)
 }
 
 #[allow(dead_code)]
