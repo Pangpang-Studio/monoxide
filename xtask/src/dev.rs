@@ -4,7 +4,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::{CARGO, workspace_root};
 
@@ -140,6 +140,15 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
         let mut st = shutdown_state.lock().unwrap();
         st.playground_child = Some(playground_child);
     }
+
+    info!("All servers started successfully!");
+    info!("");
+    warn!(
+        "Open the Playground WebUI at http://127.0.0.1:{}/",
+        cmd.port
+    );
+    warn!("");
+    warn!("Press Ctrl-C to exit.");
 
     // Exit if either server exits.
     loop {
