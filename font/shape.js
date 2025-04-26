@@ -32,3 +32,17 @@ export function ring(x0, y0, x1, y1) {
   const yh = mix(y0, y1, 0.5)
   return spiro(g4(x0, yh), g4(xh, y0), g4(x1, yh), g4(xh, y1))
 }
+
+/**
+ * Renders a ring that is centered at (x, y) with x and y ranges of width rx and
+ * ry.
+ *
+ * @param {number} x
+ * @param {number} y
+ * @param {number} rx
+ * @param {number} [ry] Default is `rx`
+ * @returns {import('monoxide').OutlineExpr} The outline of the ring
+ */
+export function ringAt(x, y, rx, ry = rx) {
+  return ring(x - rx, y - ry, x + rx, y + ry)
+}
