@@ -220,7 +220,7 @@ pub fn eval_outline(
                 let oc = monoxide_curves::stroke::stroke_spiro(
                     spiro_cps,
                     *width,
-                    Default::default(),
+                    &Default::default(),
                     dbg,
                 );
                 match oc {
