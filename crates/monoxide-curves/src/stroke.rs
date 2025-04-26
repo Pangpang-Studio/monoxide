@@ -55,6 +55,8 @@ fn is_single_piece(curve: &[SpiroCP]) -> bool {
     }
 }
 
+pub type TangentOverride = HashMap<usize, Tangent>;
+
 /// The result of the stroke operation. It can be either a single spiro curve,
 /// or two curves if the input curve is closed.
 #[derive(Debug, Clone)]
@@ -71,7 +73,7 @@ pub enum StrokeResult {
 pub fn stroke_spiro(
     curve: &[SpiroCP],
     width: f64,
-    tangent_override: HashMap<usize, Tangent>,
+    tangent_override: &TangentOverride,
     dbg: &mut impl CurveDebugger,
 ) -> StrokeResult {
     if !is_single_piece(curve) {
@@ -168,7 +170,7 @@ pub fn stroke_spiro_raw(
     curve: &[SpiroCP],
     is_closed: bool,
     width: f64,
-    tangent_override: HashMap<usize, Tangent>,
+    tangent_override: &TangentOverride,
     dbg: &mut impl CurveDebugger,
 ) -> (Vec<SpiroCP>, Vec<SpiroCP>) {
     assert!(!curve.is_empty(), "curve should not be empty");
@@ -198,8 +200,8 @@ pub fn stroke_spiro_raw(
 
     // Calculate tangent for each control point.
     let mut tangents = calc_tangents(curve, &cubic, &indices);
-    for (index, override_) in tangent_override {
-        tangents[index] = tangents[index].with_override(&override_);
+    for (&index, override_) in tangent_override {
+        tangents[index] = tangents[index].with_override(override_);
     }
     let tangents = tangents;
 
