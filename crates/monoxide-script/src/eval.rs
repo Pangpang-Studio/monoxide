@@ -199,7 +199,6 @@ pub fn eval_outline(
     out: &mut Vec<CubicBezier<Point2D>>,
     dbg: &mut impl CurveDebugger,
 ) {
-    // TODO: remove inout param in `out`
     match expr {
         OutlineExpr::Bezier(cubic_bezier) => out.push(cubic_bezier.clone()),
         OutlineExpr::Spiro(spiro_cps) => {
