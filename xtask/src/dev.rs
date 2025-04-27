@@ -216,7 +216,7 @@ fn start_playground(
     if cmd.watch {
         playground_cmd.args(&["watch", "-i", "font", "--"]);
     }
-    playground_cmd.args(&["run", "-p", playground_server_name, "--"]);
+    playground_cmd.args(&["cargo", "run", "-p", playground_server_name, "--"]);
     // TODO: configurable font directory, currently hardcoded to `font`
     playground_cmd.args(&["font", "serve", "--port"]);
     playground_cmd.arg(cmd.port.to_string());
