@@ -201,7 +201,7 @@ pub fn eval_outline(
 ) {
     match expr {
         OutlineExpr::Bezier(cubic_bezier) => out.push(cubic_bezier.clone()),
-        OutlineExpr::Spiro(spiro_cps) => {
+        OutlineExpr::Spiro(spiro_cps, _) => {
             // Write points to the debugger
             for cp in spiro_cps.iter() {
                 dbg.point(
@@ -215,13 +215,9 @@ pub fn eval_outline(
             out.extend_from_slice(&bez);
         }
         OutlineExpr::Stroked(outline_expr, width) => match &**outline_expr {
-            OutlineExpr::Spiro(spiro_cps) => {
-                let oc = monoxide_curves::stroke::stroke_spiro(
-                    spiro_cps,
-                    *width,
-                    &Default::default(),
-                    dbg,
-                );
+            OutlineExpr::Spiro(spiro_cps, tangent_override) => {
+                let oc =
+                    monoxide_curves::stroke::stroke_spiro(spiro_cps, *width, tangent_override, dbg);
                 match oc {
                     monoxide_curves::stroke::StrokeResult::One(spiro_cps) => {
                         let bz = monoxide_curves::convert::spiro_to_cube(&spiro_cps);

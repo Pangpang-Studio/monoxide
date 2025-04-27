@@ -28,6 +28,6 @@ export const S = simpleGlyph(
     g2(0.224, 0.237),
     g2(0.347, 0.335),
     g2(0.202, 0.467),
-    endOpen(0.081, 0.429),
+    endOpen(0.081, 0.429).heading(-1, 0),
   ).stroked(0.05),
 )

@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, rc::Rc};
 
-use monoxide_curves::{point::Point2D, CubicBezier, SpiroCurve};
+use monoxide_curves::{point::Point2D, stroke::TangentOverride, CubicBezier, SpiroCurve};
 use rquickjs::{
     class::{Trace, Tracer},
     JsLifetime,
@@ -60,7 +60,7 @@ pub struct SimpleGlyph {
 #[derive(Debug, Clone)]
 pub enum OutlineExpr {
     Bezier(CubicBezier<Point2D>),
-    Spiro(SpiroCurve),
+    Spiro(SpiroCurve, TangentOverride),
     Stroked(Rc<OutlineExpr>, f64),
     // TODO: transformed, etc.
 }

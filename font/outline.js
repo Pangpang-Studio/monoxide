@@ -1,6 +1,11 @@
 import * as mx from 'monoxide'
 
-/** @typedef {{ meth: string; args: number[] }} Inst */
+/**
+ * @typedef {object} Inst
+ * @property {string} meth
+ * @property {number[]} args
+ * @property {Record<string, number[]>} [extras]
+ */
 
 /**
  * @typedef {'corner'
@@ -12,10 +17,39 @@ import * as mx from 'monoxide'
  *   | 'handle'
  *   | 'open'
  *   | 'endOpen'} SpiroMeth
- *
- *
- * @typedef {Inst & { meth: SpiroMeth }} SpiroInst
  */
+
+/**
+ * @augments {Inst}
+ * @class
+ */
+class SpiroInst {
+  /** @type {SpiroMeth} */
+  meth
+  /** @type {number[]} */
+  args
+  /** @type {Record<string, number[]>} */
+  extras = {}
+
+  /**
+   * @param {SpiroMeth} meth
+   * @param {...number} args
+   */
+  constructor(meth, ...args) {
+    this.meth = meth
+    this.args = args
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @returns {SpiroInst}
+   */
+  heading(x, y) {
+    this.extras.heading = [x, y]
+    return this
+  }
+}
 
 /**
  * @param {() => any} builderFactory
@@ -24,7 +58,12 @@ import * as mx from 'monoxide'
 function instCollector(builderFactory) {
   return (...insts) => {
     let builder = builderFactory()
-    for (const { meth, args } of insts) builder = builder[meth](...args)
+    for (const { meth, args, extras } of insts) {
+      builder = builder[meth](...args)
+      if (extras)
+        for (const [meth, args] of Object.entries(extras))
+          builder = builder[meth](...args)
+    }
     return builder.build()
   }
 }
@@ -46,20 +85,30 @@ const instFactory =
 const pointInstFactory = (meth) => instFactory(meth)
 
 /**
+ * @typedef {(...args: [number, number]) => SpiroInst} SpiroInstFactory
+ * @param {SpiroMeth} meth
+ * @returns {SpiroInstFactory}
+ */
+const spiroInstFactory =
+  (meth) =>
+  (...args) =>
+    new SpiroInst(meth, ...args)
+
+/**
  * @param {SpiroInst[]} insts
  * @returns {mx.OutlineExpr}
  */
 export const spiro = instCollector(mx.spiro)
 
-export const corner = pointInstFactory('corner')
-export const g4 = pointInstFactory('g4')
-export const g2 = pointInstFactory('g2')
-export const flat = pointInstFactory('flat')
-export const curl = pointInstFactory('curl')
-export const anchor = pointInstFactory('anchor')
-export const handle = pointInstFactory('handle')
-export const open = pointInstFactory('open')
-export const endOpen = pointInstFactory('endOpen')
+export const corner = spiroInstFactory('corner')
+export const g4 = spiroInstFactory('g4')
+export const g2 = spiroInstFactory('g2')
+export const flat = spiroInstFactory('flat')
+export const curl = spiroInstFactory('curl')
+export const anchor = spiroInstFactory('anchor')
+export const handle = spiroInstFactory('handle')
+export const open = spiroInstFactory('open')
+export const endOpen = spiroInstFactory('endOpen')
 
 /**
  * @typedef {'moveTo' | 'lineTo' | 'curveTo' | 'close'} BezierMeth
