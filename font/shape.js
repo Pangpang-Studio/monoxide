@@ -1,8 +1,6 @@
 import { mix } from './math'
 import { endOpen, g4, open, spiro } from './outline'
 
-/** @typedef {[number, number]} Point */
-
 /**
  * Renders a rectangle formed by drawing a line between points (x0, y0) and (x1,
  * y1) of the given width.

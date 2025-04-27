@@ -1,5 +1,7 @@
 import * as mx from 'monoxide'
 
+/** @import {Point} from "./point" */
+
 /**
  * @typedef {object} Inst
  * @property {string} meth
@@ -78,14 +80,14 @@ const instFactory =
   (...args) => ({ meth, args })
 
 /**
- * @typedef {(...args: [number, number]) => Inst} PointInstFactory
+ * @typedef {(...args: Point) => Inst} PointInstFactory
  * @param {string} meth
  * @returns {PointInstFactory}
  */
 const pointInstFactory = (meth) => instFactory(meth)
 
 /**
- * @typedef {(...args: [number, number]) => SpiroInst} SpiroInstFactory
+ * @typedef {(...args: Point) => SpiroInst} SpiroInstFactory
  * @param {SpiroMeth} meth
  * @returns {SpiroInstFactory}
  */

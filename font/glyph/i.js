@@ -3,7 +3,7 @@ import { settings } from 'monoxide'
 import { corner, endOpen, open, simpleGlyph, spiro } from '../outline'
 import { ringAt } from '../shape'
 
-/** @import {Point} from '../shape' */
+/** @import {Point} from '../point' */
 
 const { width, descender, xHeight } = settings
 const mid = 0.5 * width

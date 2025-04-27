@@ -1,4 +1,5 @@
 import { corner, endOpen, g2, open, simpleGlyph, spiro } from '../outline'
+import { DIR } from '../point'
 
 export const s = simpleGlyph(
   spiro(
@@ -28,6 +29,6 @@ export const S = simpleGlyph(
     g2(0.224, 0.237),
     g2(0.347, 0.335),
     g2(0.202, 0.467),
-    endOpen(0.081, 0.429).heading(-1, 0),
+    endOpen(0.081, 0.429).heading(...DIR.L),
   ).stroked(0.05),
 )
