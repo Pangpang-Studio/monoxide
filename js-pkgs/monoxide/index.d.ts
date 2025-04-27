@@ -44,6 +44,9 @@ export interface SpiroBuilder {
   open(x: number, y: number): SpiroBuilder
   endOpen(x: number, y: number): SpiroBuilder
 
+  /** Overrides the tangent of the current control point. */
+  heading(x: number, y: number): SpiroBuilder
+
   /** Get the spiro curve and invalidates this builder. */
   build(): OutlineExpr
 }

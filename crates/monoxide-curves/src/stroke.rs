@@ -10,8 +10,8 @@ use crate::{CubicBezier, CubicSegment, debug::CurveDebugger, point::Point2D};
 /// represented in the out direction.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Tangent {
-    in_: Option<Point2D>,
-    out: Option<Point2D>,
+    pub in_: Option<Point2D>,
+    pub out: Option<Point2D>,
 }
 
 impl Tangent {
