@@ -1,11 +1,16 @@
-use std::{net::SocketAddrV4, path::PathBuf, sync::Arc};
+mod ws;
+
+use std::{collections::HashMap, net::SocketAddrV4, path::PathBuf, sync::Arc};
 
 use anyhow::bail;
 use axum::{
     Router,
-    extract::{Request, State},
+    extract::{Request, State, ws::WebSocket},
     routing::any,
 };
+use monoxide_script::ast::FontContext;
+use serde::Serialize;
+use tokio::sync::{Mutex, watch};
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 
@@ -26,10 +31,13 @@ pub struct ServerCommand {
     serve_dir: Option<String>,
 }
 
-pub async fn start_web_server(cmd: ServerCommand) -> anyhow::Result<()> {
+pub async fn start_web_server(
+    cmd: ServerCommand,
+    rx: watch::Receiver<Arc<RenderedFontState>>,
+) -> anyhow::Result<()> {
     let mut app = Router::new()
         .route("/api/ping", any(reply_200))
-        .route("/api/ws", any(serve_ws));
+        .route("/api/ws", any(ws::serve_ws));
 
     if let Some(url) = &cmd.reverse_proxy {
         info!("Reverse proxying to {}", url);
@@ -56,15 +64,30 @@ pub async fn start_web_server(cmd: ServerCommand) -> anyhow::Result<()> {
 
     info!("Listening on {}", listener.local_addr().unwrap());
 
-    let app = app.with_state(Arc::new(AppState {}));
+    let state = Arc::new(AppState { rx });
+    let app = app.with_state(state.clone());
 
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }
 
-#[derive(Debug, Clone)]
-pub struct AppState {}
+pub struct AppState {
+    rx: watch::Receiver<Arc<RenderedFontState>>,
+}
+
+#[derive(Default)]
+pub enum RenderedFontState {
+    #[default]
+    Nothing,
+    Font(FontContext),
+    Error(anyhow::Error),
+}
+
+pub struct RenderedFont {
+    epoch: u64,
+    cx: FontContext,
+}
 
 /// Extracted app state from the request.
 type XAppState = State<Arc<AppState>>;
@@ -72,7 +95,5 @@ type XAppState = State<Arc<AppState>>;
 async fn reply_200() -> &'static str {
     "OK"
 }
-
-async fn serve_ws(State(state): State<Arc<AppState>>) {}
 
 async fn redirect(req: Request) {}

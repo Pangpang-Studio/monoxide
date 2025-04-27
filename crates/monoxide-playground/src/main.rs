@@ -8,12 +8,14 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::Stdio,
+    sync::Arc,
 };
 
 use anyhow::{Context, Result, anyhow, bail};
 use clap::Parser;
 use monoxide_script::{
     FontParamSettings,
+    ast::FontContext,
     js::{ContextAttachment, MonoxideModule},
 };
 use notify::{RecursiveMode, Watcher};
@@ -23,7 +25,8 @@ use rquickjs::{
     loader::{BuiltinResolver, FileResolver, ModuleLoader, ScriptLoader},
 };
 use svg::SvgDebugPrinter;
-use tokio::process::Command;
+use tokio::{process::Command, sync::watch};
+use web::RenderedFontState;
 
 use crate::svg::{Scale, SvgPen, ViewBox};
 
@@ -48,8 +51,7 @@ enum Subcommand {
     Serve(web::ServerCommand),
 }
 
-/// Render glyphs to HTML files in the playground directory
-fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Path) -> Result<()> {
+fn evaluate_playground(rt: &rquickjs::Runtime, source_dir: &Path) -> Result<FontContext> {
     // Glob all js files in source_dir
     let mut js_files = vec![];
     for f in glob::glob(&format!("{}/**/*.js", source_dir.display()))? {
@@ -116,6 +118,10 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
         anyhow::Ok(ud.take())
     })?;
 
+    Ok(fcx)
+}
+
+fn render_glyphs_html(fcx: &FontContext, playground_dir: &Path) -> anyhow::Result<()> {
     // Generate individual glyph pages
     let scale = Scale::default();
     let mut glyph_links = String::new();
@@ -180,15 +186,6 @@ async fn main() -> Result<()> {
 
     let args = Playground::parse();
 
-    // TODO: organize logic
-    if let Some(cmd) = args.cmd {
-        match cmd {
-            Subcommand::Serve(cmd) => web::start_web_server(cmd)
-                .await
-                .expect("Failed to start web server"),
-        }
-    }
-
     let rt = Runtime::new()?;
 
     let file_resolver = FileResolver::default();
@@ -225,12 +222,32 @@ async fn main() -> Result<()> {
     })?;
     watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
 
-    // Initial render
-    render_glyphs(&rt, &args.source, &playground_dir)?;
+    let (render_tx, render_rx) = watch::channel(Arc::new(RenderedFontState::Nothing));
 
-    // Watch for changes and re-render
+    // TODO: organize logic
+    if let Some(cmd) = args.cmd {
+        match cmd {
+            Subcommand::Serve(cmd) => web::start_web_server(cmd, render_rx)
+                .await
+                .expect("Failed to start web server"),
+        }
+    }
+
     loop {
         rx.recv().await;
-        render_glyphs(&rt, &args.source, &playground_dir)?;
+        let res = evaluate_playground(&rt, &args.source);
+        match res {
+            Ok(fcx) => {
+                render_tx
+                    .send(Arc::new(RenderedFontState::Font(fcx)))
+                    .unwrap();
+            }
+            Err(e) => {
+                tracing::error!("Error: {e}");
+                render_tx
+                    .send(Arc::new(RenderedFontState::Error(e)))
+                    .unwrap();
+            }
+        }
     }
 }
