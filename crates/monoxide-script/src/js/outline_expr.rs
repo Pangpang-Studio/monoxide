@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use rquickjs::{class::Trace, prelude::This, Class, Ctx, JsLifetime};
 
@@ -7,7 +7,7 @@ use crate::ast::OutlineExpr;
 #[derive(JsLifetime)]
 #[rquickjs::class]
 pub struct OutlineExprObject {
-    pub item: Rc<OutlineExpr>,
+    pub item: Arc<OutlineExpr>,
 }
 
 impl<'js> Trace<'js> for OutlineExprObject {
@@ -17,7 +17,7 @@ impl<'js> Trace<'js> for OutlineExprObject {
 impl OutlineExprObject {
     pub fn new(expr: OutlineExpr) -> Self {
         Self {
-            item: Rc::new(expr),
+            item: Arc::new(expr),
         }
     }
 }

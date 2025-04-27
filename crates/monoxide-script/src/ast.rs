@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, rc::Rc};
+use std::{collections::BTreeMap, sync::Arc};
 
 use monoxide_curves::{point::Point2D, stroke::TangentOverride, CubicBezier, SpiroCurve};
 use rquickjs::{
@@ -54,14 +54,14 @@ pub enum GlyphEntry {
 
 #[derive(Debug, Clone, Default)]
 pub struct SimpleGlyph {
-    pub outlines: Vec<Rc<OutlineExpr>>,
+    pub outlines: Vec<Arc<OutlineExpr>>,
 }
 
 #[derive(Debug, Clone)]
 pub enum OutlineExpr {
     Bezier(CubicBezier<Point2D>),
     Spiro(SpiroCurve, TangentOverride),
-    Stroked(Rc<OutlineExpr>, f64),
+    Stroked(Arc<OutlineExpr>, f64),
     // TODO: transformed, etc.
 }
 
