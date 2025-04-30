@@ -24,5 +24,5 @@ export const i = simpleGlyph(
     corner(mid, xHeight - halfStrokeW),
     endOpen(mid - 0.4 * iStrokeHeight, xHeight - halfStrokeW),
   ).stroked(strokeW),
-  ringAt(mid, xHeight + 1.5 * strokeW, 0.65 * strokeW),
+  ringAt(mid, 1.225 * xHeight, 0.65 * strokeW),
 )
