@@ -68,9 +68,9 @@ fn render_glyphs(rt: &rquickjs::Runtime, source_dir: &Path, playground_dir: &Pat
             cx.clone(),
             FontParamSettings {
                 width: 0.5,
-                x_height: 0.6,
                 descender: 0.2,
-                cap_height: 1.,
+                x_height: 0.5,
+                cap_height: 0.7,
             },
         )
         .expect("Cannot create attachment");
