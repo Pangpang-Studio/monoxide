@@ -1,21 +1,18 @@
-import { settings } from 'monoxide'
-
+import { CAP, MID, WIDTH, XH } from '../const'
 import { corner, endOpen, open, simpleGlyph, spiro } from '../outline'
 import { ringAt } from '../shape'
 
-const { width, xHeight, capHeight } = settings
-const mid = 0.5 * width
-const strokeW = 0.17 * width
+const strokeW = 0.17 * WIDTH
 const halfStrokeW = 0.5 * strokeW
 
-const strokeH = xHeight
+const strokeH = XH
 const dotR = 0.65 * strokeW
 
 export const i = simpleGlyph(
   spiro(
-    open(mid, 0),
-    corner(mid, strokeH - halfStrokeW),
-    endOpen(mid - 0.4 * strokeH, xHeight - halfStrokeW),
+    open(MID, 0),
+    corner(MID, strokeH - halfStrokeW),
+    endOpen(MID - 0.4 * strokeH, strokeH - halfStrokeW),
   ).stroked(strokeW),
-  ringAt(mid, capHeight - dotR, dotR),
+  ringAt(MID, CAP - dotR, dotR),
 )

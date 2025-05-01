@@ -1,5 +1,5 @@
+import { DIR } from '../const'
 import { corner, endOpen, g2, open, simpleGlyph, spiro } from '../outline'
-import { DIR } from '../point'
 
 export const s = simpleGlyph(
   spiro(
