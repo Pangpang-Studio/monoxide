@@ -16,5 +16,6 @@ export const WIDTH = settings.width
 export const XH = settings.xHeight
 export const CAP = settings.capHeight
 export const DESC = settings.descender
+export const OVRS = settings.overshoot
 
 export const MID = 0.5 * WIDTH

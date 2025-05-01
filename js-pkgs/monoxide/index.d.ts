@@ -69,6 +69,7 @@ export interface Settings {
   xHeight: number
   descender: number
   capHeight: number
+  overshoot: number
 }
 
 export declare const settings: Settings

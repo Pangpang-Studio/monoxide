@@ -92,6 +92,7 @@ impl rquickjs::module::ModuleDef for MonoxideModule {
         settings.prop("xHeight", ud.font_params.x_height)?;
         settings.prop("descender", ud.font_params.descender)?;
         settings.prop("capHeight", ud.font_params.cap_height)?;
+        settings.prop("overshoot", ud.font_params.overshoot)?;
         exports.export("settings", settings)?;
 
         Ok(())
@@ -113,6 +114,7 @@ pub fn insert_globals<'js>(cx: Ctx<'js>) -> rquickjs::Result<()> {
     settings.prop("xHeight", ud.font_params.x_height)?;
     settings.prop("descender", ud.font_params.descender)?;
     settings.prop("capHeight", ud.font_params.cap_height)?;
+    settings.prop("overshoot", ud.font_params.overshoot)?;
     globals.set("settings", settings)?;
 
     Ok(())
