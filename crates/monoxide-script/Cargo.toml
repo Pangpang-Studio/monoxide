@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 monoxide-curves.workspace = true
+monoxide-spiro.workspace = true
 monoxide-ttf.workspace = true
 rquickjs.workspace = true
-spiro.workspace = true
 serde.workspace = true

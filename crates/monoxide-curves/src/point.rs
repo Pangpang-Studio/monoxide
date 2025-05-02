@@ -1,5 +1,7 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+use monoxide_spiro::SpiroCp;
+
 use crate::{Point, RealPoint};
 
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -113,13 +115,13 @@ impl From<Point2D> for (f64, f64) {
     }
 }
 
-impl From<spiro::SpiroCP> for Point2D {
-    fn from(spiro_cp: spiro::SpiroCP) -> Self {
+impl From<SpiroCp> for Point2D {
+    fn from(spiro_cp: SpiroCp) -> Self {
         Point2D::new(spiro_cp.x, spiro_cp.y)
     }
 }
-impl From<&spiro::SpiroCP> for Point2D {
-    fn from(spiro_cp: &spiro::SpiroCP) -> Self {
+impl From<&SpiroCp> for Point2D {
+    fn from(spiro_cp: &SpiroCp) -> Self {
         Point2D::new(spiro_cp.x, spiro_cp.y)
     }
 }

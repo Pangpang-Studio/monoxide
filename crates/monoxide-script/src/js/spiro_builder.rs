@@ -4,8 +4,8 @@ use monoxide_curves::{
     point::Point2D,
     stroke::{Tangent, TangentOverride},
 };
+use monoxide_spiro::{SpiroCp, SpiroCpTy};
 use rquickjs::{prelude::*, Class};
-use spiro::{SpiroCP, SpiroCpTy};
 
 use super::outline_expr::OutlineExprObject;
 use crate::ast::OutlineExpr;
@@ -13,7 +13,7 @@ use crate::ast::OutlineExpr;
 #[rquickjs::class]
 #[derive(rquickjs::JsLifetime, Default)]
 pub struct SpiroBuilder {
-    points: Vec<SpiroCP>,
+    points: Vec<SpiroCp>,
     tangent_override: TangentOverride,
 }
 
@@ -27,7 +27,7 @@ impl SpiroBuilder {
     }
 
     pub fn push_pt(&mut self, x: f64, y: f64, kind: SpiroCpTy) {
-        self.points.push(SpiroCP { x, y, ty: kind });
+        self.points.push(SpiroCp { x, y, ty: kind });
     }
 
     /// Adds a tangent override to the builder corresponding to the current

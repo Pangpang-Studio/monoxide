@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use spiro::{SpiroCP, SpiroCpTy};
+use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use crate::{CubicBezier, CubicSegment, debug::CurveDebugger, point::Point2D};
 
@@ -40,17 +40,17 @@ fn is_point_curved(ty: SpiroCpTy) -> bool {
     )
 }
 
-fn is_single_piece(curve: &[SpiroCP]) -> bool {
+fn is_single_piece(curve: &[SpiroCp]) -> bool {
     use SpiroCpTy::*;
 
     match curve {
         [] => false, // No curve
         [
-            SpiroCP { ty: Open, .. },
+            SpiroCp { ty: Open, .. },
             open @ ..,
-            SpiroCP { ty: EndOpen, .. },
+            SpiroCp { ty: EndOpen, .. },
         ] => !open.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
-        [SpiroCP { ty: Open, .. }, ..] | [SpiroCP { ty: EndOpen, .. }, ..] => false,
+        [SpiroCp { ty: Open, .. }, ..] | [SpiroCp { ty: EndOpen, .. }, ..] => false,
         closed => !closed.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
     }
 }
@@ -61,8 +61,8 @@ pub type TangentOverride = HashMap<usize, Tangent>;
 /// or two curves if the input curve is closed.
 #[derive(Debug, Clone)]
 pub enum StrokeResult {
-    One(Vec<SpiroCP>),
-    Two(Vec<SpiroCP>, Vec<SpiroCP>),
+    One(Vec<SpiroCp>),
+    Two(Vec<SpiroCp>, Vec<SpiroCp>),
 }
 
 /// Stroke a spiro curve. Returns a single spiro curve representing the stroke.
@@ -71,7 +71,7 @@ pub enum StrokeResult {
 ///
 /// The result should be fed into another pass removing self-loops.
 pub fn stroke_spiro(
-    curve: &[SpiroCP],
+    curve: &[SpiroCp],
     width: f64,
     tangent_override: &TangentOverride,
     dbg: &mut impl CurveDebugger,
@@ -167,12 +167,12 @@ fn debug_spiro_points(
 ///
 /// The result should be fed into another pass removing self-loops.
 pub fn stroke_spiro_raw(
-    curve: &[SpiroCP],
+    curve: &[SpiroCp],
     is_closed: bool,
     width: f64,
     tangent_override: &TangentOverride,
     dbg: &mut impl CurveDebugger,
-) -> (Vec<SpiroCP>, Vec<SpiroCP>) {
+) -> (Vec<SpiroCp>, Vec<SpiroCp>) {
     assert!(!curve.is_empty(), "curve should not be empty");
 
     // Before stroking the curve, we first need to determine the normal
@@ -283,16 +283,16 @@ pub fn stroke_spiro_raw(
 fn push_point(
     left: Point2D,
     right: Point2D,
-    orig: SpiroCP,
-    left_curve: &mut Vec<SpiroCP>,
-    right_curve: &mut Vec<SpiroCP>,
+    orig: SpiroCp,
+    left_curve: &mut Vec<SpiroCp>,
+    right_curve: &mut Vec<SpiroCp>,
 ) {
-    left_curve.push(SpiroCP {
+    left_curve.push(SpiroCp {
         x: left.x,
         y: left.y,
         ty: orig.ty,
     });
-    right_curve.push(SpiroCP {
+    right_curve.push(SpiroCp {
         x: right.x,
         y: right.y,
         ty: orig.ty,
@@ -302,7 +302,7 @@ fn push_point(
 /// Calculate the tangent at each spiro control point. Returns a vector of
 /// normalized tangent vectors, one for each control point.
 fn calc_tangents(
-    curve: &[SpiroCP],
+    curve: &[SpiroCp],
     cube_curve: &CubicBezier<Point2D>,
     indices: &[usize],
 ) -> Vec<Tangent> {
@@ -375,7 +375,7 @@ fn move_point_normal_both(
 }
 
 fn make_line_join(
-    cp: SpiroCP,
+    cp: SpiroCp,
     in_tangent: Point2D,
     out_tangent: Point2D,
     left_offset: f64,
@@ -446,7 +446,7 @@ fn make_line_join(
     (join_left, join_right)
 }
 
-fn reverse_spiro_point(cp: SpiroCP) -> SpiroCP {
+fn reverse_spiro_point(cp: SpiroCp) -> SpiroCp {
     let ty = match cp.ty {
         SpiroCpTy::Left => SpiroCpTy::Right,
         SpiroCpTy::Right => SpiroCpTy::Left,
@@ -455,5 +455,5 @@ fn reverse_spiro_point(cp: SpiroCP) -> SpiroCP {
 
         x => x,
     };
-    SpiroCP { ty, ..cp }
+    SpiroCp { ty, ..cp }
 }

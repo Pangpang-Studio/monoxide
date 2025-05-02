@@ -1,0 +1,10 @@
+[package]
+name = "monoxide-spiro"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+spiro-sys.workspace = true
+
+[dev-dependencies]
+insta = "1.43.1"
