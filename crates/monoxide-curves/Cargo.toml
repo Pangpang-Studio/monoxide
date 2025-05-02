@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-num-traits.workspace = true
-spiro.workspace = true
 flo_curves.workspace = true
+monoxide-spiro.workspace = true
+num-traits.workspace = true
