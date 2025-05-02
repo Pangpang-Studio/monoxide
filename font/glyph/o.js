@@ -2,8 +2,9 @@ import { MID, OVRS, WIDTH, XH } from '../const'
 import { curl, flat, g2, g4, simpleGlyph, spiro } from '../outline'
 
 const strokeW = 0.17 * XH
+const halfStrokeW = 0.5 * strokeW
 
-const XW = 0.57 * WIDTH
+const XW = 0.7 * WIDTH
 const halfXW = 0.5 * XW
 const halfXH = 0.5 * XH
 
@@ -38,4 +39,6 @@ function oShape(x, y, rx, ry) {
   ).stroked(strokeW)
 }
 
-export const o = simpleGlyph(oShape(MID, halfXH, halfXW, halfXH))
+export const o = simpleGlyph(
+  oShape(MID, halfXH, halfXW - halfStrokeW, halfXH - halfStrokeW),
+)
