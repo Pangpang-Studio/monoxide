@@ -214,7 +214,7 @@ fn start_playground(
     //   serve --port <port> [--reverse-proxy <url> | --serve-dir <dir>]
     let mut playground_cmd = std::process::Command::new(CARGO);
     if cmd.watch {
-        playground_cmd.args(&["watch", "-i", "font", "--"]);
+        playground_cmd.args(&["watch", "-i", "font", "-i", "xtask", "-i", "tools", "--"]);
     }
     playground_cmd.args(&["cargo", "run", "-p", playground_server_name, "--"]);
     // TODO: configurable font directory, currently hardcoded to `font`
