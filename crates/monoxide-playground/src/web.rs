@@ -1,6 +1,11 @@
 mod ws;
 
-use std::{collections::HashMap, net::SocketAddrV4, path::PathBuf, sync::Arc};
+use std::{
+    collections::HashMap,
+    net::{Ipv4Addr, SocketAddrV4},
+    path::PathBuf,
+    sync::Arc,
+};
 
 use anyhow::bail;
 use axum::{
@@ -58,7 +63,7 @@ pub async fn start_web_server(
     }
 
     let listener =
-        tokio::net::TcpListener::bind(SocketAddrV4::new([127, 0, 0, 1].into(), cmd.port))
+        tokio::net::TcpListener::bind(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, cmd.port))
             .await
             .unwrap();
 
