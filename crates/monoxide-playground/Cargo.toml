@@ -14,7 +14,7 @@ monoxide-script.workspace = true
 rquickjs.workspace = true
 glob.workspace = true
 dunce.workspace = true
-path-slash.workspace = true                               # for windows paths
+path-slash.workspace = true # for windows paths
 axum = { version = "0.8.3", features = ["macros", "ws"] }
 tracing-subscriber.workspace = true
 tracing.workspace = true
@@ -22,3 +22,7 @@ axum-reverse-proxy = "0.8.0"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { version = "1.0" }
 tower-http = { version = "0.6", features = ["fs"] }
+futures-util = { version = "0.3", default-features = false, features = [
+    "sink",
+    "std",
+] }

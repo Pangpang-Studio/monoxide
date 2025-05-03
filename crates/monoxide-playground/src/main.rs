@@ -7,11 +7,10 @@ use std::{
     fmt::Write as _,
     fs,
     path::{Path, PathBuf},
-    process::Stdio,
     sync::Arc,
 };
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow};
 use clap::Parser;
 use monoxide_script::{
     FontParamSettings,
@@ -25,7 +24,8 @@ use rquickjs::{
     loader::{BuiltinResolver, FileResolver, ModuleLoader, ScriptLoader},
 };
 use svg::SvgDebugPrinter;
-use tokio::{process::Command, sync::watch};
+use tokio::sync::watch;
+use tracing::debug;
 use web::RenderedFontState;
 
 use crate::svg::{Scale, SvgPen, ViewBox};
@@ -225,19 +225,21 @@ async fn main() -> Result<()> {
     let (render_tx, render_rx) = watch::channel(Arc::new(RenderedFontState::Nothing));
 
     // TODO: organize logic
-    if let Some(cmd) = args.cmd {
-        match cmd {
-            Subcommand::Serve(cmd) => web::start_web_server(cmd, render_rx)
-                .await
-                .expect("Failed to start web server"),
-        }
-    }
+    let _fut = if let Some(cmd) = args.cmd {
+        let fut = match cmd {
+            Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
+        };
+        Some(fut)
+    } else {
+        None
+    };
 
     loop {
-        rx.recv().await;
+        debug!("Evaluating playground...");
         let res = evaluate_playground(&rt, &args.source);
         match res {
             Ok(fcx) => {
+                debug!("Successfully evaluated playground");
                 render_tx
                     .send(Arc::new(RenderedFontState::Font(fcx)))
                     .unwrap();
@@ -249,5 +251,6 @@ async fn main() -> Result<()> {
                     .unwrap();
             }
         }
+        rx.recv().await;
     }
 }

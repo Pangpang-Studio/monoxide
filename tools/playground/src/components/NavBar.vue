@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-row gap-4">
+  <div class="flex flex-row px-1">
     <div aria-label="logo" class="px-3 py-2 font-bold">monoxide</div>
     <template
       v-for="route in computedRoutes"
@@ -9,14 +9,14 @@
       <RouterLink
         v-if="route.path"
         :to="route.path"
-        class="px-1 py-2"
+        class="px-3 py-2 hover:bg-gray-100"
         :class="{ 'text-blue-600': route.isActive }"
       >
         {{ route.name }}
       </RouterLink>
       <div
         v-else
-        class="px-1 py-2"
+        class="px-3 py-2"
         :class="{ 'text-blue-600': route.isActive }"
       >
         {{ route.name }}

@@ -1188,6 +1188,7 @@ dependencies = [
  "axum-reverse-proxy",
  "clap",
  "dunce",
+ "futures-util",
  "glob",
  "monoxide-curves",
  "monoxide-script",
