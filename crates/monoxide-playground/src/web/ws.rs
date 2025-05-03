@@ -10,18 +10,21 @@ use axum::{
     },
     response::Response,
 };
+use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use monoxide_script::ast::GlyphEntry;
 use serde::Serialize;
+use tokio::sync::watch;
+use tracing::{debug, info};
 
 use crate::svg::{Scale, SvgPen};
 
-use super::{AppState, XAppState};
+use super::{AppState, RenderedFontState, XAppState};
 
 #[derive(Serialize, Debug)]
 #[serde(tag = "t")]
 enum WsServerMsg {
     NewRendered(NewRenderedMsg),
-    Error(String),
+    Error { msg: String },
 }
 
 #[derive(Serialize, Debug)]
@@ -40,67 +43,87 @@ struct GlyphOverview {
     y1: f64,
 }
 
-#[axum::debug_handler(state = Arc<AppState>)]
 pub async fn serve_ws(State(state): XAppState, ws: WebSocketUpgrade) -> Response {
-    let run_loop = |mut ws: WebSocket| async move {
-        let mut rx = state.rx.clone();
+    info!("WebSocket connection established");
 
-        loop {
-            // this shit is probably send-only
-            let val = rx.borrow_and_update().clone();
-            match &*val {
-                super::RenderedFontState::Nothing => {
-                    // No-op for now
-                }
+    ws.on_upgrade(|socket| async move { handle_ws(state, socket).await })
+}
 
-                super::RenderedFontState::Font(font_context) => {
-                    // Maybe we shouldn't perform the render _here_, but YOLO so :)
-                    // TODO: Yeah we probably should move it out to web thread
+async fn handle_ws(state: Arc<AppState>, ws: WebSocket) {
+    let rx = state.rx.clone();
+    let (ws_tx, ws_rx) = ws.split();
 
-                    let cmap = font_context
-                        .cmap
-                        .iter()
-                        .map(|(ch, id)| (*ch, id.0))
-                        .collect();
-                    let scale = Scale::default();
-
-                    let mut glyphs = vec![];
-                    for glyph in &font_context.glyphs {
-                        let buf = String::new();
-                        let svg = {
-                            let mut pen = SvgPen::new(buf, scale);
-                            pen.draw_glyph(&glyph, &mut ())?;
-                            pen.finish()
-                        };
-                        let glyph = GlyphOverview {
-                            svg,
-                            x0: 0.0,
-                            y0: 0.0,
-                            x1: 1.0,
-                            y1: 1.0, // TODO
-                        };
-                        glyphs.push(glyph);
-                    }
-
-                    let msg = WsServerMsg::NewRendered(NewRenderedMsg { glyphs, cmap });
-                    let msg = serde_json::to_string(&msg)?;
-                    if let Err(e) = ws.send(Message::Text(msg.into())).await {
-                        tracing::error!("Failed to send message: {e}");
-                        break;
-                    }
-                }
-
-                super::RenderedFontState::Error(error) => todo!(),
+    let handle = tokio::spawn(send_ws_task(ws_tx, rx));
+    let rx = tokio::spawn(ws_rx.for_each(|msg| async {
+        match msg {
+            Ok(msg) => {
+                info!("Received message: {:?}", msg);
+            }
+            Err(e) => {
+                info!("Error receiving message: {:?}", e);
             }
         }
+    }));
 
-        Ok(())
-    };
+    // Abort for either task if one of them fails
+    tokio::select! {
+        _ = handle => {},
+        _ = rx => {},
+    }
+}
 
-    ws.on_upgrade(move |socket| async move {
-        let res: anyhow::Result<()> = run_loop(socket).await;
-        if let Err(e) = res {
-            tracing::error!("Error in WebSocket loop: {e}");
+async fn send_ws_task(
+    mut ws: SplitSink<WebSocket, Message>,
+    mut rx: watch::Receiver<Arc<RenderedFontState>>,
+) -> anyhow::Result<()> {
+    loop {
+        // this shit is probably send-only
+        let val = rx.borrow_and_update().clone();
+        match &*val {
+            super::RenderedFontState::Nothing => {
+                debug!("nothing received")
+                // No-op for now
+            }
+
+            super::RenderedFontState::Font(font_context) => {
+                // Maybe we shouldn't perform the render _here_, but YOLO so :)
+                // TODO: Yeah we probably should move it out to web thread
+                debug!("info received");
+
+                let cmap = font_context
+                    .cmap
+                    .iter()
+                    .map(|(ch, id)| (*ch, id.0))
+                    .collect();
+                let scale = Scale::default();
+
+                let mut glyphs = vec![];
+                for glyph in &font_context.glyphs {
+                    let buf = String::new();
+                    let svg = {
+                        let mut pen = SvgPen::new(buf, scale);
+                        pen.draw_glyph(&glyph, &mut ())?;
+                        pen.finish()
+                    };
+                    let glyph = GlyphOverview {
+                        svg,
+                        x0: 0.0,
+                        y0: 0.0,
+                        x1: 1.0,
+                        y1: 1.0, // TODO
+                    };
+                    glyphs.push(glyph);
+                }
+
+                let msg = WsServerMsg::NewRendered(NewRenderedMsg { glyphs, cmap });
+                let msg = serde_json::to_string(&msg)?;
+                ws.send(Message::Text(msg.into())).await?;
+            }
+
+            super::RenderedFontState::Error(error) => todo!(),
         }
-    })
+
+        rx.changed().await?;
+        debug!("changed");
+    }
 }
