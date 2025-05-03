@@ -6,7 +6,7 @@
         viewBox="-0.5 -1.5 2 2"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path :d="props.path" style="fill: black" />
+        <path :d="props.path" style="fill: black" fill-rule="nonzero" />
       </svg>
       <div class="flex flex-col">
         <h3 class="font-bold" v-if="props.name">{{ props.name }}</h3>
