@@ -118,17 +118,21 @@ pub fn stroke_spiro(
 }
 
 #[allow(dead_code)]
-fn debug_spiro_points(
+fn debug_spiro_points<C: CurveDebugger>(
     cube_curve: &CubicBezier<Point2D>,
     spiro_indices: &[usize],
-    dbg: &mut impl CurveDebugger,
+    dbg: &mut C,
 ) {
     let mut spiro_index = 0;
     // indices are segment indices
     for (idx, (start, seg)) in cube_curve.segment_iter().enumerate() {
         if idx == 0 {
             if spiro_indices[spiro_index] == 0 {
-                dbg.point(crate::debug::DebugPointKind::Curve, start, "spiro(0)");
+                dbg.point(
+                    crate::debug::DebugPointKind::Curve,
+                    start,
+                    format_args!("spiro(0)"),
+                );
             }
             spiro_index += 1;
         }
@@ -140,21 +144,26 @@ fn debug_spiro_points(
         } else {
             None
         };
-        let tag = match spiro_point_idx {
-            Some(idx) => format!("spiro({})", idx),
-            None => String::new(),
-        };
 
+        let tag = |dbg: &mut C, at| match spiro_point_idx {
+            Some(idx) => dbg.point(
+                crate::debug::DebugPointKind::Curve,
+                at,
+                format_args!("spiro({})", idx),
+            ),
+            None => dbg.point(crate::debug::DebugPointKind::Curve, at, format_args!("")),
+        };
         match seg {
             CubicSegment::Line(end) => {
-                dbg.point(crate::debug::DebugPointKind::Curve, end, &tag);
+                tag(dbg, end);
+                dbg.line(start, end, format_args!(""));
             }
             CubicSegment::Curve(p1, p2, p3) => {
-                dbg.point(crate::debug::DebugPointKind::Control, p1, "");
-                dbg.point(crate::debug::DebugPointKind::Control, p2, "");
-                dbg.point(crate::debug::DebugPointKind::Curve, p3, &tag);
-                dbg.line(start, p1, "");
-                dbg.line(p2, p3, "");
+                dbg.point(crate::debug::DebugPointKind::Control, p1, format_args!(""));
+                dbg.point(crate::debug::DebugPointKind::Control, p2, format_args!(""));
+                tag(dbg, p3);
+                dbg.line(start, p1, format_args!(""));
+                dbg.line(p2, p3, format_args!(""));
             }
         }
     }
@@ -228,7 +237,7 @@ pub fn stroke_spiro_raw(
             let (left, right) =
                 move_point_normal_both(cp.into(), tangent, left_offset, right_offset);
 
-            dbg.line(cp.into(), right, "");
+            dbg.line(cp.into(), right, format_args!(""));
 
             push_point(left, right, cp, &mut left_curve, &mut right_curve);
         } else {
@@ -271,7 +280,7 @@ pub fn stroke_spiro_raw(
                 } => move_point_normal_both(cp.into(), out, left_offset, right_offset),
             };
 
-            dbg.line(cp.into(), right, "");
+            dbg.line(cp.into(), right, format_args!(""));
 
             push_point(left, right, cp, &mut left_curve, &mut right_curve);
         }

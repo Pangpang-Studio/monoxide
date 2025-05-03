@@ -10,6 +10,7 @@ tokio = { version = "1.36.0", features = ["full"] }
 notify = "8.0.0"
 monoxide-curves.workspace = true
 monoxide-script.workspace = true
+monoxide-spiro.workspace = true
 # TODO: Remove this direct dependency.
 rquickjs.workspace = true
 glob.workspace = true

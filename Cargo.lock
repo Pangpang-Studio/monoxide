@@ -1193,6 +1193,7 @@ dependencies = [
  "glob",
  "monoxide-curves",
  "monoxide-script",
+ "monoxide-spiro",
  "notify",
  "path-slash",
  "rquickjs",
@@ -1213,6 +1214,7 @@ dependencies = [
  "monoxide-ttf",
  "rquickjs",
  "serde",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
