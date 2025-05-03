@@ -16,8 +16,10 @@ const glyphsList = computed(() => {
   // and then `glyphs` for glyph id -> glyph data
 
   let glyphs: GlyphDisplayProps[] = []
-  for (let glyph of renderedFont.glyphs) {
+  for (let i = 0; i < renderedFont.glyphs.length; i++) {
+    let glyph = renderedFont.glyphs[i]
     glyphs.push({
+      id: i,
       chars: [],
       path: glyph.svg,
       name: undefined,
@@ -33,6 +35,9 @@ const glyphsList = computed(() => {
     }
   }
 
+  console.log('glyphs', glyphs)
+
+  // Sort glyphs based on the first char in chars array
   glyphs.sort((a, b) => {
     const aHasChars = a.chars.length > 0
     const bHasChars = b.chars.length > 0
@@ -47,10 +52,10 @@ const glyphsList = computed(() => {
       return 0 // Keep original order if both have no chars
     }
     // Both have chars, compare the first char
-    // Use localeCompare for proper string comparison
-    return a.chars[0].localeCompare(b.chars[0])
+    return a.chars[0].codePointAt(0)! - b.chars[0].codePointAt(0)!
   })
 
+  console.log('glyphs', glyphs)
   return glyphs
 })
 </script>
@@ -58,13 +63,14 @@ const glyphsList = computed(() => {
 <template>
   <NavBar></NavBar>
 
-  <div class="flex flex-row flex-wrap min-h-full p-4 gap-4">
-    <GlyphDisplay
-      v-for="(glyph, index) in glyphsList"
-      :key="index"
-      :path="glyph.path"
-      :chars="glyph.chars"
-      :name="glyph.name"
-    ></GlyphDisplay>
+  <div class="flex flex-col h-screen p-4">
+    <h1 class="text-2xl font-bold mt-2 mb-2">glyphs list</h1>
+    <div class="flex flex-row flex-wrap min-h-full -mx-2">
+      <GlyphDisplay
+        v-for="(glyph, index) in glyphsList"
+        :key="index"
+        v-bind="glyph"
+      ></GlyphDisplay>
+    </div>
   </div>
 </template>
