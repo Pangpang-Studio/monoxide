@@ -1,6 +1,7 @@
 pub mod ast;
 pub mod eval;
 pub mod js;
+pub mod trace;
 
 use serde::{Deserialize, Serialize};
 

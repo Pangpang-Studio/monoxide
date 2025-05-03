@@ -1,3 +1,4 @@
+mod glyph_detail;
 mod ws;
 
 use std::{
@@ -11,7 +12,7 @@ use anyhow::bail;
 use axum::{
     Router,
     extract::{Request, State, ws::WebSocket},
-    routing::any,
+    routing::{any, method_routing::get},
 };
 use monoxide_script::ast::FontContext;
 use serde::Serialize;
@@ -42,7 +43,8 @@ pub async fn start_web_server(
 ) -> anyhow::Result<()> {
     let mut app = Router::new()
         .route("/api/ping", any(reply_200))
-        .route("/api/ws", any(ws::serve_ws));
+        .route("/api/ws", any(ws::serve_ws))
+        .route("/api/glyph/:id", get(glyph_detail::glyph_detail));
 
     if let Some(url) = &cmd.reverse_proxy {
         info!("Reverse proxying to {}", url);
