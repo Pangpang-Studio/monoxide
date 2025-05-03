@@ -7,3 +7,4 @@ edition = "2024"
 flo_curves.workspace = true
 monoxide-spiro.workspace = true
 num-traits.workspace = true
+serde.workspace = true

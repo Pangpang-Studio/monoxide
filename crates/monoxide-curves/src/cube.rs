@@ -1,10 +1,17 @@
 mod compat;
+mod exchange;
 
 use num_traits::Num;
+use serde::{Deserialize, Serialize};
 
 use super::Point;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(
+    from = "exchange::SerdeForCubicSegment<P>",
+    into = "exchange::SerdeForCubicSegment<P>",
+    bound(serialize = "P: Clone + Serialize")
+)]
 pub enum CubicSegment<P> {
     Line(P),
     Curve(P, P, P),
@@ -33,7 +40,8 @@ impl<P: Copy> CubicSegment<P> {
 /// Represents a cubic bezier path. This type implements
 /// [`flo_curves::bezier::path::BezierPath`], so it can be used with the various
 /// functions provided by [flo_curves].
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(bound(serialize = "P: Clone + Serialize"))]
 pub struct CubicBezier<P> {
     pub start: P,
     pub segments: Vec<CubicSegment<P>>,

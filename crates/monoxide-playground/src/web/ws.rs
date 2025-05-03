@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    sync::Arc,
-};
+use std::{collections::BTreeMap, sync::Arc};
 
 use axum::{
     extract::{
@@ -11,7 +8,6 @@ use axum::{
     response::Response,
 };
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
-use monoxide_script::ast::GlyphEntry;
 use serde::Serialize;
 use tokio::sync::watch;
 use tracing::{debug, info};
@@ -120,7 +116,14 @@ async fn send_ws_task(
                 ws.send(Message::Text(msg.into())).await?;
             }
 
-            super::RenderedFontState::Error(error) => todo!(),
+            super::RenderedFontState::Error(error) => {
+                debug!("error received: {:?}", error);
+                let msg = WsServerMsg::Error {
+                    msg: format!("{:?}", error),
+                };
+                let msg = serde_json::to_string(&msg)?;
+                ws.send(Message::Text(msg.into())).await?;
+            }
         }
 
         rx.changed().await?;

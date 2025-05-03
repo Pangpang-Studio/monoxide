@@ -1,10 +1,11 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use monoxide_spiro::SpiroCp;
+use serde::{Deserialize, Serialize};
 
 use crate::{Point, RealPoint};
 
-#[derive(Clone, Debug, PartialEq, Copy)]
+#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct Point2D {
     pub x: f64,
     pub y: f64,

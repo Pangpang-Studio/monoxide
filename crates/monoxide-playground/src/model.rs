@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use monoxide_curves::{CubicBezier, point::Point2D};
 use serde::Serialize;
 
 /// Represent the overall character mapping of a font
@@ -25,4 +24,25 @@ pub struct GlyphOverview {
 pub struct GlyphDetail {
     overview: GlyphOverview,
     // TODO: [`monoxide-script::ast`] types mapped here
+    construction: Vec<SerializedGlyphConstruction>,
+}
+
+#[derive(Serialize)]
+pub struct SerializedGlyphConstruction {
+    id: usize,
+
+    /// The method to construct the glyph
+    #[serde(flatten)]
+    kind: ConstructionKind,
+
+    /// The resulting curve of the construction
+    result_curve: CubicBezier<Point2D>,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "t")]
+pub enum ConstructionKind {
+    Spiro {}, // TODO: serialize spiro points
+    CubicBezier { curve: CubicBezier<Point2D> },
+    Stroke { parent: usize, width: f64 },
 }

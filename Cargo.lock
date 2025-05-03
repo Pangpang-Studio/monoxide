@@ -1177,6 +1177,7 @@ dependencies = [
  "flo_curves",
  "monoxide-spiro",
  "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -2591,6 +2592,7 @@ dependencies = [
  "anyhow",
  "clap",
  "ctrlc",
+ "libc",
  "scopeguard",
  "tracing",
  "tracing-subscriber",
