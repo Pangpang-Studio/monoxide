@@ -54,10 +54,7 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
 
     if let Some(mut child) = st.webui_child.take() {
         info!("Killing webui child process...");
-        let _ = child.kill();
-        let _ = child
-            .wait()
-            .expect("Failed to wait for webui child process");
+        gracefully_kill(&mut child).expect("Failed to kill webui child process");
         info!("Webui child process killed.");
     } else {
         info!("No webui child process to kill.");
@@ -65,10 +62,7 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
 
     if let Some(mut child) = st.playground_child.take() {
         info!("Killing playground child process...");
-        let _ = child.kill();
-        let _ = child
-            .wait()
-            .expect("Failed to wait for playground child process");
+        gracefully_kill(&mut child).expect("Failed to kill playground child process");
         info!("Playground child process killed.");
     } else {
         info!("No playground child process to kill.");
@@ -214,9 +208,11 @@ fn start_playground(
     //   serve --port <port> [--reverse-proxy <url> | --serve-dir <dir>]
     let mut playground_cmd = std::process::Command::new(CARGO);
     if cmd.watch {
-        playground_cmd.args(&["watch", "-i", "font", "-i", "xtask", "-i", "tools", "--"]);
+        playground_cmd.args(&[
+            "watch", "-i", "font", "-i", "xtask", "-i", "tools", "--", "cargo",
+        ]);
     }
-    playground_cmd.args(&["cargo", "run", "-p", playground_server_name, "--"]);
+    playground_cmd.args(&["run", "-p", playground_server_name, "--"]);
     // TODO: configurable font directory, currently hardcoded to `font`
     playground_cmd.args(&["font", "serve", "--port"]);
     playground_cmd.arg(cmd.port.to_string());
@@ -355,5 +351,27 @@ fn is_port_online(port: u16) -> anyhow::Result<bool> {
             warn!("Unexpected error checking port {}: {}", port, e);
             Err(e.into())
         }
+    }
+}
+
+/// Gracefully kill a whole process tree, and wait for it to exit.
+fn gracefully_kill(child: &mut Child) -> anyhow::Result<()> {
+    #[cfg(unix)]
+    unsafe {
+        let success = libc::kill(child.id() as i32, libc::SIGTERM);
+        if success != 0 {
+            return Err(anyhow::anyhow!(
+                "Failed to kill process: {}",
+                io::Error::last_os_error()
+            ));
+        }
+        child.wait()?;
+        Ok(())
+    }
+    #[cfg(windows)]
+    {
+        child.kill()?;
+        child.wait()?;
+        Ok(())
     }
 }

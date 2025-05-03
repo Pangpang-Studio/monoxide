@@ -3,8 +3,6 @@ mod svg;
 mod web;
 
 use std::{
-    borrow::Cow,
-    fmt::Write as _,
     fs,
     path::{Path, PathBuf},
     sync::Arc,
@@ -23,12 +21,9 @@ use rquickjs::{
     CatchResultExt, Module, Runtime,
     loader::{BuiltinResolver, FileResolver, ModuleLoader, ScriptLoader},
 };
-use svg::SvgDebugPrinter;
 use tokio::sync::watch;
 use tracing::debug;
 use web::RenderedFontState;
-
-use crate::svg::{Scale, SvgPen, ViewBox};
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -121,60 +116,6 @@ fn evaluate_playground(rt: &rquickjs::Runtime, source_dir: &Path) -> Result<Font
     Ok(fcx)
 }
 
-fn render_glyphs_html(fcx: &FontContext, playground_dir: &Path) -> anyhow::Result<()> {
-    // Generate individual glyph pages
-    let scale = Scale::default();
-    let mut glyph_links = String::new();
-
-    let glyphs = fcx
-        .cmap
-        .iter()
-        .map(|(ch, idx)| (ch, fcx.get_glyph(*idx).expect("glyph not found")));
-    for (&ch, glyph) in glyphs {
-        let buf = String::new();
-        let mut dbg = SvgDebugPrinter::new(scale);
-        let svg = {
-            let mut pen = SvgPen::new(buf, scale);
-            pen.draw_glyph(glyph, &mut dbg)?;
-            pen.finish()
-        };
-
-        let mut view_box = ViewBox::new(scale);
-        view_box.merge_point(&(0., 0.).into());
-        view_box.merge_point(&(1., 1.).into());
-
-        // Create individual glyph page
-        let ord = ch as u32;
-        fs::write(
-            playground_dir.join(format!("char/{ord}.html")),
-            format!(
-                include_str!("../assets/glyph.html.rsstr"),
-                view_box = view_box,
-                svg = svg,
-                char = ch,
-                dbg = dbg.finish()
-            ),
-        )?;
-
-        // Add link to index
-        writeln!(
-            glyph_links,
-            r#"<a href="char/{ord}.html" class="glyph-link">{ch}</a>"#,
-        )?;
-    }
-
-    // Generate index page
-    fs::write(
-        playground_dir.join("index.html"),
-        format!(
-            include_str!("../assets/index.html.rsstr"),
-            glyph_links = glyph_links,
-        ),
-    )?;
-
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
@@ -200,18 +141,6 @@ async fn main() -> Result<()> {
         (file_resolver, builtin_resolver),
         (script_loader, module_loader),
     );
-
-    let playground_dir = PathBuf::from_iter([
-        env!("CARGO_MANIFEST_DIR"),
-        "..", // "crates"
-        "..", // "monoxide"
-        "target",
-        "monoxide",
-        "playground",
-    ]);
-    let playground_dir = playground_dir
-        .canonicalize()
-        .map_or(Cow::Borrowed(&playground_dir), Cow::Owned);
 
     // Set up file watcher
     let (tx, mut rx) = tokio::sync::mpsc::channel(1);
