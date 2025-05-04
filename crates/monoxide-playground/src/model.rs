@@ -21,6 +21,7 @@ pub struct GlyphOverview {
 }
 
 /// Represent the detail of a glyph, including the comptation tree, debug points, etc.
+#[derive(Serialize)]
 pub struct GlyphDetail {
     overview: GlyphOverview,
     // TODO: [`monoxide-script::ast`] types mapped here

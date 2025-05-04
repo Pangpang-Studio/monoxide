@@ -98,7 +98,7 @@ async fn send_ws_task(
                     let buf = String::new();
                     let svg = {
                         let mut pen = SvgPen::new(buf, scale);
-                        pen.draw_glyph(&glyph, &mut ())?;
+                        pen.draw_glyph(&glyph)?;
                         pen.finish()
                     };
                     let glyph = GlyphOverview {
