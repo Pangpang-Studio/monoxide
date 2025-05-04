@@ -278,7 +278,7 @@ fn eval_outline_internal<E: EvaluationTracer>(
     match expr {
         OutlineExpr::Bezier(cubic_bezier) => {
             let id = dbg.constructed_bezier(cubic_bezier);
-            return Ok(EvalValue::bezier(cubic_bezier.clone(), id));
+            Ok(EvalValue::bezier(cubic_bezier.clone(), id))
         }
         OutlineExpr::Spiro(spiro_cps, tangent_overrides) => {
             let id = dbg.constructed_spiro(spiro_cps);
@@ -293,12 +293,12 @@ fn eval_outline_internal<E: EvaluationTracer>(
                 spiro: spiro_cps.clone(),
                 tangent_override: tangent_overrides.clone(),
             };
-            return Ok(EvalValue::spiro(spiro, id));
+            Ok(EvalValue::spiro(spiro, id))
         }
         OutlineExpr::Stroked(outline_expr, width) => {
             let evaled = eval_outline_internal(outline_expr, dbg)?;
             match evaled.kind {
-                EvalValueKind::Beziers(_) => return Err(EvalError::StrokingABezier(evaled.id)),
+                EvalValueKind::Beziers(_) => Err(EvalError::StrokingABezier(evaled.id)),
                 EvalValueKind::Spiros(eval_spiros) => {
                     eval_stroked(evaled.id, &eval_spiros, *width, dbg)
                 }
@@ -365,8 +365,8 @@ fn eval_stroked<E: EvaluationTracer>(
         dbg.intermediate_output(id, &bezs);
     }
 
-    return Ok(EvalValue {
+    Ok(EvalValue {
         kind: EvalValueKind::Spiros(out_spiros),
         id, // Use the ID from dbg.stroked
-    });
+    })
 }

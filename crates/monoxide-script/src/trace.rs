@@ -61,18 +61,19 @@ pub trait EvaluationTracer {
     }
 
     /// Provide additional debug information for the given ID.
-    fn curve_debugger<'a>(&'a mut self, id: Self::Id) -> Self::CurveDebugger<'a>;
+    fn curve_debugger(&mut self, id: Self::Id) -> Self::CurveDebugger<'_>;
 }
 
 /// A no-op tracer that does nothing. This is useful for when you don't need
 /// to trace the evaluation of a glyph.
 impl EvaluationTracer for () {
-    type Id = ();
     type CurveDebugger<'a> = ();
+    type Id = ();
 
     fn needs_evaluate_intermediate() -> bool {
         false
     }
+
     fn preallocate_next(&mut self) -> Self::Id {}
 
     fn constructed_beziers<'b>(
@@ -80,11 +81,13 @@ impl EvaluationTracer for () {
         _bezier: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
     ) -> Self::Id {
     }
+
     fn constructed_spiros<'b>(
         &mut self,
         _spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
     ) -> Self::Id {
     }
+
     fn stroked<'b>(
         &mut self,
         _parent: Self::Id,
@@ -92,10 +95,12 @@ impl EvaluationTracer for () {
         _spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
     ) -> Self::Id {
     }
+
     fn spiro_to_bezier(&mut self, _parent: Self::Id) -> Self::Id {}
+
     fn boolean_added<'b>(&mut self, _parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id {}
 
     fn intermediate_output(&mut self, _id: Self::Id, _curve: &[CubicBezier<Point2D>]) {}
 
-    fn curve_debugger<'a>(&'a mut self, _id: Self::Id) -> Self::CurveDebugger<'a> {}
+    fn curve_debugger(&mut self, _id: Self::Id) -> Self::CurveDebugger<'_> {}
 }

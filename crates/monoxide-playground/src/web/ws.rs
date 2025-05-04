@@ -12,9 +12,8 @@ use serde::Serialize;
 use tokio::sync::watch;
 use tracing::{debug, info};
 
-use crate::svg::{Scale, SvgPen};
-
 use super::{AppState, RenderedFontState, XAppState};
+use crate::svg::{Scale, SvgPen};
 
 #[derive(Serialize, Debug)]
 #[serde(tag = "t")]
@@ -98,7 +97,7 @@ async fn send_ws_task(
                     let buf = String::new();
                     let svg = {
                         let mut pen = SvgPen::new(buf, scale);
-                        pen.draw_glyph(&glyph)?;
+                        pen.draw_glyph(glyph)?;
                         pen.finish()
                     };
                     let glyph = GlyphOverview {

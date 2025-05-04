@@ -7,6 +7,7 @@ use axum::{
 use monoxide_curves::debug::CurveDebugger;
 use monoxide_script::{ast::FontContext, eval::eval_outline, trace::EvaluationTracer};
 
+use super::XAppState;
 use crate::{
     model::{
         ConstructionKind, DebugLine, DebugPoint, GlyphDetail, GlyphOverview,
@@ -14,8 +15,6 @@ use crate::{
     },
     svg::{Scale, SvgPen},
 };
-
-use super::XAppState;
 
 pub async fn glyph_detail(
     State(state): XAppState,
@@ -42,15 +41,15 @@ pub async fn glyph_detail(
 
     match glyph {
         monoxide_script::ast::GlyphEntry::Simple(simple_glyph) => {
-            let detail = simple_glyph_to_detail(id, &cx, simple_glyph);
-            return Ok(Json(detail));
+            let detail = simple_glyph_to_detail(id, cx, simple_glyph);
+            Ok(Json(detail))
         }
         monoxide_script::ast::GlyphEntry::Compound(_compound_glyph) => {
             // we don't support compound glyphs yet
-            return Err(Response::builder()
+            Err(Response::builder()
                 .status(StatusCode::NOT_IMPLEMENTED)
                 .body("Compound glyphs are not supported yet".into())
-                .unwrap());
+                .unwrap())
         }
     }
 }
@@ -121,9 +120,9 @@ impl GlyphDetailTracer {
     }
 
     fn preallocated(&self) -> bool {
-        self.buf.last().map_or(false, |ser| {
-            matches!(ser.kind, ConstructionKind::Placeholder)
-        })
+        self.buf
+            .last()
+            .is_some_and(|ser| matches!(ser.kind, ConstructionKind::Placeholder))
     }
 
     fn allocate_next(&mut self) -> (&mut SerializedGlyphConstruction, usize) {
@@ -139,9 +138,8 @@ impl GlyphDetailTracer {
 }
 
 impl EvaluationTracer for GlyphDetailTracer {
-    type Id = usize;
-
     type CurveDebugger<'a> = TracerCurveDebugger<'a>;
+    type Id = usize;
 
     fn needs_evaluate_intermediate() -> bool {
         true
@@ -220,7 +218,7 @@ impl EvaluationTracer for GlyphDetailTracer {
         id
     }
 
-    fn curve_debugger<'a>(&'a mut self, id: Self::Id) -> Self::CurveDebugger<'a> {
+    fn curve_debugger(&mut self, id: Self::Id) -> Self::CurveDebugger<'_> {
         TracerCurveDebugger {
             item: self.buf.get_mut(id).unwrap(),
         }
@@ -232,7 +230,7 @@ impl EvaluationTracer for GlyphDetailTracer {
         curve: &[monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>],
     ) {
         let it = self.buf.get_mut(id).unwrap();
-        it.result_curve = Some(curve.iter().cloned().collect());
+        it.result_curve = Some(curve.to_vec());
     }
 }
 
@@ -240,7 +238,7 @@ struct TracerCurveDebugger<'a> {
     item: &'a mut SerializedGlyphConstruction,
 }
 
-impl<'a> CurveDebugger for TracerCurveDebugger<'a> {
+impl CurveDebugger for TracerCurveDebugger<'_> {
     fn point(
         &mut self,
         kind: monoxide_curves::debug::DebugPointKind,
