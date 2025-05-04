@@ -5,7 +5,7 @@
 Please make sure you have the following installed on your machine:
 
 - A recent Rust toolchain.
-- PNPM for the `pnpx` command.
+- PNPM for font scripting, WebUI, etc.
 
 ## Getting Started
 
