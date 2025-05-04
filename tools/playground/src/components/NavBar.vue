@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { onBeforeRouteUpdate, useRoute, type RouteLocation } from 'vue-router'
 import { RouterLink } from 'vue-router'
 
