@@ -20,6 +20,7 @@ export interface DebugPointProps {
 /** The shape of the actual point displayed */
 type PointShape =
   | 'square'
+  | 'rounded-square'
   | 'circle'
   | 'forward-triangle'
   | 'backward-triangle'
@@ -32,8 +33,9 @@ const pointShape: ComputedRef<PointShape> = computed(() => {
   switch (props.kind) {
     case 'corner':
       return 'square'
-    case 'g4':
     case 'g2':
+      return 'rounded-square'
+    case 'g4':
     case 'control':
     case 'curve':
     case 'handle':
@@ -52,7 +54,7 @@ const pointShape: ComputedRef<PointShape> = computed(() => {
   }
 })
 
-const squareSize = 0.01
+const squareSize = 0.012
 const circleSize = 0.012
 const diamondSize = squareSize * Math.sqrt(2)
 const forwardAngle = computed(() => props.forward ?? 0)
@@ -98,6 +100,16 @@ const classes = computed(() => {
     :y="props.y - squareSize / 2"
     :width="squareSize"
     :height="squareSize"
+    :class="classes"
+    vector-effect="non-scaling-stroke"
+  ></rect>
+  <rect
+    v-else-if="pointShape === 'rounded-square'"
+    :x="props.x - squareSize / 2"
+    :y="props.y - squareSize / 2"
+    :width="squareSize"
+    :height="squareSize"
+    :rx="squareSize / 4"
     :class="classes"
     vector-effect="non-scaling-stroke"
   ></rect>
