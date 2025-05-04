@@ -1,7 +1,6 @@
-use std::{collections::HashMap, time::SystemTime};
+use std::time::SystemTime;
 
 use monoxide_curves::{
-    debug::CurveDebugger,
     point::Point2D,
     stroke::{StrokeResult, TangentOverride},
     CubicBezier,
@@ -38,7 +37,8 @@ pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::F
             crate::ast::GlyphEntry::Simple(simple_glyph) => {
                 let mut outlines = vec![];
                 for it in &simple_glyph.outlines {
-                    eval_outline(it, &mut outlines, &mut ());
+                    eval_outline(it, &mut outlines, &mut ()).expect("Eval error!");
+                    // FIXME: handle errors
                 }
                 let quads = outlines
                     .into_iter()
@@ -204,7 +204,7 @@ pub fn eval_outline<E: EvaluationTracer>(
     expr: &OutlineExpr,
     out: &mut Vec<CubicBezier<Point2D>>,
     dbg: &mut E,
-) -> Result<(), EvalError<E::Id>> {
+) -> Result<E::Id, EvalError<E::Id>> {
     let evaled = eval_outline_internal(expr, dbg)?;
     let id = match evaled.kind {
         EvalValueKind::Beziers(beziers) => {
@@ -223,8 +223,7 @@ pub fn eval_outline<E: EvaluationTracer>(
         }
     };
 
-    dbg.set_output_id(id);
-    Ok(())
+    Ok(id)
 }
 
 /// A spiro curve used in evaluation context.
