@@ -9,8 +9,8 @@ import { useAppState } from '../lib/state'
 const state = useAppState()
 
 const glyphsList = computed(() => {
-  if (!state.value.renderedFont) return []
-  let renderedFont = state.value.renderedFont
+  let renderedFont = state.renderedFont.value
+  if (!renderedFont) return []
 
   // glyphs are stored as `cmap` for char->glyph id mapping,
   // and then `glyphs` for glyph id -> glyph data
@@ -34,8 +34,6 @@ const glyphsList = computed(() => {
       console.warn(`Glyph id ${glyphId} not found for char ${char}`)
     }
   }
-
-  console.log('glyphs', glyphs)
 
   // Sort glyphs based on the first char in chars array
   glyphs.sort((a, b) => {

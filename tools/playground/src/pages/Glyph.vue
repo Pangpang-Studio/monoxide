@@ -2,7 +2,7 @@
 import { useRoute } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
 import { useAppState } from '../lib/state'
-import { computed, ref, watch, watchEffect, type Ref } from 'vue'
+import { computed, ref, watchEffect, type Ref } from 'vue'
 import type { GlyphDetail } from '../lib/types'
 import { getGlyphDetail } from '../lib/api'
 
@@ -24,20 +24,18 @@ const glyphId = computed(() => {
 })
 
 const overviewGlyph = computed(() => {
-  if (!state.value.renderedFont) return null
-  let renderedFont = state.value.renderedFont
-
-  return renderedFont.glyphs[glyphId.value]
+  let v = state.renderedFont.value
+  if (!v) return null
+  return v.glyphs[glyphId.value]
 })
 
 // the detail we fetch from the server
 const glyphDetail: Ref<GlyphDetail | undefined> = ref()
 const error: Ref<string | null> = ref(null)
 
-async function updateDetails(newGlyphId: number) {
+watchEffect(async () => {
   try {
-    if (!state.value.renderedFont) return
-    let id = newGlyphId
+    let id = glyphId.value
     let detail = await getGlyphDetail(id)
     if (detail) {
       if (glyphId.value === id) {
@@ -56,12 +54,9 @@ async function updateDetails(newGlyphId: number) {
       error.value = 'Unknown error'
     }
   }
-}
-watchEffect(() => {
-  if (glyphId.value !== undefined) {
-    updateDetails(glyphId.value)
-  }
 })
+
+// Meta & control
 </script>
 
 <template>

@@ -22,6 +22,7 @@ use rquickjs::{
     loader::{BuiltinResolver, FileResolver, ModuleLoader, ScriptLoader},
 };
 use tokio::sync::watch;
+use tokio_stream::StreamExt;
 use tracing::debug;
 use web::RenderedFontState;
 
@@ -143,13 +144,24 @@ async fn main() -> Result<()> {
     );
 
     // Set up file watcher
-    let (tx, mut rx) = tokio::sync::mpsc::channel(1);
-    let mut watcher = notify::recommended_watcher(move |res: notify::Result<_>| {
-        if res.is_ok() {
-            _ = tx.blocking_send(());
-        }
-    })?;
+    let (tx, rx) = tokio::sync::mpsc::channel::<()>(10);
+    let mut watcher =
+        notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
+            Ok(evt) => {
+                if evt.kind.is_modify() {
+                    debug!("File modified: {:?}", evt.paths);
+                    let _ = tx.try_send(());
+                }
+            }
+            Err(e) => {
+                tracing::error!("Error: {e}");
+            }
+        })?;
     watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
+    let mut rx = std::pin::pin!(
+        tokio_stream::wrappers::ReceiverStream::new(rx)
+            .throttle(std::time::Duration::from_millis(100))
+    );
 
     let (render_tx, render_rx) = watch::channel(Arc::new(RenderedFontState::Nothing));
 
@@ -180,6 +192,6 @@ async fn main() -> Result<()> {
                     .unwrap();
             }
         }
-        rx.recv().await;
+        rx.next().await;
     }
 }
