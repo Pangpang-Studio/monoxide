@@ -2,7 +2,7 @@
 import { useRoute } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
 import { useAppState } from '../lib/state'
-import { computed, ref, watch, type Ref } from 'vue'
+import { computed, ref, watch, watchEffect, type Ref } from 'vue'
 import type { GlyphDetail } from '../lib/types'
 import { getGlyphDetail } from '../lib/api'
 
@@ -15,9 +15,13 @@ interface Props {
 
 let props = defineProps<Props>()
 
-const glyphId = ref(
-  typeof props.glyphId === 'string' ? parseInt(props.glyphId) : props.glyphId,
-)
+const glyphId = computed(() => {
+  let id = props.glyphId
+  if (typeof id === 'string') {
+    id = parseInt(id)
+  }
+  return id
+})
 
 const overviewGlyph = computed(() => {
   if (!state.value.renderedFont) return null
@@ -30,33 +34,34 @@ const overviewGlyph = computed(() => {
 const glyphDetail: Ref<GlyphDetail | undefined> = ref()
 const error: Ref<string | null> = ref(null)
 
-watch(
-  glyphId,
-  async (newGlyphId) => {
-    try {
-      if (!state.value.renderedFont) return
-      let id = newGlyphId
-      let detail = await getGlyphDetail(id)
-      if (detail) {
-        if (glyphId.value === id) {
-          glyphDetail.value = detail
-        } else {
-          console.warn(
-            `Glyph detail for ${id} was fetched, but the glyphId changed to ${glyphId.value}. Skipping update.`,
-          )
-        }
-      }
-    } catch (e) {
-      console.error('Error fetching glyph detail:', e)
-      if (e instanceof Error) {
-        error.value = e.message
+async function updateDetails(newGlyphId: number) {
+  try {
+    if (!state.value.renderedFont) return
+    let id = newGlyphId
+    let detail = await getGlyphDetail(id)
+    if (detail) {
+      if (glyphId.value === id) {
+        glyphDetail.value = detail
       } else {
-        error.value = 'Unknown error'
+        console.warn(
+          `Glyph detail for ${id} was fetched, but the glyphId changed to ${glyphId.value}. Skipping update.`,
+        )
       }
     }
-  },
-  { immediate: true, deep: true },
-)
+  } catch (e) {
+    console.error('Error fetching glyph detail:', e)
+    if (e instanceof Error) {
+      error.value = e.message
+    } else {
+      error.value = 'Unknown error'
+    }
+  }
+}
+watchEffect(() => {
+  if (glyphId.value !== undefined) {
+    updateDetails(glyphId.value)
+  }
+})
 </script>
 
 <template>

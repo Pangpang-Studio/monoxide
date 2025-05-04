@@ -34,7 +34,6 @@ pub struct SerializedGlyphConstruction {
     pub id: usize,
 
     /// The method to construct the glyph
-    #[serde(flatten)]
     pub kind: ConstructionKind,
 
     /// The resulting curve of the construction, if any
