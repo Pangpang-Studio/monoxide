@@ -212,13 +212,14 @@ pub fn eval_outline<E: EvaluationTracer>(
             evaled.id
         }
         EvalValueKind::Spiros(spiros) => {
+            let output_size_before = out.len();
             for spiro in spiros {
                 let bez = monoxide_curves::convert::spiro_to_cube(&spiro.spiro);
 
                 out.extend(bez);
             }
             let id = dbg.spiro_to_bezier(evaled.id);
-            dbg.intermediate_output(id, &out);
+            dbg.intermediate_output(id, &out[output_size_before..]);
             id
         }
     };
@@ -281,6 +282,13 @@ fn eval_outline_internal<E: EvaluationTracer>(
         }
         OutlineExpr::Spiro(spiro_cps, tangent_overrides) => {
             let id = dbg.constructed_spiro(spiro_cps);
+
+            if E::needs_evaluate_intermediate() {
+                // convert to beziers if needed
+                let bez = monoxide_curves::convert::spiro_to_cube(spiro_cps);
+                dbg.intermediate_output(id, &bez);
+            }
+
             let spiro = EvalSpiro {
                 spiro: spiro_cps.clone(),
                 tangent_override: tangent_overrides.clone(),
@@ -306,10 +314,10 @@ fn eval_stroked<E: EvaluationTracer>(
     dbg: &mut E,
 ) -> Result<EvalValue<E::Id>, EvalError<E::Id>> {
     // For each of the spiro curves, stroke them. This may result in
-    // more than one bezier per spiro.
-    let id = dbg.stroked(evaled_id, width);
+    // more than one spiro per original spiro.
+    let id = dbg.preallocate_next();
 
-    let mut out_beziers = vec![];
+    let mut out_spiros = vec![];
     for spiro in eval_spiros {
         let oc = monoxide_curves::stroke::stroke_spiro(
             &spiro.spiro,
@@ -319,24 +327,34 @@ fn eval_stroked<E: EvaluationTracer>(
         );
         match oc {
             StrokeResult::One(spiro_cps) => {
-                let bez = monoxide_curves::convert::spiro_to_cube(&spiro_cps);
-                out_beziers.extend_from_slice(&bez);
+                out_spiros.push(EvalSpiro {
+                    spiro: spiro_cps,
+                    tangent_override: Default::default(),
+                });
             }
             StrokeResult::Two(spiro_cps, spiro_cps1) => {
-                let bez1 = monoxide_curves::convert::spiro_to_cube(&spiro_cps);
-                let bez2 = monoxide_curves::convert::spiro_to_cube(&spiro_cps1);
-                out_beziers.extend_from_slice(&bez1);
-                out_beziers.extend_from_slice(&bez2);
+                out_spiros.push(EvalSpiro {
+                    spiro: spiro_cps,
+                    tangent_override: Default::default(),
+                });
+                out_spiros.push(EvalSpiro {
+                    spiro: spiro_cps1,
+                    tangent_override: Default::default(),
+                });
             }
         }
     }
 
-    dbg.intermediate_output(id, &out_beziers);
+    let id = dbg.stroked(
+        evaled_id,
+        width,
+        out_spiros.iter().map(|s| s.spiro.as_slice()),
+    );
 
-    let id1 = dbg.spiro_to_bezier(id);
+    // dbg.intermediate_output(id, &out_spiros); // Need a way to trace Spiros if needed
 
     return Ok(EvalValue {
-        kind: EvalValueKind::Beziers(out_beziers),
-        id: id1,
+        kind: EvalValueKind::Spiros(out_spiros),
+        id, // Use the ID from dbg.stroked
     });
 }

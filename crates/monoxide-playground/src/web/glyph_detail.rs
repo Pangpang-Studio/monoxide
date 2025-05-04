@@ -74,6 +74,7 @@ fn simple_glyph_to_detail(
         }
     }
     let output_id = tracer.boolean_added(&out_ids);
+    tracer.intermediate_output(output_id, &output_outline);
 
     let out_outlines = output_outline
         .into_iter()
@@ -115,12 +116,25 @@ impl GlyphDetailTracer {
         GlyphDetailTracer { buf: Vec::new() }
     }
 
-    fn next_id(&mut self) -> usize {
-        self.buf.len()
-    }
-
     fn construction(self) -> Vec<SerializedGlyphConstruction> {
         self.buf
+    }
+
+    fn preallocated(&self) -> bool {
+        self.buf.last().map_or(false, |ser| {
+            matches!(ser.kind, ConstructionKind::Placeholder)
+        })
+    }
+
+    fn allocate_next(&mut self) -> (&mut SerializedGlyphConstruction, usize) {
+        if !self.preallocated() {
+            let id = self.buf.len();
+            let kind = ConstructionKind::Placeholder;
+            let ser = SerializedGlyphConstruction::new(id, kind);
+            self.buf.push(ser);
+        }
+        let id = self.buf.len() - 1;
+        (self.buf.last_mut().unwrap(), id)
     }
 }
 
@@ -133,53 +147,76 @@ impl EvaluationTracer for GlyphDetailTracer {
         true
     }
 
-    fn constructed_beziers(
+    fn preallocate_next(&mut self) -> Self::Id {
+        self.allocate_next().1
+    }
+
+    fn constructed_beziers<'b>(
         &mut self,
-        bezier: &[monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>],
-    ) -> Self::Id {
-        let id = self.next_id();
-        let curve = bezier.iter().cloned().collect();
-        let kind = ConstructionKind::CubicBezier { curve };
-        let ser = SerializedGlyphConstruction::new(id, kind);
-        self.buf.push(ser);
+        bezier: impl IntoIterator<
+            Item = &'b monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>,
+        >,
+    ) -> Self::Id
+    where
+        Self: 'b,
+    {
+        let (ser, id) = self.allocate_next();
+        let curve = bezier.into_iter().cloned().collect();
+        ser.kind = ConstructionKind::CubicBezier { curve };
         id
     }
 
-    fn constructed_spiros(&mut self, spiros: &[&[monoxide_spiro::SpiroCp]]) -> Self::Id {
-        let id = self.next_id();
+    fn constructed_spiros<'b>(
+        &mut self,
+        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+    ) -> Self::Id
+    where
+        Self: 'b,
+    {
+        let (ser, id) = self.allocate_next();
         let curve = spiros
-            .iter()
+            .into_iter()
             .map(|s| s.iter().cloned().map(|x| x.into()).collect())
             .collect();
-        let kind = ConstructionKind::Spiro { curve };
-        let ser = SerializedGlyphConstruction::new(id, kind);
-        self.buf.push(ser);
+        ser.kind = ConstructionKind::Spiro { curve };
         id
     }
 
-    fn stroked(&mut self, parent: Self::Id, width: f64) -> Self::Id {
-        let id = self.next_id();
-        let kind = ConstructionKind::Stroke { parent, width };
-        let ser = SerializedGlyphConstruction::new(id, kind);
-        self.buf.push(ser);
+    fn stroked<'b>(
+        &mut self,
+        parent: Self::Id,
+        width: f64,
+        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+    ) -> Self::Id
+    where
+        Self: 'b,
+    {
+        let (ser, id) = self.allocate_next();
+        ser.kind = ConstructionKind::Stroke {
+            parent,
+            width,
+            curve: spiros
+                .into_iter()
+                .map(|s| s.iter().cloned().map(|x| x.into()).collect())
+                .collect(),
+        };
         id
     }
 
     fn spiro_to_bezier(&mut self, parent: Self::Id) -> Self::Id {
-        let id = self.next_id();
-        let kind = ConstructionKind::SpiroToBezier { parent };
-        let ser = SerializedGlyphConstruction::new(id, kind);
-        self.buf.push(ser);
+        let (ser, id) = self.allocate_next();
+        ser.kind = ConstructionKind::SpiroToBezier { parent };
         id
     }
 
-    fn boolean_added(&mut self, parents: &[Self::Id]) -> Self::Id {
-        let id = self.next_id();
-        let kind = ConstructionKind::BooleanAdd {
-            parents: parents.to_vec(),
+    fn boolean_added<'b>(&mut self, parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id
+    where
+        Self: 'b,
+    {
+        let (ser, id) = self.allocate_next();
+        ser.kind = ConstructionKind::BooleanAdd {
+            parents: parents.into_iter().cloned().collect(),
         };
-        let ser = SerializedGlyphConstruction::new(id, kind);
-        self.buf.push(ser);
         id
     }
 

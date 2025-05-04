@@ -133,6 +133,7 @@ export interface StrokeConstruction {
   t: 'stroke'
   parent: number
   width: number
+  curve: SerializeSpiroPoint[][]
 }
 
 /** Maps to `ConstructionKind::SpiroToBezier` variant in `model.rs` */
