@@ -133,7 +133,7 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
         &cmd,
         playground_server_name,
         webui_port,
-        &playground_webui_dir,
+        &playground_webui_dist,
     )?;
     {
         // graceful shutdown stuff
