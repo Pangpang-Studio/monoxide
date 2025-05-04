@@ -2,7 +2,6 @@ mod glyph_detail;
 mod ws;
 
 use std::{
-    collections::HashMap,
     net::{Ipv4Addr, SocketAddrV4},
     path::PathBuf,
     sync::Arc,
@@ -11,12 +10,11 @@ use std::{
 use anyhow::bail;
 use axum::{
     Router,
-    extract::{Request, State, ws::WebSocket},
+    extract::{Request, State},
     routing::{any, method_routing::get},
 };
 use monoxide_script::ast::FontContext;
-use serde::Serialize;
-use tokio::sync::{Mutex, watch};
+use tokio::sync::watch;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 
@@ -44,7 +42,7 @@ pub async fn start_web_server(
     let mut app = Router::new()
         .route("/api/ping", any(reply_200))
         .route("/api/ws", any(ws::serve_ws))
-        .route("/api/glyph/:id", get(glyph_detail::glyph_detail));
+        .route("/api/glyph/{id}", get(glyph_detail::glyph_detail));
 
     if let Some(url) = &cmd.reverse_proxy {
         info!("Reverse proxying to {}", url);
