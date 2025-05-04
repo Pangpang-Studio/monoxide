@@ -351,7 +351,19 @@ fn eval_stroked<E: EvaluationTracer>(
         out_spiros.iter().map(|s| s.spiro.as_slice()),
     );
 
-    // dbg.intermediate_output(id, &out_spiros); // Need a way to trace Spiros if needed
+    if E::needs_evaluate_intermediate() {
+        // Convert both original spiro and the stroked spiro to beziers
+        let mut bezs = vec![];
+        for spiro in eval_spiros {
+            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.spiro);
+            bezs.extend(bez);
+        }
+        for spiro in &out_spiros {
+            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.spiro);
+            bezs.extend(bez);
+        }
+        dbg.intermediate_output(id, &bezs);
+    }
 
     return Ok(EvalValue {
         kind: EvalValueKind::Spiros(out_spiros),
