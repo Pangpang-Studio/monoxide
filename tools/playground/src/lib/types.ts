@@ -48,7 +48,7 @@ export interface GlyphDetail {
 /** Maps to `struct SerializedGlyphConstruction` in `model.rs` */
 export interface SerializedGlyphConstruction {
   id: number
-  t: string
+  kind: ConstructionKind
   result_curve: CubicBezier[] | null
   debug_points: DebugPoint[]
   debug_lines: DebugLine[]
@@ -63,7 +63,7 @@ export interface Point2D {
 /** Maps to `CubicSegment::Line` variant in `cube.rs` */
 export interface LineSegment {
   t: 'line'
-  end: Point2D
+  p2: Point2D
 }
 
 /** Maps to `CubicSegment::Curve` variant in `cube.rs` */
@@ -71,7 +71,7 @@ export interface CurveSegment {
   t: 'curve'
   c1: Point2D
   c2: Point2D
-  end: Point2D
+  p2: Point2D
 }
 
 /** Maps to `enum CubicSegment` in `cube.rs` */
@@ -84,9 +84,11 @@ export interface CubicBezier {
   closed: boolean
 }
 
+export type DebugPointKind = 'corner' | 'curve' | 'control' | 'misc' | 'hidden'
+
 /** Maps to `struct DebugPoint` in `model.rs` */
 export interface DebugPoint extends Point2D {
-  kind: string
+  kind: DebugPointKind
   tag: string
 }
 

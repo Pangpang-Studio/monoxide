@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import { computed, defineProps } from 'vue'
+import { charList } from '../lib/util'
 
 export interface GlyphDisplayProps {
   id: number
@@ -31,11 +32,5 @@ export interface GlyphDisplayProps {
 }
 
 const props = defineProps<GlyphDisplayProps>()
-const chars_list = computed(() =>
-  props.chars.map((c) => {
-    let n = c.codePointAt(0)
-
-    return { unicode: `u+${n?.toString(16).padStart(4, '0')}` }
-  }),
-)
+const chars_list = computed(() => charList(props.chars))
 </script>

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::CubicSegment;
 
 #[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
+#[serde(tag = "t")]
 pub enum SerdeForCubicSegment<P> {
     Line { p2: P },
     Curve { c1: P, c2: P, p2: P },
