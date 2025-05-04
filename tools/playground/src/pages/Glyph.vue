@@ -336,9 +336,7 @@ function selectPart(id: number) {
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          v-for="(path, i) in svg"
-          :d="path"
-          :key="i"
+          :d="svg?.join(' ')"
           class="stroke-2"
           :class="{
             'stroke-black fill-gray-200': selected === null,
