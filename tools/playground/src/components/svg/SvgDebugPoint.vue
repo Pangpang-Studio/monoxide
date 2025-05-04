@@ -52,8 +52,8 @@ const pointShape: ComputedRef<PointShape> = computed(() => {
   }
 })
 
-const squareSize = 0.015
-const circleSize = 0.01
+const squareSize = 0.01
+const circleSize = 0.012
 const diamondSize = squareSize * Math.sqrt(2)
 const forwardAngle = computed(() => props.forward ?? 0)
 
@@ -88,7 +88,7 @@ const classes = computed(() => {
     v-if="pointShape === 'circle'"
     :cx="props.x"
     :cy="props.y"
-    :r="circleSize"
+    :r="circleSize / 2"
     :class="classes"
     vector-effect="non-scaling-stroke"
   ></circle>
@@ -110,14 +110,14 @@ const classes = computed(() => {
   ></path>
   <path
     v-else-if="pointShape === 'forward-triangle'"
-    :d="`M 0 ${-circleSize / 2} L ${circleSize} ${circleSize} L ${-circleSize} ${circleSize} Z`"
+    :d="`M 0 ${-circleSize / 4} L ${circleSize / 2} ${circleSize / 2} L ${-circleSize / 2} ${circleSize / 2} Z`"
     :transform="`translate(${props.x}, ${props.y}) rotate(${forwardAngle})`"
     :class="classes"
     vector-effect="non-scaling-stroke"
   ></path>
   <path
     v-else-if="pointShape === 'backward-triangle'"
-    :d="`M 0 ${-circleSize / 2} L ${circleSize} ${circleSize} L ${-circleSize} ${circleSize} Z`"
+    :d="`M 0 ${-circleSize / 4} L ${circleSize / 2} ${circleSize / 2} L ${-circleSize / 2} ${circleSize / 2} Z`"
     :transform="`translate(${props.x}, ${props.y}) rotate(${forwardAngle + 180})`"
     :class="classes"
     vector-effect="non-scaling-stroke"

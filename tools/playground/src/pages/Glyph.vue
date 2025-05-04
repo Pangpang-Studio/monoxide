@@ -4,9 +4,11 @@ import NavBar from '../components/NavBar.vue'
 import { useAppState } from '../lib/state'
 import { computed, ref, watchEffect, type ComputedRef, type Ref } from 'vue'
 import type {
+  CubicBezier,
   DebugPointKind,
   GlyphDetail,
   SerializedGlyphConstruction,
+  SerializeSpiroPoint,
 } from '../lib/types'
 import { getGlyphDetail } from '../lib/api'
 import { charList } from '../lib/util'
@@ -105,85 +107,26 @@ const highlightPathPoints: ComputedRef<DebugPointProps[]> = computed(() => {
   if (sel.t == 'part') {
     let part = glyphDetail.value.construction[sel.id]
 
-    if (part.kind.t == 'spiro') {
+    if (part.kind.t == 'spiro' || part.kind.t == 'stroke') {
       let curves = part.kind.curve
       for (let i = 0; i < curves.length; i++) {
-        let curve = curves[i]
-        for (let j = 0; j < curve.length; j++) {
-          let point = curve[j]
-          points.push({
-            x: point.x,
-            y: point.y,
-            kind: point.ty,
-          })
-        }
+        debugSpiro(curves[i], points)
+      }
+    } else if (part.kind.t == 'cubic-bezier') {
+      for (let i = 0; i < part.kind.curve.length; i++) {
+        debugCubicBezier(part.kind.curve[i], points)
       }
     }
 
-    if (part.result_curve) {
+    if (
+      part.result_curve &&
+      part.kind.t != 'spiro' &&
+      part.kind.t != 'stroke'
+    ) {
       for (let i = 0; i < part.result_curve.length; i++) {
         let curve = part.result_curve[i]
 
-        {
-          // starting point
-          let startPointKind: DebugPointKind = 'corner'
-          if (curve.segments[0].t === 'curve') {
-            startPointKind = 'curve'
-          } else if (curve.segments[curve.segments.length - 1].t === 'curve') {
-            startPointKind = 'curve'
-          }
-          points.push({
-            x: curve.start.x,
-            y: curve.start.y,
-            kind: startPointKind,
-          })
-        }
-
-        // Segments
-        for (let j = 0; j < curve.segments.length; j++) {
-          let segment = curve.segments[j]
-          if (segment.t === 'curve') {
-            points.push({
-              x: segment.c1.x,
-              y: segment.c1.y,
-              kind: 'control',
-            })
-            points.push({
-              x: segment.c2.x,
-              y: segment.c2.y,
-              kind: 'control',
-            })
-          } else if (segment.t === 'line') {
-            // pass
-          }
-          if (j === curve.segments.length - 1) {
-            if (curve.closed) {
-              // pass, we already added the start point
-            } else {
-              points.push({
-                x: segment.p2.x,
-                y: segment.p2.y,
-                kind: segment.t == 'curve' ? 'curve' : 'corner',
-              })
-            }
-          } else {
-            let nextSegment = curve.segments[j + 1]
-            let isCurve = segment.t === 'curve' || nextSegment.t === 'curve'
-            if (isCurve) {
-              points.push({
-                x: segment.p2.x,
-                y: segment.p2.y,
-                kind: 'curve',
-              })
-            } else {
-              points.push({
-                x: segment.p2.x,
-                y: segment.p2.y,
-                kind: 'corner',
-              })
-            }
-          }
-        }
+        debugCubicBezier(curve, points)
       }
 
       if (part.debug_points) {
@@ -241,6 +184,133 @@ const constructionSteps: ComputedRef<ConstructionStep[]> = computed(() => {
   })
 })
 
+const highlightPath: ComputedRef<string[]> = computed(() => {
+  let paths: string[] = []
+  if (glyphDetail.value) {
+    let sel = selected.value
+    if (sel && sel.t === 'part') {
+      let part = glyphDetail.value.construction[sel.id]
+      if (part.kind.t === 'cubic-bezier') {
+        for (let i = 0; i < part.kind.curve.length; i++) {
+          let curve = part.kind.curve[i]
+          paths.push(drawSvgPath(curve))
+        }
+      }
+      if (part.result_curve) {
+        for (let i = 0; i < part.result_curve.length; i++) {
+          let curve = part.result_curve[i]
+          paths.push(drawSvgPath(curve))
+        }
+      }
+      if (part.debug_lines) {
+        for (let i = 0; i < part.debug_lines.length; i++) {
+          let line = part.debug_lines[i]
+          paths.push(
+            'M' +
+              line.from.x +
+              ' ' +
+              line.from.y +
+              ' L' +
+              line.to.x +
+              ' ' +
+              line.to.y,
+          )
+        }
+      }
+    }
+  }
+  return paths
+})
+
+function debugSpiro(curve: SerializeSpiroPoint[], points: DebugPointProps[]) {
+  for (let j = 0; j < curve.length; j++) {
+    let point = curve[j]
+    points.push({
+      x: point.x,
+      y: point.y,
+      kind: point.ty,
+    })
+  }
+}
+
+function debugCubicBezier(curve: CubicBezier, points: DebugPointProps[]) {
+  console.log(curve)
+  {
+    let startPointKind: DebugPointKind = 'corner'
+    if (curve.segments[0].t === 'curve') {
+      startPointKind = 'curve'
+    } else if (curve.segments[curve.segments.length - 1].t === 'curve') {
+      startPointKind = 'curve'
+    }
+    points.push({
+      x: curve.start.x,
+      y: curve.start.y,
+      kind: startPointKind,
+    })
+  }
+
+  // Segments
+  for (let j = 0; j < curve.segments.length; j++) {
+    let segment = curve.segments[j]
+    if (segment.t === 'curve') {
+      points.push({
+        x: segment.c1.x,
+        y: segment.c1.y,
+        kind: 'control',
+      })
+      points.push({
+        x: segment.c2.x,
+        y: segment.c2.y,
+        kind: 'control',
+      })
+    } else if (segment.t === 'line') {
+      // pass
+    }
+    if (j === curve.segments.length - 1) {
+      if (curve.closed) {
+        // pass, we already added the start point
+      } else {
+        points.push({
+          x: segment.p2.x,
+          y: segment.p2.y,
+          kind: segment.t == 'curve' ? 'curve' : 'corner',
+        })
+      }
+    } else {
+      let nextSegment = curve.segments[j + 1]
+      let isCurve = segment.t === 'curve' || nextSegment.t === 'curve'
+      if (isCurve) {
+        points.push({
+          x: segment.p2.x,
+          y: segment.p2.y,
+          kind: 'curve',
+        })
+      } else {
+        points.push({
+          x: segment.p2.x,
+          y: segment.p2.y,
+          kind: 'corner',
+        })
+      }
+    }
+  }
+}
+
+function drawSvgPath(curve: CubicBezier): string {
+  let path = 'M' + curve.start.x + ' ' + curve.start.y
+  for (let i = 0; i < curve.segments.length; i++) {
+    let segment = curve.segments[i]
+    if (segment.t === 'curve') {
+      path += ' C' + segment.c1.x + ' ' + segment.c1.y
+      path += ', ' + segment.c2.x + ' ' + segment.c2.y
+      path += ', ' + segment.p2.x + ' ' + segment.p2.y
+    } else if (segment.t === 'line') {
+      path += ' L' + segment.p2.x + ' ' + segment.p2.y
+    }
+  }
+  return path
+}
+
 function selectPart(id: number) {
   if (selected.value?.t === 'part' && selected.value.id === id) {
     selected.value = null
@@ -262,7 +332,7 @@ function selectPart(id: number) {
       coordinates on the fly. -->
       <svg
         class="w-full aspect-square border-2 border-black bg-white"
-        viewBox="-0.5 -1.5 2 2"
+        viewBox="-0.2 -1.2 1.4 1.4"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
@@ -290,6 +360,17 @@ function selectPart(id: number) {
           vector-effect="non-scaling-stroke"
           class="stroke-2 stroke-gray-200"
         ></g>
+        <!-- Debug lines -->
+        <!-- TODO: flip SVG -->
+        <g fill-rule="nonzero" transform="scale(1 -1)">
+          <path
+            v-for="(path, i) in highlightPath"
+            :d="path"
+            :key="i"
+            class="stroke-2 stroke-blue-500 fill-none"
+            vector-effect="non-scaling-stroke"
+          ></path>
+        </g>
         <!-- Debug points -->
         <g fill-rule="nonzero" vector-effect="non-scaling-stroke">
           <SvgDebugPoint
@@ -298,12 +379,6 @@ function selectPart(id: number) {
             v-bind="point"
           ></SvgDebugPoint>
         </g>
-        <!-- Debug lines -->
-        <g
-          fill-rule="nonzero"
-          vector-effect="non-scaling-stroke"
-          class="stroke-2"
-        ></g>
       </svg>
     </div>
 

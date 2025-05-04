@@ -87,6 +87,7 @@ pub enum ConstructionKind {
     Stroke {
         parent: usize,
         width: f64,
+        curve: Vec<Vec<SerializeSpiroPoint>>,
     },
     SpiroToBezier {
         parent: usize,
@@ -94,6 +95,8 @@ pub enum ConstructionKind {
     BooleanAdd {
         parents: Vec<usize>,
     },
+    /// A placeholder when the construction is not yet complete.
+    Placeholder,
 }
 
 #[derive(Serialize)]
