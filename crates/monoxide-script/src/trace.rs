@@ -1,6 +1,6 @@
 //! Provides trait for tracing the evaluation of a glyph
 
-use monoxide_curves::{debug::CurveDebugger, point::Point2D, stroke::StrokeResult, CubicBezier};
+use monoxide_curves::{debug::CurveDebugger, point::Point2D, CubicBezier};
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
 pub trait EvaluationTracer {
@@ -22,9 +22,6 @@ pub trait EvaluationTracer {
     fn stroked(&mut self, parent: Self::Id, width: f64) -> Self::Id;
     fn spiro_to_bezier(&mut self, parent: Self::Id) -> Self::Id;
     fn boolean_added(&mut self, parents: &[Self::Id]) -> Self::Id;
-
-    /// Specify the ID of the final output
-    fn set_output_id(&mut self, id: Self::Id);
 
     fn constructed_bezier(&mut self, bezier: &CubicBezier<Point2D>) -> Self::Id {
         self.constructed_beziers(std::slice::from_ref(bezier))
@@ -60,8 +57,6 @@ impl EvaluationTracer for () {
     fn stroked(&mut self, _parent: Self::Id, _width: f64) -> Self::Id {}
     fn spiro_to_bezier(&mut self, _parent: Self::Id) -> Self::Id {}
     fn boolean_added(&mut self, _parents: &[Self::Id]) -> Self::Id {}
-
-    fn set_output_id(&mut self, _id: Self::Id) {}
 
     fn intermediate_output(&mut self, _id: Self::Id, _curve: &[CubicBezier<Point2D>]) {}
 

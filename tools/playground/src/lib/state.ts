@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import type { NewRenderedMsg, WSRecvMsg } from './api'
+import type { NewRenderedMsg, WSRecvMsg } from './types'
 
 export function useAppState(): Ref<AppState> {
   if (globalState) {

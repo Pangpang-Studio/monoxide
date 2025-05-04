@@ -4,85 +4,111 @@ use serde::Serialize;
 /// Represent the overall character mapping of a font
 #[derive(Serialize)]
 pub struct FontOverview {
-    glyphs: Vec<GlyphOverview>,
+    pub glyphs: Vec<GlyphOverview>,
 }
 
 /// Represents the minimal information to represent a glyph
 #[derive(Serialize)]
 pub struct GlyphOverview {
     /// The index of the current glyph, to be used in other interfaces.
-    id: usize,
+    pub id: usize,
     /// The character this glyph represents
-    ch: char,
+    pub ch: Option<char>,
     /// The name of the glyph, if any
-    name: Option<String>,
+    pub name: Option<String>,
     /// The outline(s) of the current glyph
-    outline: Vec<String>,
+    pub outline: Vec<String>,
 }
 
 /// Represent the detail of a glyph, including the comptation tree, debug points, etc.
 #[derive(Serialize)]
 pub struct GlyphDetail {
-    overview: GlyphOverview,
-    // TODO: [`monoxide-script::ast`] types mapped here
-    construction: Vec<SerializedGlyphConstruction>,
+    pub overview: GlyphOverview,
+    pub construction: Vec<SerializedGlyphConstruction>,
+    pub result_id: Option<usize>,
+    pub errors: Vec<String>,
 }
 
 #[derive(Serialize)]
 pub struct SerializedGlyphConstruction {
-    id: usize,
+    pub id: usize,
 
     /// The method to construct the glyph
     #[serde(flatten)]
-    kind: ConstructionKind,
+    pub kind: ConstructionKind,
 
     /// The resulting curve of the construction, if any
-    result_curve: Option<CubicBezier<Point2D>>,
+    pub result_curve: Option<Vec<CubicBezier<Point2D>>>,
 
     /// Auxiliary points for debugging
-    debug_points: Vec<DebugPoint>,
+    pub debug_points: Vec<DebugPoint>,
 
     /// Auxiliary lines for debugging
-    debug_lines: Vec<DebugLine>,
+    pub debug_lines: Vec<DebugLine>,
+}
+
+impl SerializedGlyphConstruction {
+    pub fn new(id: usize, kind: ConstructionKind) -> Self {
+        SerializedGlyphConstruction {
+            id,
+            kind,
+            result_curve: None,
+            debug_points: vec![],
+            debug_lines: vec![],
+        }
+    }
 }
 
 /// A point for debugging
 #[derive(Serialize)]
 pub struct DebugPoint {
-    kind: &'static str,
+    pub kind: &'static str,
+    pub tag: String,
     #[serde(flatten)]
-    at: Point2D,
+    pub at: Point2D,
 }
 
 /// A line for debugging
 #[derive(Serialize)]
 pub struct DebugLine {
-    from: Point2D,
-    to: Point2D,
-    tag: String,
+    pub from: Point2D,
+    pub to: Point2D,
+    pub tag: String,
 }
 
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "kebab-case")]
 pub enum ConstructionKind {
-    Spiro { curve: Vec<SerializeSpiroPoint> },
-    CubicBezier { curve: CubicBezier<Point2D> },
-    Stroke { parent: usize, width: f64 },
-    BooleanAdd { parents: Vec<usize> },
+    Spiro {
+        curve: Vec<Vec<SerializeSpiroPoint>>,
+    },
+    CubicBezier {
+        curve: Vec<CubicBezier<Point2D>>,
+    },
+    Stroke {
+        parent: usize,
+        width: f64,
+    },
+    SpiroToBezier {
+        parent: usize,
+    },
+    BooleanAdd {
+        parents: Vec<usize>,
+    },
 }
 
 #[derive(Serialize)]
 pub struct SerializeSpiroPoint {
     #[serde(flatten)]
-    point: Point2D,
-    ty: SerializeSpiroKind,
+    pub point: Point2D,
+    pub ty: SerializeSpiroKind,
 }
 
-impl Into<SerializeSpiroPoint> for monoxide_spiro::SpiroCp {
-    fn into(self) -> SerializeSpiroPoint {
+impl From<monoxide_spiro::SpiroCp> for SerializeSpiroPoint {
+    fn from(value: monoxide_spiro::SpiroCp) -> Self {
         SerializeSpiroPoint {
-            point: Point2D::new(self.x, self.y),
-            ty: self.ty.into(),
+            point: Point2D::new(value.x, value.y),
+            ty: value.ty.into(),
         }
     }
 }
@@ -102,9 +128,9 @@ pub enum SerializeSpiroKind {
     EndOpen,
 }
 
-impl Into<SerializeSpiroKind> for monoxide_spiro::SpiroCpTy {
-    fn into(self) -> SerializeSpiroKind {
-        match self {
+impl From<monoxide_spiro::SpiroCpTy> for SerializeSpiroKind {
+    fn from(value: monoxide_spiro::SpiroCpTy) -> Self {
+        match value {
             monoxide_spiro::SpiroCpTy::Corner => SerializeSpiroKind::Corner,
             monoxide_spiro::SpiroCpTy::G4 => SerializeSpiroKind::G4,
             monoxide_spiro::SpiroCpTy::G2 => SerializeSpiroKind::G2,

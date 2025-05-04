@@ -60,7 +60,7 @@ impl<W: Write> SvgPen<W> {
         }
     }
 
-    fn draw_contour(&mut self, contour: &CubicBezier<Point2D>) -> fmt::Result {
+    pub fn draw_contour(&mut self, contour: &CubicBezier<Point2D>) -> fmt::Result {
         self.draw_start(&contour.start)?;
 
         for el in &contour.segments {
