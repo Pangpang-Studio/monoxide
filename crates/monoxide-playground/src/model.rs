@@ -20,7 +20,8 @@ pub struct GlyphOverview {
     pub outline: Vec<String>,
 }
 
-/// Represent the detail of a glyph, including the comptation tree, debug points, etc.
+/// Represent the detail of a glyph, including the comptation tree, debug
+/// points, etc.
 #[derive(Serialize)]
 pub struct GlyphDetail {
     pub overview: GlyphOverview,

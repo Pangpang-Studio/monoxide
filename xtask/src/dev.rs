@@ -1,6 +1,6 @@
 use std::{
-    net::SocketAddrV4,
-    ops::ControlFlow,
+    io,
+    net::{SocketAddrV4, TcpStream},
     path::Path,
     process::Child,
     sync::{Arc, Mutex},
@@ -9,8 +9,6 @@ use std::{
 use tracing::{info, warn};
 
 use crate::{CARGO, workspace_root};
-use std::io;
-use std::net::TcpStream;
 
 #[derive(clap::Parser)]
 pub struct DevCommand {
@@ -208,13 +206,13 @@ fn start_playground(
     //   serve --port <port> [--reverse-proxy <url> | --serve-dir <dir>]
     let mut playground_cmd = std::process::Command::new(CARGO);
     if cmd.watch {
-        playground_cmd.args(&[
+        playground_cmd.args([
             "watch", "-i", "font", "-i", "xtask", "-i", "tools", "--", "cargo",
         ]);
     }
-    playground_cmd.args(&["run", "-p", playground_server_name, "--"]);
+    playground_cmd.args(["run", "-p", playground_server_name, "--"]);
     // TODO: configurable font directory, currently hardcoded to `font`
-    playground_cmd.args(&["font", "serve", "--port"]);
+    playground_cmd.args(["font", "serve", "--port"]);
     playground_cmd.arg(cmd.port.to_string());
     if let Some(webui_port) = webui_port {
         playground_cmd.arg("--reverse-proxy");
