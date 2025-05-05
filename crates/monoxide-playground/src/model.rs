@@ -20,11 +20,27 @@ pub struct GlyphOverview {
     pub outline: Vec<CubicBezier<Point2D>>,
 }
 
+/// A guideline in either horizontal or vertical direction, with a position
+/// and tag
+#[derive(Serialize)]
+pub struct Guideline {
+    pub pos: f64,
+    pub label: Option<String>,
+}
+
+/// The guidelines of a glyph, including horizontal and vertical ones
+#[derive(Serialize)]
+pub struct Guidelines {
+    pub h: Vec<Guideline>,
+    pub v: Vec<Guideline>,
+}
+
 /// Represent the detail of a glyph, including the comptation tree, debug
 /// points, etc.
 #[derive(Serialize)]
 pub struct GlyphDetail {
     pub overview: GlyphOverview,
+    pub guidelines: Guidelines,
     pub construction: Vec<SerializedGlyphConstruction>,
     pub result_id: Option<usize>,
     pub errors: Vec<String>,

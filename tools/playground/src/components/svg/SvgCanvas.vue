@@ -97,7 +97,7 @@ watch(svgRef, (newRef, oldRef) => {
 })
 
 watch(
-  [width, margin],
+  [width, margin, props],
   () => {
     let w = width.value
     if (w <= 0) return // dummy values

@@ -49,7 +49,7 @@ impl<'js> ContextAttachment<'js> {
         Class::<spiro_builder::SpiroBuilder>::define(globals)?;
         Class::<outline_expr::OutlineExprObject>::define(globals)?;
 
-        let factory = glyph_factory::GlyphFactory::new(cx.clone())?;
+        let factory = glyph_factory::GlyphFactory::new(cx.clone(), params.clone())?;
 
         Ok(ContextAttachment {
             font_params: params,

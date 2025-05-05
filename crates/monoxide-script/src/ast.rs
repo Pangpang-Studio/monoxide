@@ -6,14 +6,25 @@ use rquickjs::{
     JsLifetime,
 };
 
+use crate::FontParamSettings;
+
 #[rquickjs::class]
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct FontContext {
     pub glyphs: Vec<GlyphEntry>,
     pub cmap: BTreeMap<char, GlyphId>,
+    pub settings: FontParamSettings,
 }
 
 impl FontContext {
+    pub fn new(settings: FontParamSettings) -> Self {
+        FontContext {
+            glyphs: Vec::new(),
+            cmap: BTreeMap::new(),
+            settings,
+        }
+    }
+
     pub fn get_char_glyph_id(&self, c: char) -> Option<GlyphId> {
         self.cmap.get(&c).copied()
     }
@@ -55,6 +66,9 @@ pub enum GlyphEntry {
 #[derive(Debug, Clone, Default)]
 pub struct SimpleGlyph {
     pub outlines: Vec<Arc<OutlineExpr>>,
+    /// The advance width of the glyph. If unset, uses the default advance width
+    /// of the font.
+    pub advance: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
