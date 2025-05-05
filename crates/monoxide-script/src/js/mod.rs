@@ -1,4 +1,4 @@
-use rquickjs::{Class, Ctx, JsLifetime, Object};
+use rquickjs::{Class, Ctx, JsLifetime};
 
 use crate::{ast::FontContext, FontParamSettings};
 
@@ -87,13 +87,7 @@ impl rquickjs::module::ModuleDef for MonoxideModule {
         exports.export("bezier", js_declare_bezier)?;
         exports.export("spiro", js_declare_spiro)?;
 
-        let settings = Object::new(cx.clone())?;
-        settings.prop("width", ud.font_params.width)?;
-        settings.prop("xHeight", ud.font_params.x_height)?;
-        settings.prop("descender", ud.font_params.descender)?;
-        settings.prop("capHeight", ud.font_params.cap_height)?;
-        settings.prop("overshoot", ud.font_params.overshoot)?;
-        exports.export("settings", settings)?;
+        exports.export("settings", ud.font_params.populate(cx.clone())?)?;
 
         Ok(())
     }
@@ -109,13 +103,7 @@ pub fn insert_globals<'js>(cx: Ctx<'js>) -> rquickjs::Result<()> {
     globals.set("bezier", js_declare_bezier)?;
     globals.set("spiro", js_declare_spiro)?;
 
-    let settings = Object::new(cx.clone())?;
-    settings.prop("width", ud.font_params.width)?;
-    settings.prop("xHeight", ud.font_params.x_height)?;
-    settings.prop("descender", ud.font_params.descender)?;
-    settings.prop("capHeight", ud.font_params.cap_height)?;
-    settings.prop("overshoot", ud.font_params.overshoot)?;
-    globals.set("settings", settings)?;
+    globals.set("settings", ud.font_params.populate(cx.clone())?)?;
 
     Ok(())
 }
