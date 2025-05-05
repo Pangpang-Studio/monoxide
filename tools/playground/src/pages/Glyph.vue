@@ -323,7 +323,7 @@ function selectPart(id: number) {
 <template>
   <NavBar></NavBar>
   <div
-    class="grid grid-cols-1 md:grid-cols-3 min-h-screen mx-8 my-8 gap-8"
+    class="grid grid-cols-1 md:grid-cols-3 flex-grow mx-8 my-8 gap-8"
     v-if="overviewGlyph"
   >
     <!-- Glyph display area -->
