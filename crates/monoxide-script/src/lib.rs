@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 ///    x_height _| ||  || |
 ///             _| ||==|| |
 ///           0 _|_||__||_|____ x
-///  -descender _|________| width
+///   descender _|________| width
 /// ```
 ///
 /// In other words, in the **scripting language** (but not in the
@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// follow the below coordinate restrictions:
 ///
 /// - 0 <= x <= width
-/// - -descender <= y <= ascender := 1 - descender
+/// - descender <= y <= ascender := 1 + descender
 ///
 /// See: <http://designwithfontforge.com/en-US/The_EM_Square.html>
 #[derive(Clone, Debug, Serialize, Deserialize)]

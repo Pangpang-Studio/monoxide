@@ -23,7 +23,11 @@ export const XH = settings.xHeight
 /** The cap height. */
 export const CAP = settings.capHeight
 
-/** The descender. */
+/**
+ * The descender.
+ *
+ * Note: This is usually a negative value.
+ */
 export const DESC = settings.descender
 
 /** The overshoot. */
@@ -36,6 +40,9 @@ export const SBL = settings.sideBearing
 
 /** The horizontal midline of a half-width character. */
 export const MID = 0.5 * WIDTH
+
+/** The ascender. */
+export const ASC = 1 + DESC
 
 /** The right side bearing. */
 export const SBR = WIDTH - settings.sideBearing
