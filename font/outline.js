@@ -1,7 +1,5 @@
 import * as mx from 'monoxide'
 
-import { addy } from './point'
-
 /** @import {Point} from "./point" */
 
 /**
@@ -73,22 +71,13 @@ function instCollector(builderFactory) {
 }
 
 /**
- * Shifts a point up by the descender value. This brings the point to the
- * baseline in the "real" coordinates used by `monoxide-script`.
- *
- * @param {Point} p
- * @returns {Point}
- */
-const shiftUp = (p) => addy(p, mx.settings.descender)
-
-/**
  * @typedef {(...args: Point) => Inst} PointInstFactory
  * @param {string} meth
  * @returns {PointInstFactory}
  */
 const pointInstFactory =
   (meth) =>
-  (...p) => ({ meth, args: shiftUp(p) })
+  (...p) => ({ meth, args: p })
 
 /**
  * @typedef {(...args: Point) => SpiroInst} SpiroInstFactory
@@ -98,7 +87,7 @@ const pointInstFactory =
 const spiroInstFactory =
   (meth) =>
   (...p) =>
-    new SpiroInst(meth, ...shiftUp(p))
+    new SpiroInst(meth, ...p)
 
 /**
  * @param {SpiroInst[]} insts
@@ -136,10 +125,7 @@ export const lineTo = pointInstFactory('lineTo')
  *   ...args: [number, number, number, number, number, number]
  * ) => Inst}
  */
-export const curveTo = (x, y, z, w, u, v) => ({
-  meth: 'curveTo',
-  args: [...shiftUp([x, y]), ...shiftUp([z, w]), ...shiftUp([u, v])],
-})
+export const curveTo = (...ps) => ({ meth: 'curveTo', args: ps })
 
 /** @type {() => Inst} */
 export const close = () => ({ meth: 'close', args: [] })
