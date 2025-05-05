@@ -1,4 +1,8 @@
-import type { CubicBezier } from '../../lib/types'
+import type {
+  CubicBezier,
+  DebugPointKind,
+  SerializeSpiroKind,
+} from '../../lib/types'
 
 export interface SvgGuideline {
   pos: number
@@ -17,6 +21,17 @@ export interface DraftToSvgXform {
   translateY: number
 }
 
+export type AcceptedKinds = DebugPointKind | SerializeSpiroKind
+
+export interface SvgDebugPointInfo {
+  x: number
+  y: number
+  kind: AcceptedKinds
+  /** The forward angle, in degrees. Only used in {forward,backward}-triangle */
+  forward?: number
+  tag?: string
+}
+
 export interface SvgGuidelinesProps extends SvgGuidelines {
   xform: DraftToSvgXform
   canvasWidth: number
@@ -32,6 +47,8 @@ export interface SvgCanvasProps {
   margin?: number
   mainPath: CubicBezier[] | null
   selected: SelectionMode
+  debugPaths: CubicBezier[]
+  debugPoints: SvgDebugPointInfo[]
 }
 
 export enum SelectionMode {

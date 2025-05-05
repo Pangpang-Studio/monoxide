@@ -5,16 +5,12 @@
 
 <script setup lang="ts">
 import { computed, defineProps, type ComputedRef } from 'vue'
-import type { DebugPointKind, SerializeSpiroKind } from '../../lib/types'
+import type { AcceptedKinds, DraftToSvgXform, SvgDebugPointInfo } from './types'
+import { xformPoint } from './util'
 
-export type AcceptedKinds = DebugPointKind | SerializeSpiroKind
 export interface DebugPointProps {
-  x: number
-  y: number
-  kind: AcceptedKinds
-  /** The forward angle, in degrees. Only used in {forward,backward}-triangle */
-  forward?: number
-  tag?: string
+  info: SvgDebugPointInfo
+  cvt: DraftToSvgXform
 }
 
 /** The shape of the actual point displayed */
@@ -30,7 +26,7 @@ type PointShape =
 const props = defineProps<DebugPointProps>()
 
 const pointShape: ComputedRef<PointShape> = computed(() => {
-  switch (props.kind) {
+  switch (props.info.kind) {
     case 'corner':
       return 'square'
     case 'g2':
@@ -54,23 +50,22 @@ const pointShape: ComputedRef<PointShape> = computed(() => {
   }
 })
 
-const squareSize = 0.012
-const circleSize = 0.012
+const squareSize = 8
+const circleSize = squareSize
 const diamondSize = squareSize * Math.sqrt(2)
-const forwardAngle = computed(() => props.forward ?? 0)
+const forwardAngle = computed(() => props.info.forward ?? 0)
 
 function strokeClass(kind: AcceptedKinds): string {
   switch (kind) {
     case 'corner':
     case 'g2':
+    case 'g4':
     case 'curve':
     case 'flat':
     case 'curl':
     case 'open':
     case 'end-open':
       return 'stroke-blue-700'
-    case 'g4':
-      return 'stroke-blue-800'
     case 'anchor':
     case 'misc':
     case 'control':
@@ -81,23 +76,25 @@ function strokeClass(kind: AcceptedKinds): string {
 }
 
 const classes = computed(() => {
-  return ['stroke-2', 'fill-white', strokeClass(props.kind)]
+  return ['stroke-2', 'fill-white', strokeClass(props.info.kind)]
 })
+
+const coords = computed(() => xformPoint(props.cvt, props.info))
 </script>
 
 <template>
   <circle
     v-if="pointShape === 'circle'"
-    :cx="props.x"
-    :cy="props.y"
+    :cx="coords.x"
+    :cy="coords.y"
     :r="circleSize / 2"
     :class="classes"
     vector-effect="non-scaling-stroke"
   ></circle>
   <rect
     v-else-if="pointShape === 'square'"
-    :x="props.x - squareSize / 2"
-    :y="props.y - squareSize / 2"
+    :x="coords.x - squareSize / 2"
+    :y="coords.y - squareSize / 2"
     :width="squareSize"
     :height="squareSize"
     :class="classes"
@@ -105,8 +102,8 @@ const classes = computed(() => {
   ></rect>
   <rect
     v-else-if="pointShape === 'rounded-square'"
-    :x="props.x - squareSize / 2"
-    :y="props.y - squareSize / 2"
+    :x="coords.x - squareSize / 2"
+    :y="coords.y - squareSize / 2"
     :width="squareSize"
     :height="squareSize"
     :rx="squareSize / 4"
@@ -116,21 +113,21 @@ const classes = computed(() => {
   <path
     v-else-if="pointShape === 'diamond'"
     :d="`M 0 ${-diamondSize} L ${diamondSize} 0 L 0 ${diamondSize} L ${-diamondSize} 0 Z`"
-    :transform="`translate(${props.x}, ${props.y}) rotate(45)`"
+    :transform="`translate(${coords.x}, ${coords.y}) rotate(45)`"
     :class="classes"
     vector-effect="non-scaling-stroke"
   ></path>
   <path
     v-else-if="pointShape === 'forward-triangle'"
     :d="`M 0 ${-circleSize / 4} L ${circleSize / 2} ${circleSize / 2} L ${-circleSize / 2} ${circleSize / 2} Z`"
-    :transform="`translate(${props.x}, ${props.y}) rotate(${forwardAngle})`"
+    :transform="`translate(${coords.x}, ${coords.y}) rotate(${forwardAngle})`"
     :class="classes"
     vector-effect="non-scaling-stroke"
   ></path>
   <path
     v-else-if="pointShape === 'backward-triangle'"
     :d="`M 0 ${-circleSize / 4} L ${circleSize / 2} ${circleSize / 2} L ${-circleSize / 2} ${circleSize / 2} Z`"
-    :transform="`translate(${props.x}, ${props.y}) rotate(${forwardAngle + 180})`"
+    :transform="`translate(${coords.x}, ${coords.y}) rotate(${forwardAngle + 180})`"
     :class="classes"
     vector-effect="non-scaling-stroke"
   ></path>
@@ -140,8 +137,8 @@ const classes = computed(() => {
 
   <!-- tag -->
   <text
-    v-if="props.tag"
-    :x="props.x + squareSize * 1.5"
-    :y="props.y - squareSize / 2"
+    v-if="props.info.tag"
+    :x="coords.x + squareSize * 1.5"
+    :y="coords.y - squareSize / 2"
   ></text>
 </template>

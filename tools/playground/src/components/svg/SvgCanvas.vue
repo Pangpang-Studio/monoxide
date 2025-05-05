@@ -21,10 +21,24 @@
       :class="{
         'stroke-black fill-gray-200': props.selected === SelectionMode.None,
         'stroke-gray-300 fill-gray-100': props.selected === SelectionMode.Part,
-        'stroke-gray-300 fill-transparent':
-          props.selected === SelectionMode.Overlay,
+        'stroke-gray-300 fill-none': props.selected === SelectionMode.Overlay,
       }"
     ></SvgPath>
+    <!-- Debug paths -->
+    <SvgPath
+      :path="props.debugPaths"
+      :cvt="cvt"
+      class="stroke-2 stroke-blue-600 fill-none"
+    ></SvgPath>
+    <!-- Debug points -->
+    <g>
+      <SvgDebugPoint
+        v-for="(point, i) in props.debugPoints"
+        :key="i"
+        :info="point"
+        :cvt="cvt"
+      ></SvgDebugPoint>
+    </g>
   </svg>
 </template>
 
@@ -45,6 +59,7 @@ import {
 } from './types'
 import SvgGuidelines from './SvgGuidelines.vue'
 import SvgPath from './SvgPath.vue'
+import SvgDebugPoint from './SvgDebugPoint.vue'
 
 const svgRef = useTemplateRef('svg')
 
