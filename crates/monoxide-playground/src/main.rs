@@ -69,7 +69,7 @@ fn evaluate_playground(rt: &rquickjs::Runtime, source_dir: &Path) -> Result<Font
             FontParamSettings {
                 width,
                 x_height,
-                descender: 0.2,
+                descender: -0.2,
                 cap_height: 0.7,
                 side_bearing: 0.15 * width,
                 overshoot: x_height / 120.,
