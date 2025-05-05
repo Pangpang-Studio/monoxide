@@ -85,10 +85,24 @@ function updateWidth() {
     width.value = newWidth // avoid triggering resize event again
   }
 }
-watchEffect(() => {
-  svgRef.value?.addEventListener('resize', updateWidth)
-})
 onMounted(updateWidth)
+
+const resizeObserver = new ResizeObserver(() => {
+  updateWidth()
+})
+onMounted(() => {
+  if (svgRef.value) {
+    resizeObserver.observe(svgRef.value)
+  }
+})
+watch(svgRef, (newRef, oldRef) => {
+  if (oldRef) {
+    resizeObserver.unobserve(oldRef)
+  }
+  if (newRef) {
+    resizeObserver.observe(newRef)
+  }
+})
 
 watch(
   [width, margin],
