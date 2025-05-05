@@ -17,7 +17,7 @@ pub struct GlyphOverview {
     /// The name of the glyph, if any
     pub name: Option<String>,
     /// The outline(s) of the current glyph
-    pub outline: Vec<String>,
+    pub outline: Vec<CubicBezier<Point2D>>,
 }
 
 /// Represent the detail of a glyph, including the comptation tree, debug

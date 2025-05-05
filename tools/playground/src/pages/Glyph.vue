@@ -16,6 +16,7 @@ import SvgDebugPoint, {
   type DebugPointProps,
 } from '../components/svg/SvgDebugPoint.vue'
 import SvgCanvas from '../components/svg/SvgCanvas.vue'
+import { SelectionMode } from '../components/svg/types'
 
 const route = useRoute()
 const state = useAppState()
@@ -73,8 +74,6 @@ watchEffect(async () => {
 const svg = computed(() => {
   if (glyphDetail.value) {
     return glyphDetail.value.overview.outline
-  } else if (overviewGlyph.value) {
-    return [overviewGlyph.value.svg]
   } else {
     return null
   }
@@ -319,6 +318,20 @@ function selectPart(id: number) {
   }
   selected.value = { t: 'part', id: id }
 }
+
+const canvasSelectionMode = computed(() => {
+  let sel = selected.value
+  if (sel === null) {
+    return SelectionMode.None
+  } else if (sel.t == 'part') {
+    return SelectionMode.Part
+  } else if (sel.t == 'overlay') {
+    return SelectionMode.Overlay
+  } else {
+    console.error('Unknown selection mode', sel)
+    return SelectionMode.None
+  }
+})
 </script>
 
 <template>
@@ -342,6 +355,8 @@ function selectPart(id: number) {
             { pos: 0.5, label: 'right' },
           ],
         }"
+        :main-path="svg"
+        :selected="canvasSelectionMode"
       ></SvgCanvas>
       <!-- TODO: don't use a fixed size and scale. Instead, calculate the
       coordinates on the fly. -->
@@ -350,29 +365,6 @@ function selectPart(id: number) {
         viewBox="-0.2 -1.2 1.4 1.4"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <path
-          :d="svg?.join(' ')"
-          class="stroke-2"
-          :class="{
-            'stroke-black fill-gray-200': selected === null,
-            'stroke-gray-300 fill-gray-100': selected !== null,
-          }"
-          fill-rule="nonzero"
-          vector-effect="non-scaling-stroke"
-        />
-        <!-- Path key points -->
-        <g
-          fill-rule="nonzero"
-          vector-effect="non-scaling-stroke"
-          class="stroke-2 fill-white stroke-black"
-          v-if="selected === null"
-        ></g>
-        <!-- Guide lines -->
-        <g
-          fill-rule="nonzero"
-          vector-effect="non-scaling-stroke"
-          class="stroke-2 stroke-gray-200"
-        ></g>
         <!-- Debug lines -->
         <!-- TODO: flip SVG -->
         <g fill-rule="nonzero" transform="scale(1 -1)">

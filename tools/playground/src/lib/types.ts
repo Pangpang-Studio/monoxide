@@ -35,7 +35,7 @@ export interface GlyphOverviewDetail {
   id: number
   ch: string | null
   name: string | null
-  outline: string[]
+  outline: CubicBezier[]
 }
 
 /** Maps to `struct GlyphDetail` in `model.rs` */

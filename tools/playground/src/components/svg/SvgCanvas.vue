@@ -12,6 +12,19 @@
       :canvas-height="height"
       :canvas-width="width"
     ></SvgGuidelines>
+    <!-- Main glyph -->
+    <SvgPath
+      v-if="props.mainPath"
+      :path="props.mainPath"
+      :cvt="cvt"
+      class="stroke-2"
+      :class="{
+        'stroke-black fill-gray-200': props.selected === SelectionMode.None,
+        'stroke-gray-300 fill-gray-100': props.selected === SelectionMode.Part,
+        'stroke-gray-300 fill-transparent':
+          props.selected === SelectionMode.Overlay,
+      }"
+    ></SvgPath>
   </svg>
 </template>
 
@@ -25,8 +38,13 @@ import {
   watchEffect,
   type Ref,
 } from 'vue'
-import type { DraftToSvgXform, SvgCanvasProps } from './types'
+import {
+  SelectionMode,
+  type DraftToSvgXform,
+  type SvgCanvasProps,
+} from './types'
 import SvgGuidelines from './SvgGuidelines.vue'
+import SvgPath from './SvgPath.vue'
 
 const svgRef = useTemplateRef('svg')
 
