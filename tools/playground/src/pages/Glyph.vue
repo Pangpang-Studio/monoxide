@@ -15,6 +15,7 @@ import { charList } from '../lib/util'
 import SvgDebugPoint, {
   type DebugPointProps,
 } from '../components/svg/SvgDebugPoint.vue'
+import SvgCanvas from '../components/svg/SvgCanvas.vue'
 
 const route = useRoute()
 const state = useAppState()
@@ -328,6 +329,20 @@ function selectPart(id: number) {
   >
     <!-- Glyph display area -->
     <div class="md:col-span-2">
+      <!-- New canvas here -->
+      <p>new canvas</p>
+      <SvgCanvas
+        :guidelines="{
+          h: [
+            { pos: 0, label: 'top' },
+            { pos: 1, label: 'bottom' },
+          ],
+          v: [
+            { pos: 0, label: 'left' },
+            { pos: 0.5, label: 'right' },
+          ],
+        }"
+      ></SvgCanvas>
       <!-- TODO: don't use a fixed size and scale. Instead, calculate the
       coordinates on the fly. -->
       <svg
