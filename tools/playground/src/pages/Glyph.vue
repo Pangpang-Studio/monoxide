@@ -5,16 +5,11 @@ import { useAppState } from '../lib/state'
 import { computed, ref, watchEffect, type ComputedRef, type Ref } from 'vue'
 import type {
   CubicBezier,
-  DebugPointKind,
   GlyphDetail,
   SerializedGlyphConstruction,
-  SerializeSpiroPoint,
 } from '../lib/types'
 import { getGlyphDetail } from '../lib/api'
 import { charList } from '../lib/util'
-import SvgDebugPoint, {
-  type DebugPointProps,
-} from '../components/svg/SvgDebugPoint.vue'
 import SvgCanvas from '../components/svg/SvgCanvas.vue'
 import { SelectionMode, type SvgDebugPointInfo } from '../components/svg/types'
 import { generateDebugPoints } from '../components/svg/debugPoints'
@@ -210,13 +205,11 @@ const debugPoints: ComputedRef<SvgDebugPointInfo[]> = computed(() => {
   >
     <!-- Glyph display area -->
     <div class="md:col-span-2">
-      <!-- New canvas here -->
-      <p>new canvas</p>
       <SvgCanvas
         :guidelines="{
           h: [
-            { pos: 0, label: 'top' },
-            { pos: 1, label: 'bottom' },
+            { pos: 1, label: 'top' },
+            { pos: 0, label: 'bottom' },
           ],
           v: [
             { pos: 0, label: 'left' },

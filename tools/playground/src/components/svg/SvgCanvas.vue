@@ -43,15 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  ref,
-  useTemplateRef,
-  watch,
-  watchEffect,
-  type Ref,
-} from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch, type Ref } from 'vue'
 import {
   SelectionMode,
   type DraftToSvgXform,
