@@ -1,7 +1,10 @@
 use rquickjs::{class::Trace, prelude::This, Class, Ctx, Function, JsLifetime, Value};
 
 use super::outline_expr::OutlineExprObject;
-use crate::ast::{FontContext, SimpleGlyph};
+use crate::{
+    ast::{FontContext, SimpleGlyph},
+    FontParamSettings,
+};
 
 #[derive(JsLifetime, Debug)]
 #[rquickjs::class]
@@ -14,17 +17,18 @@ impl Trace<'_> for GlyphFactory {
 }
 
 impl GlyphFactory {
-    pub fn new(cx: Ctx<'_>) -> rquickjs::Result<Class<'_, Self>> {
+    pub fn new(cx: Ctx<'_>, settings: FontParamSettings) -> rquickjs::Result<Class<'_, Self>> {
         Class::instance(
             cx,
             GlyphFactory {
-                value: FontContext::default(),
+                value: FontContext::new(settings),
             },
         )
     }
 
     pub fn take(&mut self) -> FontContext {
-        std::mem::take(&mut self.value)
+        let dummy_one = FontContext::new(self.value.settings.clone());
+        std::mem::replace(&mut self.value, dummy_one)
     }
 }
 

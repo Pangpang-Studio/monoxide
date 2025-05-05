@@ -5,15 +5,16 @@ use axum::{
     response::Response,
 };
 use monoxide_curves::debug::CurveDebugger;
-use monoxide_script::{ast::FontContext, eval::eval_outline, trace::EvaluationTracer};
+use monoxide_script::{
+    ast::{FontContext, SimpleGlyph},
+    eval::eval_outline,
+    trace::EvaluationTracer,
+};
 
 use super::XAppState;
-use crate::{
-    model::{
-        ConstructionKind, DebugLine, DebugPoint, GlyphDetail, GlyphOverview,
-        SerializedGlyphConstruction,
-    },
-    svg::{Scale, SvgPen},
+use crate::model::{
+    ConstructionKind, DebugLine, DebugPoint, GlyphDetail, GlyphOverview, Guideline, Guidelines,
+    SerializedGlyphConstruction,
 };
 
 pub async fn glyph_detail(
@@ -86,12 +87,48 @@ fn simple_glyph_to_detail(
         name: None,
         outline: output_outline,
     };
+    let guidelines = make_guidelines(cx, glyph);
 
     GlyphDetail {
         overview,
+        guidelines,
         construction: tracer.construction(),
         result_id: Some(output_id),
         errors: out_errs,
+    }
+}
+
+fn make_guidelines(cx: &FontContext, glyph: &SimpleGlyph) -> Guidelines {
+    let settings = &cx.settings;
+    Guidelines {
+        h: vec![
+            Guideline {
+                pos: 0.0,
+                label: Some("baseline".to_string()),
+            },
+            Guideline {
+                pos: settings.x_height,
+                label: Some("x-height".to_string()),
+            },
+            Guideline {
+                pos: settings.cap_height,
+                label: Some("cap-height".to_string()),
+            },
+            Guideline {
+                pos: -settings.descender,
+                label: Some("descender".to_string()),
+            },
+        ],
+        v: vec![
+            Guideline {
+                pos: 0.0,
+                label: None,
+            },
+            Guideline {
+                pos: glyph.advance.unwrap_or(settings.width),
+                label: Some("advance".to_string()),
+            },
+        ],
     }
 }
 

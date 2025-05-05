@@ -206,16 +206,7 @@ const debugPoints: ComputedRef<SvgDebugPointInfo[]> = computed(() => {
     <!-- Glyph display area -->
     <div class="md:col-span-2">
       <SvgCanvas
-        :guidelines="{
-          h: [
-            { pos: 1, label: 'top' },
-            { pos: 0, label: 'bottom' },
-          ],
-          v: [
-            { pos: 0, label: 'left' },
-            { pos: 0.5, label: 'right' },
-          ],
-        }"
+        :guidelines="glyphDetail?.guidelines ?? { h: [], v: [] }"
         :main-path="svg"
         :selected="canvasSelectionMode"
         :debug-paths="debugPaths"

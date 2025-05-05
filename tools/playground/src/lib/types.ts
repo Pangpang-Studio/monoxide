@@ -38,10 +38,22 @@ export interface GlyphOverviewDetail {
   outline: CubicBezier[]
 }
 
+export interface Guideline {
+  pos: number
+  label: string | null
+}
+
+export interface Guidelines {
+  h: Guideline[]
+  v: Guideline[]
+}
+
 /** Maps to `struct GlyphDetail` in `model.rs` */
 export interface GlyphDetail {
   overview: GlyphOverviewDetail
+  guidelines: Guidelines
   construction: SerializedGlyphConstruction[]
+  result_id: number | null
   errors: string[]
 }
 
