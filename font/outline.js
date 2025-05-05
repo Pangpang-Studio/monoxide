@@ -93,7 +93,7 @@ const spiroInstFactory =
  * @param {SpiroInst[]} insts
  * @returns {mx.OutlineExpr}
  */
-export const spiro = instCollector(mx.spiro)
+export const spiro = (...insts) => instCollector(mx.spiro)(...insts)
 
 export const corner = spiroInstFactory('corner')
 export const g4 = spiroInstFactory('g4')
@@ -115,7 +115,8 @@ export const endOpen = spiroInstFactory('endOpen')
  * @param {BezierInst[]} insts
  * @returns {mx.OutlineExpr}
  */
-export const bezier = instCollector(() => ({ moveTo: mx.bezier }))
+export const bezier = (...insts) =>
+  instCollector(() => ({ moveTo: mx.bezier }))(...insts)
 
 export const moveTo = pointInstFactory('moveTo')
 export const lineTo = pointInstFactory('lineTo')
