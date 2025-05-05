@@ -3,6 +3,7 @@ pub mod eval;
 pub mod js;
 pub mod trace;
 
+use rquickjs::{Ctx, Object};
 use serde::{Deserialize, Serialize};
 
 /// Defines the basic em parameters for the font.
@@ -37,4 +38,16 @@ pub struct FontParamSettings {
     /// Vertical overshoot for arcs.
     /// See: <http://designwithfontforge.com/en-US/Creating_o_and_n.html>
     pub overshoot: f64,
+}
+
+impl FontParamSettings {
+    fn populate<'js>(&self, cx: Ctx<'js>) -> rquickjs::Result<Object<'js>> {
+        let settings = Object::new(cx.clone())?;
+        settings.prop("width", self.width)?;
+        settings.prop("xHeight", self.x_height)?;
+        settings.prop("descender", self.descender)?;
+        settings.prop("capHeight", self.cap_height)?;
+        settings.prop("overshoot", self.overshoot)?;
+        Ok(settings)
+    }
 }
