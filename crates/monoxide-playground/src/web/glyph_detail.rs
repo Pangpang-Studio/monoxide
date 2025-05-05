@@ -75,17 +75,6 @@ fn simple_glyph_to_detail(
     let output_id = tracer.boolean_added(&out_ids);
     tracer.intermediate_output(output_id, &output_outline);
 
-    let out_outlines = output_outline
-        .into_iter()
-        .map(|outline| {
-            let mut s = String::new();
-            SvgPen::new(&mut s, Scale::default())
-                .draw_contour(&outline)
-                .unwrap();
-            s
-        })
-        .collect();
-
     let char_mapped = cx
         .cmap
         .iter()
@@ -95,7 +84,7 @@ fn simple_glyph_to_detail(
         id,
         ch: char_mapped,
         name: None,
-        outline: out_outlines,
+        outline: output_outline,
     };
 
     GlyphDetail {

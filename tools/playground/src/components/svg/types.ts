@@ -1,3 +1,5 @@
+import type { CubicBezier } from '../../lib/types'
+
 export interface SvgGuideline {
   pos: number
   label: string | null
@@ -28,4 +30,12 @@ export interface SvgCanvasProps {
    * relative to the extremeties of the guidelines.
    */
   margin?: number
+  mainPath: CubicBezier[] | null
+  selected: SelectionMode
+}
+
+export enum SelectionMode {
+  None = 'none',
+  Part = 'part',
+  Overlay = 'overlay',
 }
