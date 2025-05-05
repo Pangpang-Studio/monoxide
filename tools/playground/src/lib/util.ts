@@ -17,3 +17,5 @@ export function charList(chars: string[]): CharListOutput[] {
     }
   })
 }
+
+export const basicTitle = 'Monoxide Web Inspector'
