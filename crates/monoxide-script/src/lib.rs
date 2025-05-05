@@ -20,12 +20,11 @@ use serde::{Deserialize, Serialize};
 ///   descender _|________| width
 /// ```
 ///
-/// In other words, in the **scripting language** (but not in the
-/// `monoxide-script` APIs), a regular glyph must be designed to
-/// follow the below coordinate restrictions:
+/// In other words, a regular glyph must be designed to follow the below
+/// coordinate restrictions:
 ///
-/// - 0 <= x <= width
-/// - descender <= y <= ascender := 1 + descender
+/// * 0 <= x <= width
+/// * descender <= y <= ascender := 1 + descender
 ///
 /// See: <http://designwithfontforge.com/en-US/The_EM_Square.html>
 #[derive(Clone, Debug, Serialize, Deserialize)]
