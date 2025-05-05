@@ -7,7 +7,9 @@ use crate::{CubicBezier, cube::CubicBezierBuilder, point::Point2D};
 
 pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Vec<CubicBezier<Point2D>> {
     let mut ctx = BezierContext::new(false);
-    assert!(ctx.run_spiro(spiro));
+    if !ctx.run_spiro(spiro) {
+        return vec![];
+    }
     assert!(ctx.active_builder.is_none());
     ctx.curves
 }
@@ -25,7 +27,9 @@ pub fn spiro_to_cube_with_indices(
     spiro: &[SpiroCp],
 ) -> (Vec<CubicBezier<Point2D>>, Vec<SpiroPointIndex>) {
     let mut ctx = BezierContext::new(true);
-    assert!(ctx.run_spiro(spiro));
+    if !ctx.run_spiro(spiro) {
+        return (vec![], vec![]);
+    }
     assert!(ctx.active_builder.is_none());
     (ctx.curves, ctx.cp_indices)
 }
