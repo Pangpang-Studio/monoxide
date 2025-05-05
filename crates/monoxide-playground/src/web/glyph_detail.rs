@@ -115,7 +115,7 @@ fn make_guidelines(cx: &FontContext, glyph: &SimpleGlyph) -> Guidelines {
                 label: Some("cap-height".to_string()),
             },
             Guideline {
-                pos: -settings.descender,
+                pos: settings.descender,
                 label: Some("descender".to_string()),
             },
         ],
