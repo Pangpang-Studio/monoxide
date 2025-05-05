@@ -70,6 +70,7 @@ export interface Settings {
   descender: number
   capHeight: number
   overshoot: number
+  sideBearing: number
 }
 
 export declare const settings: Settings

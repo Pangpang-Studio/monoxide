@@ -63,18 +63,16 @@ fn evaluate_playground(rt: &rquickjs::Runtime, source_dir: &Path) -> Result<Font
     let cx = rquickjs::Context::full(rt).context("Can't create context")?;
     let fcx = cx.with(|cx| {
         let width = 0.5;
-        let descender = 0.2;
         let x_height = 0.5;
-        let cap_height = 0.7;
-        let overshoot = x_height / 120.;
         let cx_att = ContextAttachment::new(
             cx.clone(),
             FontParamSettings {
                 width,
-                descender,
                 x_height,
-                cap_height,
-                overshoot,
+                descender: 0.2,
+                cap_height: 0.7,
+                side_bearing: 0.15 * width,
+                overshoot: x_height / 120.,
             },
         )
         .expect("Cannot create attachment");

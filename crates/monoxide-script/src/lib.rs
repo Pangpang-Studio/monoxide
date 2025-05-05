@@ -38,6 +38,9 @@ pub struct FontParamSettings {
     /// Vertical overshoot for arcs.
     /// See: <http://designwithfontforge.com/en-US/Creating_o_and_n.html>
     pub overshoot: f64,
+
+    /// Primary side bearing, a.k.a. the horizontal margin of glyphs.
+    pub side_bearing: f64,
 }
 
 impl FontParamSettings {
@@ -48,6 +51,7 @@ impl FontParamSettings {
         settings.prop("descender", self.descender)?;
         settings.prop("capHeight", self.cap_height)?;
         settings.prop("overshoot", self.overshoot)?;
+        settings.prop("sideBearing", self.side_bearing)?;
         Ok(settings)
     }
 }
