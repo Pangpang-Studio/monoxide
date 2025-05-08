@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import type { GlyphOverview, WSRecvMsg } from './types'
 
 export function useAppState(): AppState {
@@ -102,6 +102,25 @@ export class AppState {
   renderedFont: Ref<FontOverview | null> = ref(null)
   /** The error received from server */
   error: Ref<string | null> = ref(null)
+  /** Reverse cmap */
+  revCmap: ComputedRef<Map<number, string[]>>
+
+  constructor() {
+    this.revCmap = computed(() => {
+      let cmap = this.renderedFont.value?.cmap
+      if (!cmap) {
+        return new Map<number, string[]>()
+      }
+      let revCmap = new Map<number, string[]>()
+      for (let [k, v] of cmap.entries()) {
+        if (!revCmap.has(v)) {
+          revCmap.set(v, [])
+        }
+        revCmap.get(v)?.push(k)
+      }
+      return revCmap
+    })
+  }
 
   public started(): boolean {
     return this.running.value !== undefined
