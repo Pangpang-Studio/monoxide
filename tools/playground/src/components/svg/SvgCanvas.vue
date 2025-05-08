@@ -21,7 +21,8 @@
       :class="{
         'stroke-black fill-gray-200': props.selected === SelectionMode.None,
         'stroke-gray-300 fill-gray-100': props.selected === SelectionMode.Part,
-        'stroke-gray-600 fill-none': props.selected === SelectionMode.Overlay,
+        'stroke-stone-600 fill-stone-200':
+          props.selected === SelectionMode.Overlay,
       }"
     ></SvgPath>
     <!-- Debug paths -->
@@ -29,6 +30,12 @@
       :path="props.debugPaths"
       :cvt="cvt"
       class="stroke-2 stroke-blue-600 fill-none"
+    ></SvgPath>
+    <SvgPath
+      :path="props.debugFill"
+      :cvt="cvt"
+      class="fill-blue-200 stroke-blue-600 stroke-2"
+      style="mix-blend-mode: multiply"
     ></SvgPath>
     <!-- Debug points -->
     <g>
