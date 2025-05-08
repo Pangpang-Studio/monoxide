@@ -19,14 +19,13 @@ const glyphsList = computed(() => {
   for (let i = 0; i < renderedFont.glyphs.length; i++) {
     let glyph = renderedFont.glyphs[i]
     glyphs.push({
-      id: i,
+      overview: glyph,
       chars: [],
-      path: glyph.svg,
       name: undefined,
     })
   }
 
-  for (let [char, glyphId] of Object.entries(renderedFont.cmap)) {
+  for (let [char, glyphId] of renderedFont.cmap.entries()) {
     let glyph = glyphs[glyphId]
     if (glyph) {
       glyph.chars.push(char)

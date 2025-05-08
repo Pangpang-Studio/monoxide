@@ -1,5 +1,7 @@
 //! Provides trait for tracing the evaluation of a glyph
 
+use std::path::Display;
+
 use monoxide_curves::{debug::CurveDebugger, point::Point2D, CubicBezier};
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
@@ -64,28 +66,41 @@ pub trait EvaluationTracer {
     fn curve_debugger(&mut self, id: Self::Id) -> Self::CurveDebugger<'_>;
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+pub struct NoId;
+
+impl std::fmt::Display for NoId {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Ok(())
+    }
+}
+
 /// A no-op tracer that does nothing. This is useful for when you don't need
 /// to trace the evaluation of a glyph.
 impl EvaluationTracer for () {
     type CurveDebugger<'a> = ();
-    type Id = ();
+    type Id = NoId;
 
     fn needs_evaluate_intermediate() -> bool {
         false
     }
 
-    fn preallocate_next(&mut self) -> Self::Id {}
+    fn preallocate_next(&mut self) -> Self::Id {
+        NoId
+    }
 
     fn constructed_beziers<'b>(
         &mut self,
         _bezier: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
     ) -> Self::Id {
+        NoId
     }
 
     fn constructed_spiros<'b>(
         &mut self,
         _spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
     ) -> Self::Id {
+        NoId
     }
 
     fn stroked<'b>(
@@ -94,11 +109,16 @@ impl EvaluationTracer for () {
         _width: f64,
         _spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
     ) -> Self::Id {
+        NoId
     }
 
-    fn spiro_to_bezier(&mut self, _parent: Self::Id) -> Self::Id {}
+    fn spiro_to_bezier(&mut self, _parent: Self::Id) -> Self::Id {
+        NoId
+    }
 
-    fn boolean_added<'b>(&mut self, _parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id {}
+    fn boolean_added<'b>(&mut self, _parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id {
+        NoId
+    }
 
     fn intermediate_output(&mut self, _id: Self::Id, _curve: &[CubicBezier<Point2D>]) {}
 

@@ -76,16 +76,12 @@ fn simple_glyph_to_detail(
     let output_id = tracer.boolean_added(&out_ids);
     tracer.intermediate_output(output_id, &output_outline);
 
-    let char_mapped = cx
-        .cmap
-        .iter()
-        .find_map(|(ch, ch_id)| if ch_id.0 == id { Some(*ch) } else { None });
-
     let overview = GlyphOverview {
         id,
-        ch: char_mapped,
         name: None,
         outline: output_outline,
+        error: None,
+        advance: cx.settings.width,
     };
     let guidelines = make_guidelines(cx, glyph);
 
