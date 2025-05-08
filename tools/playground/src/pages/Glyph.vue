@@ -158,9 +158,19 @@ const debugPaths: ComputedRef<CubicBezier[]> = computed(() => {
   if (glyphDetail.value) {
     let sel = selected.value
     if (!sel) {
-      return []
     } else if (sel.t === 'part') {
       debugPathsForPart(glyphDetail.value, sel.id, paths)
+    } else if (sel.t === 'overlay') {
+    }
+  }
+  return paths
+})
+const debugFill: ComputedRef<CubicBezier[]> = computed(() => {
+  let paths: CubicBezier[] = []
+  if (glyphDetail.value) {
+    let sel = selected.value
+    if (!sel) {
+    } else if (sel.t === 'part') {
     } else if (sel.t === 'overlay') {
       // Overlay another glyph
       debugPathsForOverlay(sel.id, paths)
@@ -264,6 +274,7 @@ const otherGlyphsSelection = computed(() => {
         :main-path="svg"
         :selected="canvasSelectionMode"
         :debug-paths="debugPaths"
+        :debug-fill="debugFill"
         :debug-points="debugPoints"
       ></SvgCanvas>
     </div>

@@ -48,6 +48,7 @@ export interface SvgCanvasProps {
   mainPath: CubicBezier[] | null
   selected: SelectionMode
   debugPaths: CubicBezier[]
+  debugFill: CubicBezier[]
   debugPoints: SvgDebugPointInfo[]
 }
 
