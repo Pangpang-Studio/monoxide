@@ -8,34 +8,28 @@ use axum::{
     response::Response,
 };
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
+use monoxide_curves::{CubicBezier, point::Point2D};
+use monoxide_script::eval::eval_outline;
 use serde::Serialize;
 use tokio::sync::watch;
 use tracing::{debug, info};
 
 use super::{AppState, RenderedFontState, XAppState};
-use crate::svg::{Scale, SvgPen};
+use crate::model::{FontOverview, GlyphOverview};
 
 #[derive(Serialize, Debug)]
 #[serde(tag = "t")]
 enum WsServerMsg {
-    NewRendered(NewRenderedMsg),
+    /// Notify the client that new font data is going to arrive
+    PrepareForNewEpoch,
+    /// Send a single glyph to the client. This is to avoid having a too large
+    /// WebSocket message
+    Glyph(GlyphOverview),
+    /// Notify the client that construction is now complete, and the client can
+    /// flush the pending data to UI.
+    EpochComplete(FontOverview),
+    /// There's an error when evaluating the font
     Error { msg: String },
-}
-
-#[derive(Serialize, Debug)]
-struct NewRenderedMsg {
-    glyphs: Vec<GlyphOverview>,
-    cmap: BTreeMap<char, usize>,
-}
-
-#[derive(Serialize, Debug)]
-struct GlyphOverview {
-    svg: String,
-    // viewport
-    x0: f64,
-    y0: f64,
-    x1: f64,
-    y1: f64,
 }
 
 pub async fn serve_ws(State(state): XAppState, ws: WebSocketUpgrade) -> Response {
@@ -85,34 +79,40 @@ async fn send_ws_task(
                 // TODO: Yeah we probably should move it out to web thread
                 debug!("info received");
 
-                let cmap = font_context
-                    .cmap
-                    .iter()
-                    .map(|(ch, id)| (*ch, id.0))
-                    .collect();
-                let scale = Scale::default();
+                ws.feed(Message::Text(
+                    serde_json::to_string(&WsServerMsg::PrepareForNewEpoch)?.into(),
+                ))
+                .await?;
 
-                let mut glyphs = vec![];
-                for glyph in &font_context.glyphs {
-                    let buf = String::new();
-                    let svg = {
-                        let mut pen = SvgPen::new(buf, scale);
-                        pen.draw_glyph(glyph)?;
-                        pen.finish()
+                for (i, glyph) in font_context.glyphs.iter().enumerate() {
+                    let outline = render_glyph_to_beziers(glyph);
+                    let (outline, error) = match outline {
+                        Ok(outline) => (outline, None),
+                        Err(e) => (vec![], Some(e.to_string())),
                     };
                     let glyph = GlyphOverview {
-                        svg,
-                        x0: 0.0,
-                        y0: 0.0,
-                        x1: 1.0,
-                        y1: 1.0, // TODO
+                        id: i,
+                        name: None,
+                        outline,
+                        error,
+                        advance: font_context.settings.width,
                     };
-                    glyphs.push(glyph);
+                    ws.feed(Message::Text(
+                        serde_json::to_string(&WsServerMsg::Glyph(glyph))?.into(),
+                    ))
+                    .await?;
                 }
 
-                let msg = WsServerMsg::NewRendered(NewRenderedMsg { glyphs, cmap });
-                let msg = serde_json::to_string(&msg)?;
-                ws.send(Message::Text(msg.into())).await?;
+                let overview = FontOverview {
+                    cmap: font_context.cmap.iter().map(|(k, v)| (*k, v.0)).collect(),
+                };
+
+                ws.feed(Message::Text(
+                    serde_json::to_string(&WsServerMsg::EpochComplete(overview))?.into(),
+                ))
+                .await?;
+
+                ws.flush().await?;
             }
 
             super::RenderedFontState::Error(error) => {
@@ -128,4 +128,19 @@ async fn send_ws_task(
         rx.changed().await?;
         debug!("changed");
     }
+}
+
+fn render_glyph_to_beziers(
+    glyph: &monoxide_script::ast::GlyphEntry,
+) -> anyhow::Result<Vec<CubicBezier<Point2D>>> {
+    let mut rendered = vec![];
+    match glyph {
+        monoxide_script::ast::GlyphEntry::Simple(simple_glyph) => {
+            for outline in &simple_glyph.outlines {
+                eval_outline(&outline, &mut rendered, &mut ())?;
+            }
+        }
+        monoxide_script::ast::GlyphEntry::Compound(_) => todo!(),
+    }
+    Ok(rendered)
 }

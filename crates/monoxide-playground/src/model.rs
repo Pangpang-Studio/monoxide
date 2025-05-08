@@ -1,23 +1,27 @@
+use std::collections::{BTreeMap, HashMap};
+
 use monoxide_curves::{CubicBezier, point::Point2D};
 use serde::Serialize;
 
-/// Represent the overall character mapping of a font
-#[derive(Serialize)]
+/// Represents a the overall character mapping of a font
+#[derive(Serialize, Debug)]
 pub struct FontOverview {
-    pub glyphs: Vec<GlyphOverview>,
+    pub cmap: BTreeMap<char, usize>,
 }
 
 /// Represents the minimal information to represent a glyph
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct GlyphOverview {
     /// The index of the current glyph, to be used in other interfaces.
     pub id: usize,
-    /// The character this glyph represents
-    pub ch: Option<char>,
     /// The name of the glyph, if any
     pub name: Option<String>,
     /// The outline(s) of the current glyph
     pub outline: Vec<CubicBezier<Point2D>>,
+    /// The error occurred when evaluating the glyph, if any
+    pub error: Option<String>,
+    /// The space to advance for this glyph
+    pub advance: f64,
 }
 
 /// A guideline in either horizontal or vertical direction, with a position

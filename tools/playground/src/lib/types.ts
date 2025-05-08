@@ -1,41 +1,50 @@
 // API is served at /api, the server will handle the reverse proxies
-
-export interface NewRenderedMsg {
-  t: 'NewRendered'
-  glyphs: GlyphOverview[]
-  cmap: Cmap
-}
-
 export interface ErrorMsg {
   t: 'Error'
   msg: string
 }
 
-export type WSRecvMsg = NewRenderedMsg | ErrorMsg
-
-export interface GlyphOverview {
-  svg: string
-  x0: number
-  y0: number
-  x1: number
-  y1: number
+// Messages from the server based on WsServerMsg enum in ws.rs
+export interface PrepareForNewEpochMsg {
+  t: 'PrepareForNewEpoch'
 }
 
+export interface GlyphMsg extends GlyphOverview {
+  t: 'Glyph'
+  error: string | null
+}
+
+export interface EpochCompleteMsg {
+  t: 'EpochComplete'
+  cmap: Cmap
+}
+
+export type WSRecvMsg =
+  | PrepareForNewEpochMsg
+  | GlyphMsg
+  | EpochCompleteMsg
+  | ErrorMsg
+
+/**
+ * Represents the mapping from character to glyph ID. The key is one character
+ * and the value is the glyph ID.
+ */
 export interface Cmap {
   [key: string]: number
 }
 
 /** Maps to `struct FontOverview` in `model.rs` */
 export interface FontOverview {
-  glyphs: GlyphOverviewDetail[]
+  glyphs: GlyphOverview[]
 }
 
 /** Maps to `struct GlyphOverviewDetail` in `model.rs` */
-export interface GlyphOverviewDetail {
+export interface GlyphOverview {
   id: number
-  ch: string | null
   name: string | null
   outline: CubicBezier[]
+  error: string | null
+  advance: number
 }
 
 export interface Guideline {
@@ -50,7 +59,7 @@ export interface Guidelines {
 
 /** Maps to `struct GlyphDetail` in `model.rs` */
 export interface GlyphDetail {
-  overview: GlyphOverviewDetail
+  overview: GlyphOverview
   guidelines: Guidelines
   construction: SerializedGlyphConstruction[]
   result_id: number | null

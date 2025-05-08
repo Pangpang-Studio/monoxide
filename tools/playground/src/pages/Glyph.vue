@@ -76,8 +76,15 @@ const svg = computed(() => {
 })
 
 const chars = computed(() => {
-  if (glyphDetail.value?.overview.ch) {
-    return charList([glyphDetail.value.overview.ch]) // TODO: pass more than one char here
+  if (state.renderedFont.value) {
+    let font = state.renderedFont.value
+    let chars = []
+    for (let [char, thisId] of font.cmap.entries()) {
+      if (thisId === glyphId.value) {
+        chars.push(char)
+      }
+    }
+    return charList(chars)
   } else {
     return []
   }
