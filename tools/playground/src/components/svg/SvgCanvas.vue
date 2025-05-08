@@ -21,7 +21,7 @@
       :class="{
         'stroke-black fill-gray-200': props.selected === SelectionMode.None,
         'stroke-gray-300 fill-gray-100': props.selected === SelectionMode.Part,
-        'stroke-gray-300 fill-none': props.selected === SelectionMode.Overlay,
+        'stroke-gray-600 fill-none': props.selected === SelectionMode.Overlay,
       }"
     ></SvgPath>
     <!-- Debug paths -->

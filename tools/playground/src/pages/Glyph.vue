@@ -76,25 +76,22 @@ const svg = computed(() => {
 })
 
 const chars = computed(() => {
-  if (state.renderedFont.value) {
-    let font = state.renderedFont.value
-    let chars = []
-    for (let [char, thisId] of font.cmap.entries()) {
-      if (thisId === glyphId.value) {
-        chars.push(char)
-      }
-    }
-    return charList(chars)
-  } else {
-    return []
-  }
+  return charList(state.revCmap.value.get(glyphId.value) ?? [])
 })
 
 // Meta & control
 /// Either a selected subpart of the glyph, or overlaying another glyph
-type Selected = { t: 'part'; id: number } | { t: 'overlay'; ch: string }
+type Selected = { t: 'part'; id: number } | { t: 'overlay'; id: number }
 
 const selected = ref<Selected | null>(null)
+const selectedOverlay = ref<number | null>(null)
+
+watchEffect(() => {
+  let v = selectedOverlay.value
+  if (v !== null) {
+    selected.value = { t: 'overlay', id: v }
+  }
+})
 
 interface ConstructionStep {
   id: number
@@ -137,6 +134,11 @@ function selectPart(id: number) {
   selected.value = { t: 'part', id: id }
 }
 
+function selectNone() {
+  selected.value = null
+  selectedOverlay.value = null
+}
+
 const canvasSelectionMode = computed(() => {
   let sel = selected.value
   if (sel === null) {
@@ -155,33 +157,13 @@ const debugPaths: ComputedRef<CubicBezier[]> = computed(() => {
   let paths: CubicBezier[] = []
   if (glyphDetail.value) {
     let sel = selected.value
-    if (sel && sel.t === 'part') {
-      let part = glyphDetail.value.construction[sel.id]
-      if (part.kind.t === 'cubic-bezier') {
-        for (let i = 0; i < part.kind.curve.length; i++) {
-          paths.push(part.kind.curve[i])
-        }
-      }
-      if (part.result_curve) {
-        for (let i = 0; i < part.result_curve.length; i++) {
-          paths.push(part.result_curve[i])
-        }
-      }
-      if (part.debug_lines) {
-        for (let i = 0; i < part.debug_lines.length; i++) {
-          let line = part.debug_lines[i]
-          paths.push({
-            start: line.from,
-            segments: [
-              {
-                t: 'line',
-                p2: line.to,
-              },
-            ],
-            closed: false,
-          })
-        }
-      }
+    if (!sel) {
+      return []
+    } else if (sel.t === 'part') {
+      debugPathsForPart(glyphDetail.value, sel.id, paths)
+    } else if (sel.t === 'overlay') {
+      // Overlay another glyph
+      debugPathsForOverlay(sel.id, paths)
     }
   }
   return paths
@@ -201,6 +183,71 @@ const debugPoints: ComputedRef<SvgDebugPointInfo[]> = computed(() => {
   } else {
     return [] // TODO
   }
+})
+
+function debugPathsForPart(
+  glyphDetail: GlyphDetail,
+  id: number,
+  paths: CubicBezier[],
+) {
+  let part = glyphDetail.construction[id]
+  if (part.kind.t === 'cubic-bezier') {
+    for (let i = 0; i < part.kind.curve.length; i++) {
+      paths.push(part.kind.curve[i])
+    }
+  }
+  if (part.result_curve) {
+    for (let i = 0; i < part.result_curve.length; i++) {
+      paths.push(part.result_curve[i])
+    }
+  }
+  if (part.debug_lines) {
+    for (let i = 0; i < part.debug_lines.length; i++) {
+      let line = part.debug_lines[i]
+      paths.push({
+        start: line.from,
+        segments: [
+          {
+            t: 'line',
+            p2: line.to,
+          },
+        ],
+        closed: false,
+      })
+    }
+  }
+}
+
+function debugPathsForOverlay(overlayId: number, paths: CubicBezier[]) {
+  let overlayGlyph = state.renderedFont.value?.glyphs[overlayId]
+  if (!overlayGlyph) {
+    console.warn(`Glyph with id ${overlayId} not found`)
+    return
+  }
+  paths.push(...overlayGlyph.outline)
+}
+
+const otherGlyphsSelection = computed(() => {
+  let glyphs = state.renderedFont.value?.glyphs
+  if (!glyphs) {
+    return []
+  }
+  return glyphs.map((g, i) => {
+    let title: string
+    if (g.name) {
+      title = g.name
+    } else {
+      title = `Glyph #${i}`
+    }
+    let revChar = state.revCmap.value.get(i)
+    for (let c of revChar ?? []) {
+      title += ` '${c}'`
+    }
+    return {
+      id: i,
+      title: title,
+    }
+  })
 })
 </script>
 
@@ -246,6 +293,30 @@ const debugPoints: ComputedRef<SvgDebugPointInfo[]> = computed(() => {
           @click="selectPart(step.id)"
         >
           <pre class="inline">%{{ step.id }} = {{ step.desc }}</pre>
+        </div>
+      </div>
+      <!-- Overlay another glyph -->
+      <div class="mb-2 flex flex-col">
+        <h2 class="font-bold">Overlay</h2>
+        <div class="flex flex-row gap-2">
+          <select
+            v-model="selectedOverlay"
+            class="border-0 border-b-2 border-black hover:border-blue-700 py-1 mb-2 flex-grow"
+          >
+            <option
+              v-for="glyph in otherGlyphsSelection"
+              :key="glyph.id"
+              :value="glyph.id"
+            >
+              {{ glyph.title }}
+            </option>
+          </select>
+          <button
+            class="border-2 border-black hover:border-blue-700 p-1 mr-auto mb-2"
+            @click="selectNone"
+          >
+            clear
+          </button>
         </div>
       </div>
     </div>
