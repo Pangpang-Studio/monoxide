@@ -323,7 +323,7 @@ const otherGlyphsSelection = computed(() => {
             </option>
           </select>
           <button
-            class="border-2 border-black hover:border-blue-700 p-1 mr-auto mb-2"
+            class="border-2 border-black hover:border-blue-700 py-1 px-2 mb-2"
             @click="selectNone"
           >
             clear
