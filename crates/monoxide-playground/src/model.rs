@@ -3,7 +3,9 @@ use std::collections::{BTreeMap, HashMap};
 use monoxide_curves::{CubicBezier, point::Point2D};
 use serde::Serialize;
 
-/// Represents a the overall character mapping of a font
+/// Represents the information about the font other than the list of glyphs,
+/// sent over the websocket wire. Glyphs are sent in separate messages to 
+/// reduce size.
 #[derive(Serialize, Debug)]
 pub struct FontOverview {
     pub cmap: BTreeMap<char, usize>,
