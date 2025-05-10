@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, sync::Arc};
+use std::sync::Arc;
 
 use axum::{
     extract::{
@@ -137,7 +137,7 @@ fn render_glyph_to_beziers(
     match glyph {
         monoxide_script::ast::GlyphEntry::Simple(simple_glyph) => {
             for outline in &simple_glyph.outlines {
-                eval_outline(&outline, &mut rendered, &mut ())?;
+                eval_outline(outline, &mut rendered, &mut ())?;
             }
         }
         monoxide_script::ast::GlyphEntry::Compound(_) => todo!(),

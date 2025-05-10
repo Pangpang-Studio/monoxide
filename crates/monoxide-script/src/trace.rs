@@ -1,7 +1,5 @@
 //! Provides trait for tracing the evaluation of a glyph
 
-use std::path::Display;
-
 use monoxide_curves::{debug::CurveDebugger, point::Point2D, CubicBezier};
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
