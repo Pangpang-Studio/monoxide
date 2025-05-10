@@ -1,10 +1,10 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use monoxide_curves::{CubicBezier, point::Point2D};
 use serde::Serialize;
 
 /// Represents the information about the font other than the list of glyphs,
-/// sent over the websocket wire. Glyphs are sent in separate messages to 
+/// sent over the websocket wire. Glyphs are sent in separate messages to
 /// reduce size.
 #[derive(Serialize, Debug)]
 pub struct FontOverview {
