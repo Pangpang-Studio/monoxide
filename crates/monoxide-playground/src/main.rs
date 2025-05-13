@@ -151,9 +151,7 @@ async fn main() -> Result<()> {
                     let _ = tx.try_send(());
                 }
             }
-            Err(e) => {
-                tracing::error!("Error: {e}");
-            }
+            Err(e) => tracing::error!("{e:?}"),
         })?;
     watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
     let mut rx = std::pin::pin!(
@@ -184,7 +182,7 @@ async fn main() -> Result<()> {
                     .unwrap();
             }
             Err(e) => {
-                tracing::error!("Error: {e}");
+                tracing::error!("{e:?}");
                 render_tx
                     .send(Arc::new(RenderedFontState::Error(e)))
                     .unwrap();
