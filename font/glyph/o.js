@@ -1,9 +1,9 @@
 import { MID, OVRS, SBL, XH } from '../const'
-import { curl, flat, g2, g4, simpleGlyph, spiro } from '../outline'
+import { curl, flat, g4, simpleGlyph, spiro } from '../outline'
 
 const strokeW = 0.17 * XH
 
-const endN = g2
+const endN = g4
 const midN = g4
 
 /**
