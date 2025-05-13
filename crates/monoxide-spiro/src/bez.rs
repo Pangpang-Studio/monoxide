@@ -1,6 +1,6 @@
 use std::ffi::c_int;
 
-use spiro_sys::{SpiroCPsToBezier2, bezctx, spiro_cp};
+use spiro_sys::{SPIRO_RETRO_VER1, SpiroCPsToBezier2, bezctx, spiro_cp};
 
 use crate::{SpiroCp, SpiroCpTy};
 
@@ -27,12 +27,11 @@ pub trait BezCtx {
         self.start();
         let mut ctx = BezCtxAdapter::new(self);
         let mut ps = ps.iter().cloned().map(spiro_cp::from).collect::<Vec<_>>();
-        let ncq = 0;
         let ok = (unsafe {
             SpiroCPsToBezier2(
                 ps.as_mut_ptr(),
                 ps.len() as _,
-                ncq,
+                SPIRO_RETRO_VER1 as _,
                 is_closed as _,
                 (&raw mut ctx).cast(),
             )
