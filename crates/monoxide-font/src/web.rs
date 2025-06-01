@@ -26,12 +26,12 @@ pub struct ServerCommand {
     /// Reverse proxy a different server when path doesn't match any route.
     /// This is useful when developing the playground web UI and this server
     /// at the same time.
-    #[clap(long, conflicts_with("serve_dir"))]
+    #[clap(long, conflicts_with = "serve_dir")]
     reverse_proxy: Option<String>,
 
     /// Serve the web UI from a directory. Should be used when you only want to
     /// develop the font and don't care about the playground itself.
-    #[clap(long, conflicts_with("reverse_proxy"))]
+    #[clap(long, conflicts_with = "reverse_proxy")]
     serve_dir: Option<String>,
 }
 
