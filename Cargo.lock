@@ -1181,7 +1181,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "monoxide-playground"
+name = "monoxide-font"
 version = "0.1.0"
 dependencies = [
  "anyhow",

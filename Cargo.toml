@@ -31,7 +31,7 @@ wildcard_imports = "allow"
 members = [
     ".",
     "crates/monoxide-curves",
-    "crates/monoxide-playground",
+    "crates/monoxide-font",
     "crates/monoxide-script",
     "crates/monoxide-spiro",
     "crates/monoxide-ttf",
