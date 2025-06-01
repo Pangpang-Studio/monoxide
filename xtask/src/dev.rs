@@ -72,7 +72,7 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
 
 pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
     let root = workspace_root();
-    let playground_server_name = "monoxide-playground";
+    let playground_server_name = "monoxide-font";
     let playground_webui_dir = root.join("tools/playground");
     let playground_webui_dist = playground_webui_dir.join("dist");
 
@@ -201,25 +201,23 @@ fn start_playground(
     playground_webui_dir: &Path,
 ) -> anyhow::Result<Child> {
     // [cargo watch -i font --] \
-    //   cargo run -p monoxide-playground -- \
-    //   font \
-    //   serve --port <port> [--reverse-proxy <url> | --serve-dir <dir>]
-    let mut playground_cmd = std::process::Command::new(CARGO);
+    //   dx serve --hotpatch -p monoxide-playground -- \
+    //   serve --port=<port> [--reverse-proxy=<url> | --serve-dir=<dir>]
+    let mut playground_cmd;
     if cmd.watch {
-        playground_cmd.args([
-            "watch", "-i", "font", "-i", "xtask", "-i", "tools", "--", "cargo",
-        ]);
-    }
-    playground_cmd.args(["run", "-p", playground_server_name, "--"]);
-    // TODO: configurable font directory, currently hardcoded to `font`
-    playground_cmd.args(["font", "serve", "--port"]);
-    playground_cmd.arg(cmd.port.to_string());
-    if let Some(webui_port) = webui_port {
-        playground_cmd.arg("--reverse-proxy");
-        playground_cmd.arg(format!("http://127.0.0.1:{}", webui_port));
+        playground_cmd = std::process::Command::new(CARGO);
+        playground_cmd.args(["watch", "-i", "xtask", "-i", "tools", "--", "dx"]);
     } else {
-        playground_cmd.arg("--serve-dir");
-        playground_cmd.arg(playground_webui_dir.display().to_string());
+        playground_cmd = std::process::Command::new("dx");
+    }
+    playground_cmd.args(["serve", "--hotpatch", "-p", playground_server_name, "--"]);
+    // TODO: configurable font directory, currently hardcoded to `font`
+    playground_cmd.args(["font", "serve"]);
+    playground_cmd.arg(format!("--port={}", cmd.port));
+    if let Some(webui_port) = webui_port {
+        playground_cmd.arg(format!("--reverse-proxy=http://127.0.0.1:{webui_port}"));
+    } else {
+        playground_cmd.arg(format!("--serve-dir={}", playground_webui_dir.display()));
     }
     playground_cmd.stdout(std::process::Stdio::inherit());
     playground_cmd.stderr(std::process::Stdio::inherit());

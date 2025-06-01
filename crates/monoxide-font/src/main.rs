@@ -10,12 +10,12 @@ use std::{
 
 use anyhow::{Context, Result, anyhow};
 use clap::Parser;
+use dioxus_devtools::subsecond;
 use monoxide_script::{
     FontParamSettings,
     ast::FontContext,
     js::{ContextAttachment, MonoxideModule},
 };
-use notify::{RecursiveMode, Watcher};
 use path_slash::PathExt;
 use rquickjs::{
     CatchResultExt, Module, Runtime,
@@ -36,6 +36,7 @@ struct Playground {
     serve: Option<Option<String>>,
 
     /// The script directory to build the glyphs from.
+    #[clap(default_value = "font")]
     source: PathBuf,
 
     #[clap(subcommand)]
@@ -143,37 +144,48 @@ async fn main() -> Result<()> {
 
     // Set up file watcher
     let (tx, rx) = tokio::sync::mpsc::channel::<()>(10);
-    let mut watcher =
-        notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
-            Ok(evt) => {
-                if evt.kind.is_modify() {
-                    debug!("File modified: {:?}", evt.paths);
-                    let _ = tx.try_send(());
-                }
-            }
-            Err(e) => tracing::error!("{e:?}"),
-        })?;
-    watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
+    // let mut watcher =
+    //     notify::recommended_watcher(move |res: notify::Result<notify::Event>|
+    // match res {         Ok(evt) => {
+    //             if evt.kind.is_modify() {
+    //                 debug!("File modified: {:?}", evt.paths);
+    //                 let _ = tx.try_send(());
+    //             }
+    //         }
+    //         Err(e) => tracing::error!("{e:?}"),
+    //     })?;
+    // watcher.watch(Path::new("font"), RecursiveMode::Recursive)?;
     let mut rx = std::pin::pin!(
-        tokio_stream::wrappers::ReceiverStream::new(rx)
-            .throttle(std::time::Duration::from_millis(100))
+        tokio_stream::wrappers::ReceiverStream::new(rx) /* .throttle(std::time::Duration::from_millis(100)) */
     );
 
-    let (render_tx, render_rx) = watch::channel(Arc::new(RenderedFontState::Nothing));
+    let (render_tx, mut render_rx) = watch::channel(Arc::new(RenderedFontState::Nothing));
 
-    // TODO: organize logic
+    // Establish the connection to the subsecond launcher.
+    dioxus_devtools::connect_subsecond();
+    subsecond::register_handler(Arc::new(move || {
+        _ = tx.try_send(());
+    }));
+
+    // Start the web server if requested.
     let _fut = if let Some(cmd) = args.cmd {
-        let fut = match cmd {
+        match cmd {
             Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
-        };
-        Some(fut)
+        }
     } else {
-        None
+        tokio::spawn(async move {
+            loop {
+                render_rx.borrow_and_update();
+                if render_rx.changed().await.is_err() {
+                    break Ok(());
+                }
+            }
+        })
     };
 
     loop {
         debug!("Evaluating playground...");
-        let res = evaluate_playground(&rt, &args.source);
+        let res = subsecond::call(|| evaluate_playground(&rt, &args.source));
         match res {
             Ok(fcx) => {
                 debug!("Successfully evaluated playground");
