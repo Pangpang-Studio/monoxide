@@ -1,17 +1,17 @@
-mod model;
-mod svg;
-mod web;
-
 use std::{path::PathBuf, sync::Arc};
 
 use anyhow::Result;
 use clap::Parser;
 use dioxus_devtools::subsecond;
-use monoxide_script::{FontParamSettings, ast::FontContext};
+use monoxide_font::web::{self, RenderedFontState};
+use monoxide_script::{
+    FontParamSettings,
+    ast::{FontContext, SimpleGlyph},
+    dsl::{BezierBuilder, BezierInst},
+};
 use tokio::sync::watch;
 use tokio_stream::StreamExt;
 use tracing::debug;
-use web::RenderedFontState;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -49,6 +49,27 @@ fn evaluate_playground() -> Result<FontContext> {
     };
 
     let mut fcx = FontContext::new(settings);
+
+    let glyphs = [(
+        'c',
+        fcx.add_glyph(
+            SimpleGlyph::new(
+                [BezierBuilder::new(true, (0.3, 0.))
+                    .extend([
+                        BezierInst::line(0.6, 0.),
+                        BezierInst::line(1., fcx.settings.width),
+                        BezierInst::line(0.3, 0.),
+                    ])
+                    .build()]
+                .map(Arc::new),
+            )
+            .into(),
+        ),
+    )];
+
+    for (ch, gl) in glyphs {
+        fcx.assign_char(ch, gl);
+    }
     Ok(fcx)
 }
 

@@ -7,6 +7,5 @@ edition = "2021"
 monoxide-curves.workspace = true
 monoxide-spiro.workspace = true
 monoxide-ttf.workspace = true
-rquickjs.workspace = true
 serde.workspace = true
 thiserror.workspace = true

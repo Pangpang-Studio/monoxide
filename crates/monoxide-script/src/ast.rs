@@ -1,14 +1,9 @@
 use std::{collections::BTreeMap, sync::Arc};
 
 use monoxide_curves::{point::Point2D, stroke::TangentOverride, CubicBezier, SpiroCurve};
-use rquickjs::{
-    class::{Trace, Tracer},
-    JsLifetime,
-};
 
 use crate::FontParamSettings;
 
-#[rquickjs::class]
 #[derive(Debug, Clone)]
 pub struct FontContext {
     pub glyphs: Vec<GlyphEntry>,
@@ -44,16 +39,6 @@ impl FontContext {
     }
 }
 
-unsafe impl JsLifetime<'_> for FontContext {
-    type Changed<'to> = Self;
-}
-
-impl Trace<'_> for FontContext {
-    fn trace(&self, _cx: Tracer) {
-        // No need to trace, as we don't have any JS references in this struct.
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GlyphId(pub usize);
 
@@ -63,12 +48,40 @@ pub enum GlyphEntry {
     Compound(CompoundGlyph),
 }
 
+impl From<SimpleGlyph> for GlyphEntry {
+    fn from(glyph: SimpleGlyph) -> Self {
+        GlyphEntry::Simple(glyph)
+    }
+}
+
+impl From<CompoundGlyph> for GlyphEntry {
+    fn from(glyph: CompoundGlyph) -> Self {
+        GlyphEntry::Compound(glyph)
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct SimpleGlyph {
     pub outlines: Vec<Arc<OutlineExpr>>,
     /// The advance width of the glyph. If unset, uses the default advance width
     /// of the font.
     pub advance: Option<f64>,
+}
+
+impl SimpleGlyph {
+    pub fn new(outlines: impl IntoIterator<Item = Arc<OutlineExpr>>) -> Self {
+        Self::with_advance(outlines, None)
+    }
+
+    pub fn with_advance(
+        outlines: impl IntoIterator<Item = Arc<OutlineExpr>>,
+        advance: impl Into<Option<f64>>,
+    ) -> Self {
+        Self {
+            outlines: outlines.into_iter().collect(),
+            advance: advance.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -82,6 +95,12 @@ pub enum OutlineExpr {
 impl Default for OutlineExpr {
     fn default() -> Self {
         OutlineExpr::Bezier(CubicBezier::builder(Point2D::new(0., 0.)).build())
+    }
+}
+
+impl OutlineExpr {
+    pub fn stroked(self: Arc<Self>, width: f64) -> Arc<Self> {
+        Arc::new(OutlineExpr::Stroked(self, width))
     }
 }
 

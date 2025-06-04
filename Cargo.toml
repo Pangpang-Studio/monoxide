@@ -48,12 +48,8 @@ monoxide = { path = "." }
 # Deps
 anyhow = "1.0.98"
 clap = { version = "4.5.37", features = ["derive"] }
-dunce = "1.0.5"
 flo_curves = { git = "https://github.com/Pangpang-Studio/flo_curves.git", branch = "dev" }
-glob = "0.3"
 num-traits = "0.2.19"
-path-slash = "0.2.1"
-rquickjs = { version = "0.9.0", features = ["macro", "loader"] }
 serde = { version = "1", features = ["derive"] }
 spiro-sys = { package = "spiro-sys-rs", git = "https://github.com/Pangpang-Studio/spiro-sys-rs.git", version = "0.1.0" }
 tracing = "0.1.41"
