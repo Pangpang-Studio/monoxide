@@ -62,3 +62,10 @@ pub enum SpiroCpTy {
     Open = SPIRO_OPEN_CONTOUR,
     EndOpen = SPIRO_END_OPEN_CONTOUR,
 }
+
+impl SpiroCpTy {
+    pub fn at(self, pt: impl Into<(f64, f64)>) -> SpiroCp {
+        let (x, y) = pt.into();
+        SpiroCp { x, y, ty: self }
+    }
+}
