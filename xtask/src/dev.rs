@@ -223,9 +223,7 @@ fn start_playground(
         "--features=playground",
         "--",
     ]);
-    // TODO: configurable font directory, currently hardcoded to `font`
-    playground_cmd.args(["font", "serve"]);
-    playground_cmd.arg(format!("--port={}", cmd.port));
+    playground_cmd.args(["serve", &format!("--port={}", cmd.port)]);
     if let Some(webui_port) = webui_port {
         playground_cmd.arg(format!("--reverse-proxy=http://127.0.0.1:{webui_port}"));
     } else {
