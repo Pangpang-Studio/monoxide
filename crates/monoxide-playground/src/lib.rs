@@ -2,7 +2,7 @@ mod model;
 mod svg;
 mod web;
 
-use std::{fmt::Debug, path::PathBuf, sync::Arc};
+use std::{fmt::Debug, sync::Arc};
 
 use anyhow::{Result, anyhow};
 use clap::Parser;
@@ -15,18 +15,8 @@ use tracing::debug;
 #[derive(Parser)]
 #[command(author, version, about)]
 pub struct Playground {
-    /// Optional serve mode with custom command.
-    /// Use this flag directly to run a dev server with `vite`, or set it to
-    /// `npx` to run `npx vite` instead (idem for `pnpx`).
-    #[arg(long)]
-    serve: Option<Option<String>>,
-
-    /// The script directory to build the glyphs from.
-    #[clap(default_value = "font")]
-    source: PathBuf,
-
     #[clap(subcommand)]
-    cmd: Option<Subcommand>,
+    cmd: Subcommand,
 }
 
 #[derive(clap::Parser)]
@@ -50,7 +40,7 @@ impl Playground {
         let (tx, rx) = tokio::sync::mpsc::channel::<()>(10);
         let mut rx = std::pin::pin!(tokio_stream::wrappers::ReceiverStream::new(rx));
 
-        let (render_tx, mut render_rx) = watch::channel(Arc::new(web::RenderedFontState::Nothing));
+        let (render_tx, render_rx) = watch::channel(Arc::new(web::RenderedFontState::Nothing));
 
         // Establish the connection to the subsecond launcher.
         dioxus_devtools::connect_subsecond();
@@ -58,20 +48,8 @@ impl Playground {
             _ = tx.try_send(());
         }));
 
-        // Start the web server if requested.
-        let _fut = if let Some(cmd) = args.cmd {
-            match cmd {
-                Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
-            }
-        } else {
-            tokio::spawn(async move {
-                loop {
-                    render_rx.borrow_and_update();
-                    if render_rx.changed().await.is_err() {
-                        break Ok(());
-                    }
-                }
-            })
+        let _fut = match args.cmd {
+            Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
         };
 
         loop {
