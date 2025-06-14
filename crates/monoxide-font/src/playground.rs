@@ -1,4 +1,3 @@
-#[path = "font.rs"]
 mod font;
 
 use anyhow::Result;
