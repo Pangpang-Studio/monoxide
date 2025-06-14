@@ -4,6 +4,8 @@
 //! crate will not be able to find it.
 
 mod glyph;
+mod math;
+mod shape;
 
 use monoxide_script::{FontParamSettings, ast::FontContext};
 
