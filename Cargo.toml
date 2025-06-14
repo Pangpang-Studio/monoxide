@@ -32,6 +32,7 @@ members = [
     ".",
     "crates/monoxide-curves",
     "crates/monoxide-font",
+    "crates/monoxide-playground",
     "crates/monoxide-script",
     "crates/monoxide-spiro",
     "crates/monoxide-ttf",
@@ -41,6 +42,7 @@ members = [
 [workspace.dependencies]
 # Monoxide itself
 monoxide-curves = { path = "crates/monoxide-curves" }
+monoxide-playground = { path = "crates/monoxide-playground" }
 monoxide-script = { path = "crates/monoxide-script" }
 monoxide-spiro = { path = "crates/monoxide-spiro" }
 monoxide-ttf = { path = "crates/monoxide-ttf" }
@@ -48,10 +50,12 @@ monoxide = { path = "." }
 # Deps
 anyhow = "1.0.98"
 clap = { version = "4.5.37", features = ["derive"] }
+dioxus-devtools = "0.7.0-alpha.1"
 flo_curves = { git = "https://github.com/Pangpang-Studio/flo_curves.git", branch = "dev" }
 num-traits = "0.2.19"
 serde = { version = "1", features = ["derive"] }
 spiro-sys = { package = "spiro-sys-rs", git = "https://github.com/Pangpang-Studio/spiro-sys-rs.git", version = "0.1.0" }
+tokio = { version = "1.36.0" }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 thiserror = "2.0"

@@ -1245,6 +1245,19 @@ name = "monoxide-font"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dioxus-devtools",
+ "monoxide-curves",
+ "monoxide-playground",
+ "monoxide-script",
+ "monoxide-spiro",
+ "tokio",
+]
+
+[[package]]
+name = "monoxide-playground"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
  "axum",
  "axum-reverse-proxy",
  "clap",

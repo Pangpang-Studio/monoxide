@@ -3,26 +3,22 @@ name = "monoxide-font"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+playground = []
+
 [dependencies]
-anyhow = "1.0.97"
-clap.workspace = true
 monoxide-curves.workspace = true
 monoxide-script.workspace = true
 monoxide-spiro.workspace = true
-tracing-subscriber.workspace = true
-tracing.workspace = true
-serde = { workspace = true, features = ["derive"] }
-serde_json = { version = "1.0" }
 
-# Dependencies for the Web playground
-axum = { version = "0.8.3", features = ["macros", "ws"] }
-axum-reverse-proxy = "0.8.0"
-dioxus-devtools = "0.7.0-alpha.1"
-futures-util = { version = "0.3", default-features = false, features = [
-    "sink",
-    "std",
-] }
-tokio = { version = "1.36.0", features = ["full"] }
-tokio-stream = "0.1.17"
-tower-http = { version = "0.6", features = ["fs"] }
-# TODO: Remove this direct dependency.
+[dev-dependencies]
+anyhow.workspace = true
+dioxus-devtools.workspace = true
+tokio.workspace = true
+monoxide-playground.workspace = true
+
+[[example]]
+name = "playground"
+# HACK: To make `subsecond` aware of `font.rs`, we have to put it under `src/`.
+path = "src/playground.rs"
+required-features = ["playground"]

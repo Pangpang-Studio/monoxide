@@ -11,5 +11,5 @@ fixed = "=1.28.0"
 indexmap = "2.7.1"
 num-traits.workspace = true
 rust_decimal = { version = "1.36.0", default-features = false }
-thiserror = "2.0.11"
+thiserror.workspace = true
 widestring = "1.1.0"

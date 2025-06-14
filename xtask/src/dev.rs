@@ -72,7 +72,8 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
 
 pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
     let root = workspace_root();
-    let playground_server_name = "monoxide-font";
+    let playground_crate = "monoxide-font";
+    let playground_example = "playground";
     let playground_webui_dir = root.join("tools/playground");
     let playground_webui_dist = playground_webui_dir.join("dist");
 
@@ -129,7 +130,8 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
     // Then start the playground server.
     let playground_child = start_playground(
         &cmd,
-        playground_server_name,
+        playground_crate,
+        playground_example,
         webui_port,
         &playground_webui_dist,
     )?;
@@ -196,7 +198,8 @@ fn check_exit_status(shutdown_state: &Arc<Mutex<ShutdownState>>) -> bool {
 
 fn start_playground(
     cmd: &DevCommand,
-    playground_server_name: &str,
+    playground_crate: &str,
+    playground_example: &str,
     webui_port: Option<u16>,
     playground_webui_dir: &Path,
 ) -> anyhow::Result<Child> {
@@ -210,7 +213,16 @@ fn start_playground(
     } else {
         playground_cmd = std::process::Command::new("dx");
     }
-    playground_cmd.args(["serve", "--hotpatch", "-p", playground_server_name, "--"]);
+    playground_cmd.args([
+        "serve",
+        "--hotpatch",
+        "-p",
+        playground_crate,
+        "--example",
+        playground_example,
+        "--features=playground",
+        "--",
+    ]);
     // TODO: configurable font directory, currently hardcoded to `font`
     playground_cmd.args(["font", "serve"]);
     playground_cmd.arg(format!("--port={}", cmd.port));
