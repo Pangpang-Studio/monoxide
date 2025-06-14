@@ -60,7 +60,7 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
 
     if let Some(mut child) = st.playground_child.take() {
         info!("Killing playground child process...");
-        gracefully_kill(&mut child).expect("Failed to kill playground child process");
+        _ = gracefully_kill(&mut child).inspect_err(|e| warn!("{e:?}"));
         info!("Playground child process killed.");
     } else {
         info!("No playground child process to kill.");
