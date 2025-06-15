@@ -8,12 +8,10 @@ use super::math::mix;
 /// Renders a rectangle formed by drawing a line between points `start` and
 /// `end` and span it in the normal direction according to the given width.
 pub fn rect(start: impl Into<Point2D>, end: impl Into<Point2D>, width: f64) -> Arc<OutlineExpr> {
-    Arc::new(
-        SpiroBuilder::new(false)
-            .extend([flat!(start.into()), curl!(end.into())])
-            .build(),
-    )
-    .stroked(width)
+    SpiroBuilder::new(false)
+        .extend([flat!(start.into()), curl!(end.into())])
+        .build()
+        .stroked(width)
 }
 
 /// Renders a ring delimited within the given x and y ranges.
@@ -25,9 +23,7 @@ pub fn ring(xr: Range<f64>, yr: Range<f64>) -> Arc<OutlineExpr> {
     let xm = mix(x0, x1, 0.5);
     let ym = mix(y0, y1, 0.5);
 
-    Arc::new(
-        SpiroBuilder::new(true)
-            .extend([g4!(x0, ym), g4!(xm, y0), g4!(x1, ym), g4!(xm, y1)])
-            .build(),
-    )
+    SpiroBuilder::new(true)
+        .extend([g4!(x0, ym), g4!(xm, y0), g4!(x1, ym), g4!(xm, y1)])
+        .build()
 }

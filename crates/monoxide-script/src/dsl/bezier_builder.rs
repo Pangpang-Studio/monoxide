@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use monoxide_curves::{cube::CubicBezierBuilder, point::Point2D};
 
 use crate::ast::OutlineExpr;
@@ -86,7 +88,7 @@ impl BezierBuilder {
         self
     }
 
-    pub fn build(mut self) -> OutlineExpr {
+    pub fn build(mut self) -> Arc<OutlineExpr> {
         let mut b = CubicBezierBuilder::new(self.start);
         if self.is_closed {
             if let Some(BezierInst::Line(pt) | BezierInst::Curve(_, _, pt)) = self.insts.last_mut()
@@ -103,6 +105,6 @@ impl BezierBuilder {
         if self.is_closed {
             b.close();
         }
-        OutlineExpr::Bezier(b.build())
+        Arc::new(OutlineExpr::Bezier(b.build()))
     }
 }

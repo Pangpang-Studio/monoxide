@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use monoxide_curves::{
     point::Point2D,
     stroke::{Tangent, TangentOverride},
@@ -145,11 +147,11 @@ impl SpiroBuilder {
         self
     }
 
-    pub fn build(mut self) -> OutlineExpr {
+    pub fn build(mut self) -> Arc<OutlineExpr> {
         if !self.is_closed && !self.points.is_empty() {
             self.points.last_mut().unwrap().ty = SpiroCpTy::EndOpen;
             self.points.first_mut().unwrap().ty = SpiroCpTy::Open;
         }
-        OutlineExpr::Spiro(self.points, self.tangent_override)
+        Arc::new(OutlineExpr::Spiro(self.points, self.tangent_override))
     }
 }
