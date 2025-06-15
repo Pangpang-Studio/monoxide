@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use monoxide_script::{
     ast::{FontContext, SimpleGlyph},
     dsl::BezierBuilder,
@@ -7,14 +5,11 @@ use monoxide_script::{
 };
 
 pub fn c(fcx: &FontContext) -> SimpleGlyph {
-    SimpleGlyph::new(
-        [BezierBuilder::new(true, (0.3, 0.))
-            .extend([
-                line!(0.6, 0.),
-                line!(1., fcx.settings.width),
-                line!(0.3, 0.),
-            ])
-            .build()]
-        .map(Arc::new),
-    )
+    SimpleGlyph::new([BezierBuilder::new(true, (0.3, 0.))
+        .extend([
+            line!(0.6, 0.),
+            line!(1., fcx.settings.width),
+            line!(0.3, 0.),
+        ])
+        .build()])
 }
