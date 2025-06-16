@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     io,
     net::{SocketAddrV4, TcpStream},
     path::Path,
@@ -221,14 +222,14 @@ fn start_playground(
         "--example",
         playground_example,
         "--features=playground",
-        "--",
     ]);
-    playground_cmd.args(["serve", &format!("--port={}", cmd.port)]);
+    let mut playground_args = vec![Cow::from("serve"), format!("--port={}", cmd.port).into()];
     if let Some(webui_port) = webui_port {
-        playground_cmd.arg(format!("--reverse-proxy=http://127.0.0.1:{webui_port}"));
+        playground_args.push(format!("--reverse-proxy=http://127.0.0.1:{webui_port}").into());
     } else {
-        playground_cmd.arg(format!("--serve-dir={}", playground_webui_dir.display()));
+        playground_args.push(format!("--serve-dir={}", playground_webui_dir.display()).into());
     }
+    playground_cmd.arg("--args").arg(playground_args.join(" "));
     playground_cmd.stdout(std::process::Stdio::inherit());
     playground_cmd.stderr(std::process::Stdio::inherit());
     playground_cmd.current_dir(workspace_root());
