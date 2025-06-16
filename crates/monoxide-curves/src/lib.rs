@@ -79,3 +79,47 @@ impl<N: Real + Copy> RealPoint for (N, N) {
         self.0.hypot(self.1)
     }
 }
+
+impl Point for f64 {
+    type Scalar = f64;
+
+    fn zero() -> Self {
+        0.0
+    }
+
+    fn unit(axis: usize) -> Self {
+        match axis {
+            0 => 1.0,
+            _ => panic!("Invalid axis for 1D point"),
+        }
+    }
+
+    fn with_axis(&self, axis: usize, value: f64) -> Self {
+        match axis {
+            0 => value,
+            _ => panic!("Invalid axis for 1D point"),
+        }
+    }
+
+    fn mul_scalar(&self, scalar: f64) -> Self {
+        self * scalar
+    }
+
+    fn scale(&self, vector: &Self) -> Self {
+        self * vector
+    }
+
+    fn point_add(&self, other: &Self) -> Self {
+        self + other
+    }
+
+    fn point_sub(&self, other: &Self) -> Self {
+        self - other
+    }
+}
+
+impl RealPoint for f64 {
+    fn norm(&self) -> f64 {
+        self.abs()
+    }
+}
