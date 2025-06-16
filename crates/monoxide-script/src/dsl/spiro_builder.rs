@@ -6,6 +6,7 @@ use monoxide_curves::{
 };
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
+use super::IntoOutline;
 use crate::ast::OutlineExpr;
 
 #[derive(Debug, Clone)]
@@ -122,7 +123,15 @@ impl SpiroInst {
 }
 
 impl SpiroBuilder {
-    pub fn new(is_closed: bool) -> Self {
+    pub fn open() -> Self {
+        Self::new(false)
+    }
+
+    pub fn closed() -> Self {
+        Self::new(true)
+    }
+
+    fn new(is_closed: bool) -> Self {
         Self {
             is_closed,
             points: vec![],
@@ -130,7 +139,7 @@ impl SpiroBuilder {
         }
     }
 
-    pub fn push(mut self, inst: SpiroInst) -> Self {
+    pub fn inst(mut self, inst: SpiroInst) -> Self {
         self.points.push(inst.pt);
         if let Some(tan) = inst.opts.heading {
             let tan = Some(tan.normalize());
@@ -140,18 +149,24 @@ impl SpiroBuilder {
         self
     }
 
-    pub fn extend(mut self, insts: impl IntoIterator<Item = SpiroInst>) -> Self {
+    pub fn insts(mut self, insts: impl IntoIterator<Item = SpiroInst>) -> Self {
         for inst in insts {
-            self = self.push(inst);
+            self = self.inst(inst);
         }
         self
     }
 
-    pub fn build(mut self) -> Arc<OutlineExpr> {
+    pub fn build(mut self) -> OutlineExpr {
         if !self.is_closed && !self.points.is_empty() {
             self.points.last_mut().unwrap().ty = SpiroCpTy::EndOpen;
             self.points.first_mut().unwrap().ty = SpiroCpTy::Open;
         }
-        Arc::new(OutlineExpr::Spiro(self.points, self.tangent_override))
+        OutlineExpr::Spiro(self.points, self.tangent_override)
+    }
+}
+
+impl IntoOutline for SpiroBuilder {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        Arc::new(self.build())
     }
 }

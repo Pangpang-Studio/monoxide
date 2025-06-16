@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Range, Sub};
+use std::ops::{Add, Mul, Sub};
 
 /// Returns the weighted average of `z` and `w` based on the `ratio`.
 pub fn mix<F, T: Add<T, Output = T> + Sub<T, Output = T> + Mul<F, Output = T> + Copy>(
@@ -7,8 +7,4 @@ pub fn mix<F, T: Add<T, Output = T> + Sub<T, Output = T> + Mul<F, Output = T> + 
     ratio: F,
 ) -> T {
     w + (z - w) * ratio
-}
-
-pub fn crange(center: f64, radius: f64) -> Range<f64> {
-    (center - radius)..(center + radius)
 }

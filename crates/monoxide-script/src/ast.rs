@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, sync::Arc};
 
 use monoxide_curves::{point::Point2D, stroke::TangentOverride, CubicBezier, SpiroCurve};
 
-use crate::FontParamSettings;
+use crate::{dsl::IntoOutline, FontParamSettings};
 
 #[derive(Debug, Clone)]
 pub struct FontContext {
@@ -69,18 +69,25 @@ pub struct SimpleGlyph {
 }
 
 impl SimpleGlyph {
-    pub fn new(outlines: impl IntoIterator<Item = Arc<OutlineExpr>>) -> Self {
-        Self::with_advance(outlines, None)
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    pub fn with_advance(
-        outlines: impl IntoIterator<Item = Arc<OutlineExpr>>,
-        advance: impl Into<Option<f64>>,
-    ) -> Self {
-        Self {
-            outlines: outlines.into_iter().collect(),
-            advance: advance.into(),
+    pub fn outline(mut self, outline: impl IntoOutline) -> Self {
+        self.outlines.push(outline.into_outline());
+        self
+    }
+
+    pub fn outlines<I: IntoOutline>(mut self, outlines: impl IntoIterator<Item = I>) -> Self {
+        for outline in outlines {
+            self = self.outline(outline);
         }
+        self
+    }
+
+    pub fn advance(mut self, advance: impl Into<Option<f64>>) -> Self {
+        self.advance = advance.into();
+        self
     }
 }
 
