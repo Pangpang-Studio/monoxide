@@ -3,7 +3,7 @@ use std::{
     io,
     net::{SocketAddrV4, TcpStream},
     path::Path,
-    process::Child,
+    process::{Child, Command},
     sync::{Arc, Mutex},
 };
 
@@ -204,15 +204,12 @@ fn start_playground(
     webui_port: Option<u16>,
     playground_webui_dir: &Path,
 ) -> anyhow::Result<Child> {
-    // [cargo watch -i font --] \
-    //   dx serve --hotpatch -p monoxide-playground -- \
-    //   serve --port=<port> [--reverse-proxy=<url> | --serve-dir=<dir>]
     let mut playground_cmd;
     if cmd.watch {
-        playground_cmd = std::process::Command::new(CARGO);
+        playground_cmd = Command::new(CARGO);
         playground_cmd.args(["watch", "-i", "xtask", "-i", "tools", "--", "dx"]);
     } else {
-        playground_cmd = std::process::Command::new("dx");
+        playground_cmd = Command::new("dx");
     }
     playground_cmd.args([
         "serve",
@@ -257,7 +254,7 @@ fn start_playground(
 }
 
 fn build_webui(pnpm: &str, dir: &Path) {
-    let mut cmd = std::process::Command::new(pnpm);
+    let mut cmd = Command::new(pnpm);
     cmd.arg("build");
     cmd.current_dir(dir);
     let status = cmd.status().expect("Failed to run pnpm build");
@@ -273,7 +270,7 @@ const RETRY_COUNT: usize = 10;
 fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u16, Child)> {
     for i in 0..RETRY_COUNT {
         let port = start_port + i as u16;
-        let mut cmd = std::process::Command::new(pnpm);
+        let mut cmd = Command::new(pnpm);
         cmd.arg("dev")
             .arg("--host=127.0.0.1")
             .arg("--cors")
