@@ -22,3 +22,7 @@ name = "playground"
 # HACK: To make `subsecond` aware of `font.rs`, we have to put it under `src/`.
 path = "src/playground.rs"
 required-features = ["playground"]
+
+[[example]]
+name = "compile"
+path = "src/compile.rs"
