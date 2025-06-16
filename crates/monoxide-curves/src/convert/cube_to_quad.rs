@@ -37,6 +37,9 @@ where
             }
         }
     }
+    if cube.closed {
+        quad.close();
+    }
 
     quad.build()
 }
