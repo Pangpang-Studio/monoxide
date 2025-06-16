@@ -32,6 +32,9 @@ pub struct AuxiliarySettings {
 pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::FontFile {
     // TODO: glyphs[0] must be tofu, we currently don't have anything to handle
     let mut glyphs = vec![];
+    if cx.glyphs.len() == 1 {
+        panic!("Windows font reader disallow single-glyph fonts")
+    }
     for glyph in cx.glyphs.iter() {
         match glyph {
             crate::ast::GlyphEntry::Simple(simple_glyph) => {
