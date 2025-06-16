@@ -1,29 +1,71 @@
 use std::{ops::Range, sync::Arc};
 
 use monoxide_curves::point::Point2D;
-use monoxide_script::{ast::OutlineExpr, curl, dsl::SpiroBuilder, flat, g4};
+use monoxide_script::{
+    ast::OutlineExpr,
+    curl,
+    dsl::{IntoOutline, SpiroBuilder},
+    flat, g4,
+};
 
 use super::math::mix;
 
-/// Renders a rectangle formed by drawing a line between points `start` and
+/// A rectangle formed by drawing a line between points `start` and
 /// `end` and span it in the normal direction according to the given width.
-pub fn rect(start: impl Into<Point2D>, end: impl Into<Point2D>, width: f64) -> Arc<OutlineExpr> {
-    SpiroBuilder::new(false)
-        .extend([flat!(start.into()), curl!(end.into())])
-        .build()
-        .stroked(width)
+pub struct Rect {
+    pub start: Point2D,
+    pub end: Point2D,
+    pub width: f64,
 }
 
-/// Renders a ring delimited within the given x and y ranges.
-pub fn ring(xr: Range<f64>, yr: Range<f64>) -> Arc<OutlineExpr> {
-    let x0 = xr.start;
-    let x1 = xr.end;
-    let y0 = yr.start;
-    let y1 = yr.end;
-    let xm = mix(x0, x1, 0.5);
-    let ym = mix(y0, y1, 0.5);
+impl Rect {
+    pub fn new(start: impl Into<Point2D>, end: impl Into<Point2D>, width: f64) -> Self {
+        Self {
+            start: start.into(),
+            end: end.into(),
+            width,
+        }
+    }
+}
 
-    SpiroBuilder::new(true)
-        .extend([g4!(x0, ym), g4!(xm, y0), g4!(x1, ym), g4!(xm, y1)])
-        .build()
+impl IntoOutline for Rect {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        SpiroBuilder::open()
+            .insts([flat!(self.start), curl!(self.end)])
+            .into_outline()
+            .stroked(self.width)
+    }
+}
+
+/// A ring delimited within the given x and y ranges.
+#[derive(Clone, Debug)]
+pub struct Ring {
+    pub xr: Range<f64>,
+    pub yr: Range<f64>,
+}
+
+impl Ring {
+    pub fn new(xr: Range<f64>, yr: Range<f64>) -> Self {
+        Self { xr, yr }
+    }
+
+    pub fn at(center: impl Into<Point2D>, radii: impl Into<Point2D>) -> Self {
+        let c = center.into();
+        let r = radii.into();
+        Self::new((c.x - r.x)..(c.x + r.x), (c.y - r.y)..(c.y + r.y))
+    }
+}
+
+impl IntoOutline for Ring {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        let Range { start: x0, end: x1 } = self.xr;
+        let Range { start: y0, end: y1 } = self.yr;
+
+        let xm = mix(x0, x1, 0.5);
+        let ym = mix(y0, y1, 0.5);
+
+        SpiroBuilder::closed()
+            .insts([g4!(x0, ym), g4!(xm, y0), g4!(x1, ym), g4!(xm, y1)])
+            .into_outline()
+    }
 }

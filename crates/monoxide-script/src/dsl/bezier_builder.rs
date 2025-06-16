@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use monoxide_curves::{cube::CubicBezierBuilder, point::Point2D};
 
+use super::IntoOutline;
 use crate::ast::OutlineExpr;
 
 pub struct BezierBuilder {
@@ -68,7 +69,7 @@ macro_rules! curve {
 }
 
 impl BezierBuilder {
-    pub fn new(is_closed: bool, start: impl Into<Point2D>) -> Self {
+    fn new(is_closed: bool, start: impl Into<Point2D>) -> Self {
         Self {
             start: start.into(),
             insts: vec![],
@@ -76,19 +77,27 @@ impl BezierBuilder {
         }
     }
 
-    pub fn push(mut self, inst: BezierInst) -> Self {
+    pub fn closed(start: impl Into<Point2D>) -> Self {
+        Self::new(true, start)
+    }
+
+    pub fn open(start: impl Into<Point2D>) -> Self {
+        Self::new(false, start)
+    }
+
+    pub fn inst(mut self, inst: BezierInst) -> Self {
         self.insts.push(inst);
         self
     }
 
-    pub fn extend(mut self, insts: impl IntoIterator<Item = BezierInst>) -> Self {
+    pub fn insts(mut self, insts: impl IntoIterator<Item = BezierInst>) -> Self {
         for inst in insts {
-            self = self.push(inst);
+            self = self.inst(inst);
         }
         self
     }
 
-    pub fn build(mut self) -> Arc<OutlineExpr> {
+    pub fn build(mut self) -> OutlineExpr {
         let mut b = CubicBezierBuilder::new(self.start);
         if self.is_closed {
             if let Some(BezierInst::Line(pt) | BezierInst::Curve(_, _, pt)) = self.insts.last_mut()
@@ -105,6 +114,12 @@ impl BezierBuilder {
         if self.is_closed {
             b.close();
         }
-        Arc::new(OutlineExpr::Bezier(b.build()))
+        OutlineExpr::Bezier(b.build())
+    }
+}
+
+impl IntoOutline for BezierBuilder {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        Arc::new(self.build())
     }
 }
