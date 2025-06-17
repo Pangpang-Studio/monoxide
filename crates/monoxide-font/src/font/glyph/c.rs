@@ -10,7 +10,7 @@ pub fn c(fcx: &FontContext) -> SimpleGlyph {
     SimpleGlyph::new()
         .outline(BezierBuilder::open((0.6, 0.)).insts([
             line!(0.8, 0.),
-            line!(1., fcx.settings.width),
+            line!(1., fcx.settings().width),
             line!(0.6, 0.),
         ]))
         .outline(Rect::new((0., 0.), (0.1, 0.4), 0.05))

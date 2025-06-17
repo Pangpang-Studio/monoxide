@@ -7,6 +7,8 @@ mod glyph;
 mod math;
 mod shape;
 
+use std::sync::Arc;
+
 use monoxide_script::{FontParamSettings, ast::FontContext};
 
 pub fn make_font() -> Result<FontContext, ()> {
@@ -27,12 +29,12 @@ pub fn make_font() -> Result<FontContext, ()> {
     let mut fcx = FontContext::new(settings);
 
     let glyphs = [
-        ('c', fcx.add_glyph(glyph::c(&fcx).into())),
-        ('i', fcx.add_glyph(glyph::i(&fcx).into())),
+        ('c', (glyph::c(&fcx).into())),
+        ('i', (glyph::i(&fcx).into())),
     ];
 
     for (ch, gl) in glyphs {
-        fcx.assign_char(ch, gl);
+        fcx.set_mapping(ch, Arc::new(gl));
     }
     Ok(fcx)
 }
