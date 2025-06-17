@@ -2,6 +2,8 @@ pub mod ast;
 pub mod dsl;
 pub mod eval;
 pub mod trace;
+mod util;
+
 
 use serde::{Deserialize, Serialize};
 

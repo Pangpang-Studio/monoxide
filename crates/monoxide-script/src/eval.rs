@@ -1,5 +1,6 @@
-use std::time::SystemTime;
+use std::{collections::BTreeMap, hash::Hash, sync::Arc, time::SystemTime};
 
+use indexmap::IndexSet;
 use monoxide_curves::{
     point::Point2D,
     stroke::{StrokeResult, TangentOverride},
@@ -14,8 +15,9 @@ use monoxide_ttf::{
 };
 
 use crate::{
-    ast::{FontContext, OutlineExpr},
+    ast::{FontContext, GlyphEntry, OutlineExpr},
     trace::EvaluationTracer,
+    util::RefIdArc,
     FontParamSettings,
 };
 
@@ -23,20 +25,55 @@ pub struct AuxiliarySettings {
     /// Points per em when converting floating-point point data into
     /// fixed-point ones. A common value is 2048.
     pub point_per_em: u16,
-
     pub font_name: String,
+}
 
-    pub settings: FontParamSettings,
+/// A [`FontContext`] with only reachable glyphs and the layout determined.
+///
+/// The implementor should ensure that `glyph_list[0]` is the TOFU glyph.
+pub struct SerializedFontContext {
+    pub glyph_list: Vec<Arc<GlyphEntry>>,
+    pub cmap: BTreeMap<char, usize>,
 }
 
 pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::FontFile {
-    // TODO: glyphs[0] must be tofu, we currently don't have anything to handle
-    let mut glyphs = vec![];
-    if cx.glyphs.len() == 1 {
+    let scx = layout_glyphs(cx);
+    if scx.glyph_list.len() == 1 {
         panic!("Windows font reader disallow single-glyph fonts")
     }
-    for glyph in cx.glyphs.iter() {
-        match glyph {
+    let glyphs = eval_glyphs(aux, &scx);
+    create_tables(cx, &scx, aux, glyphs)
+}
+
+/// Lays out all glyphs referenced within a [`FontContext`] into a linear list.
+pub fn layout_glyphs(cx: &FontContext) -> SerializedFontContext {
+    let mut res = IndexSet::<RefIdArc<GlyphEntry>>::new();
+
+    let tofu_id = res
+        .insert_full(cx.tofu.clone().expect("Tofu unset").into())
+        .0;
+    assert_eq!(tofu_id, 0, "Tofu glyph must be the first glyph in the font");
+
+    let mut cmap = BTreeMap::new();
+    for (&c, g) in &cx.cmap {
+        let id = res.insert_full(g.clone().into()).0;
+        cmap.insert(c, id);
+
+        if let GlyphEntry::Compound(_) = &**g {
+            todo!("DFS on compound glyphs");
+        }
+    }
+
+    SerializedFontContext {
+        glyph_list: res.into_iter().map(|x| x.into()).collect(),
+        cmap,
+    }
+}
+
+fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<glyf::Glyph> {
+    let mut glyphs = vec![];
+    for glyph in scx.glyph_list.iter() {
+        match &**glyph {
             crate::ast::GlyphEntry::Simple(simple_glyph) => {
                 let mut outlines = vec![];
                 for it in &simple_glyph.outlines {
@@ -61,17 +98,26 @@ pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::F
             crate::ast::GlyphEntry::Compound(..) => todo!("Compound is not supported"),
         }
     }
+    glyphs
+}
+
+fn create_tables(
+    cx: &FontContext,
+    scx: &SerializedFontContext,
+    aux: &AuxiliarySettings,
+    glyphs: Vec<glyf::Glyph>,
+) -> FontFile {
     let glyf = glyf::Table { glyphs };
     let loca = hl::loca::glyf_to_loca(&glyf);
     let maxp = hl::maxp::glyf_to_maxp(&glyf);
 
-    let mappings = cx
+    let mappings = scx
         .cmap
         .iter()
         .map(|(&k, &v)| hl::cmap::SeqMapping {
             start_code: k as u32,
             len: 1,
-            glyph_id: v.0 as u32,
+            glyph_id: v as u32,
         })
         .collect::<Vec<_>>();
     let cmap = hl::cmap::Table {
@@ -84,17 +130,17 @@ pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::F
 
     let hmtx = hmtx::Table {
         metrics: vec![hmtx::LongHorizontalMetric {
-            advance_width: (aux.point_per_em as f64 * aux.settings.width) as ufword,
+            advance_width: (aux.point_per_em as f64 * cx.settings.width) as ufword,
             left_side_bearing: 0,
         }],
-        left_side_bearings: vec![0; cx.glyphs.len() - 1],
+        left_side_bearings: vec![0; scx.glyph_list.len() - 1],
     };
 
     let head = head::Table {
         font_revision: 0,
         checksum_adjustment: 0,
         flags: head::HeaderFlags::empty(),
-        units_per_em: 1024,
+        units_per_em: aux.point_per_em,
         created: SystemTime::now(),
         modified: SystemTime::now(),
         x_min: 0,

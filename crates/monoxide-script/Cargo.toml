@@ -9,3 +9,4 @@ monoxide-spiro.workspace = true
 monoxide-ttf.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+indexmap.workspace = true

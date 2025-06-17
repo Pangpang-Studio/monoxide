@@ -23,17 +23,17 @@ pub async fn glyph_detail(
 ) -> Result<Json<GlyphDetail>, Response> {
     let latest_state = state.rx.borrow().clone();
 
-    let cx = match &*latest_state {
+    let (cx, ser_fcx) = match &*latest_state {
         crate::web::RenderedFontState::Nothing | crate::web::RenderedFontState::Error(_) => {
             return Err(Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body("No font loaded".into())
                 .unwrap());
         }
-        crate::web::RenderedFontState::Font(cx) => cx,
+        crate::web::RenderedFontState::Font(cx, ser_fcx) => (cx, ser_fcx),
     };
 
-    let glyph = cx.glyphs.get(id).ok_or_else(|| {
+    let glyph = &**ser_fcx.glyph_list.get(id).ok_or_else(|| {
         Response::builder()
             .status(StatusCode::NOT_FOUND)
             .body("Glyph not found".into())
@@ -81,7 +81,7 @@ fn simple_glyph_to_detail(
         name: None,
         outline: output_outline,
         error: None,
-        advance: cx.settings.width,
+        advance: cx.settings().width,
     };
     let guidelines = make_guidelines(cx, glyph);
 
@@ -95,7 +95,7 @@ fn simple_glyph_to_detail(
 }
 
 fn make_guidelines(cx: &FontContext, glyph: &SimpleGlyph) -> Guidelines {
-    let settings = &cx.settings;
+    let settings = cx.settings();
     Guidelines {
         h: vec![
             Guideline {

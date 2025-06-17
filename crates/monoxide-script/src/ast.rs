@@ -6,36 +6,42 @@ use crate::{dsl::IntoOutline, FontParamSettings};
 
 #[derive(Debug, Clone)]
 pub struct FontContext {
-    pub glyphs: Vec<GlyphEntry>,
-    pub cmap: BTreeMap<char, GlyphId>,
-    pub settings: FontParamSettings,
+    /// The default glyph, used for characters that do not have a glyph assigned.
+    ///
+    /// This glyph should usually be the tofu glyph, and additionally assigned
+    /// to U+FFFD REPLACEMENT CHARACTER.
+    ///
+    /// Finalizing the context without setting this will result in an error.
+    pub(crate) tofu: Option<Arc<GlyphEntry>>,
+    /// The regular character mapping. This mapping is used when no other
+    /// replacements override the characters.
+    pub(crate) cmap: BTreeMap<char, Arc<GlyphEntry>>,
+    pub(crate) settings: FontParamSettings,
 }
 
 impl FontContext {
     pub fn new(settings: FontParamSettings) -> Self {
-        FontContext {
-            glyphs: Vec::new(),
+        Self {
+            tofu: None,
             cmap: BTreeMap::new(),
             settings,
         }
     }
 
-    pub fn get_char_glyph_id(&self, c: char) -> Option<GlyphId> {
-        self.cmap.get(&c).copied()
+    /// Set the default glyph for the font. Also sets the tofu glyph to U+FFFD.
+    pub fn set_tofu(&mut self, tofu: Arc<GlyphEntry>) {
+        self.tofu = Some(tofu.clone());
+        self.cmap.insert('\u{FFFD}', tofu);
     }
 
-    pub fn get_glyph(&self, id: GlyphId) -> Option<&GlyphEntry> {
-        self.glyphs.get(id.0)
+    /// Set the glyph of the given character. Returns the previous glyph
+    /// if it was set, otherwise `None`.
+    pub fn set_mapping(&mut self, ch: char, glyph: Arc<GlyphEntry>) -> Option<Arc<GlyphEntry>> {
+        self.cmap.insert(ch, glyph)
     }
 
-    pub fn add_glyph(&mut self, v: GlyphEntry) -> GlyphId {
-        let id = self.glyphs.len();
-        self.glyphs.push(v);
-        GlyphId(id)
-    }
-
-    pub fn assign_char(&mut self, char: char, glyph_id: GlyphId) {
-        self.cmap.insert(char, glyph_id);
+    pub fn settings(&self) -> &FontParamSettings {
+        &self.settings
     }
 }
 
@@ -114,5 +120,7 @@ impl OutlineExpr {
 #[derive(Debug, Clone, Default)]
 pub struct CompoundGlyph {
     /// Index into the glyphs array of the font context.
-    pub components: Vec<usize>,
+    ///
+    /// TODO: compound glyphs can transform their components
+    pub components: Vec<Arc<GlyphEntry>>,
 }

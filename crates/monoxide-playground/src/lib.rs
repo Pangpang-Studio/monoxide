@@ -7,7 +7,7 @@ use std::{fmt::Debug, sync::Arc};
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use dioxus_devtools::subsecond;
-use monoxide_script::ast::FontContext;
+use monoxide_script::{ast::FontContext, eval::layout_glyphs};
 use tokio::sync::watch;
 use tokio_stream::StreamExt;
 use tracing::debug;
@@ -57,8 +57,9 @@ impl Playground {
             match make_font() {
                 Ok(fcx) => {
                     debug!("Successfully evaluated playground");
+                    let ser_fcx = layout_glyphs(&fcx);
                     render_tx
-                        .send(Arc::new(web::RenderedFontState::Font(fcx)))
+                        .send(Arc::new(web::RenderedFontState::Font(fcx, ser_fcx)))
                         .unwrap();
                 }
                 Err(e) => {

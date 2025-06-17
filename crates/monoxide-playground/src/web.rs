@@ -13,7 +13,7 @@ use axum::{
     extract::{Request, State},
     routing::{any, method_routing::get},
 };
-use monoxide_script::ast::FontContext;
+use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
 use tokio::sync::watch;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
@@ -85,7 +85,7 @@ pub struct AppState {
 pub enum RenderedFontState {
     #[default]
     Nothing,
-    Font(FontContext),
+    Font(FontContext, SerializedFontContext),
     Error(anyhow::Error),
 }
 
