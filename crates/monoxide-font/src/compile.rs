@@ -9,7 +9,6 @@ fn main() {
         &AuxiliarySettings {
             point_per_em: 2048,
             font_name: "Monoxide".into(),
-            settings: fcx.settings.clone(),
         },
     );
     res.write(std::fs::File::create("out.ttf").expect("Failed to open file"))

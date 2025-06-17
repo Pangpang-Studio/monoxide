@@ -52,6 +52,7 @@ anyhow = "1.0.98"
 clap = { version = "4.5.37", features = ["derive"] }
 dioxus-devtools = "0.7.0-alpha.1"
 flo_curves = { git = "https://github.com/Pangpang-Studio/flo_curves.git", branch = "dev" }
+indexmap = "2.9.0"
 num-traits = "0.2.19"
 serde = { version = "1", features = ["derive"] }
 spiro-sys = { package = "spiro-sys-rs", git = "https://github.com/Pangpang-Studio/spiro-sys-rs.git", version = "0.1.0" }
