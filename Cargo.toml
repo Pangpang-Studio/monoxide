@@ -7,6 +7,8 @@ repository = "https://github.com/rami3l/monoxide"
 readme = "README.md"
 
 [dependencies]
+monoxide-font.workspace = true
+monoxide-script.workspace = true
 
 [build-dependencies]
 
@@ -42,6 +44,7 @@ members = [
 [workspace.dependencies]
 # Monoxide itself
 monoxide-curves = { path = "crates/monoxide-curves" }
+monoxide-font = { path = "crates/monoxide-font" }
 monoxide-playground = { path = "crates/monoxide-playground" }
 monoxide-script = { path = "crates/monoxide-script" }
 monoxide-spiro = { path = "crates/monoxide-spiro" }
