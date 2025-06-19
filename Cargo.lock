@@ -1229,6 +1229,10 @@ dependencies = [
 [[package]]
 name = "monoxide"
 version = "0.0.1"
+dependencies = [
+ "monoxide-font",
+ "monoxide-script",
+]
 
 [[package]]
 name = "monoxide-curves"
