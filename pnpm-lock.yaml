@@ -11,9 +11,6 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
-      prettier-plugin-jsdoc:
-        specifier: ^1.3.2
-        version: 1.3.2(prettier@3.5.3)
 
   font:
     dependencies:
