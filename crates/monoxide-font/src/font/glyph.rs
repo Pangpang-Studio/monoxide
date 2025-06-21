@@ -10,5 +10,6 @@ macro_rules! glyph_mods {
 glyph_mods! {
     c;
     i;
+    o;
     tofu;
 }
