@@ -29,9 +29,9 @@ pub fn o_shape(
     let Point2D { x, y } = center.into();
     let Point2D { x: rx, y: ry } = radii.into();
 
-    let mid_curve_w = 0.6 * rx;
-    let mid_curve_h = (1. / 17.) * ry;
-    let end_curve_h = (9. / 17.) * ry;
+    let mid_curve_w = 0.85 * rx;
+    let mid_curve_h = (5. / 16.) * ry;
+    let end_curve_h = (13. / 16.) * ry;
 
     let y_hi = y + ry;
     let y_lo = y - ry;
