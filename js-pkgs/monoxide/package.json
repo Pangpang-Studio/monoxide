@@ -1,7 +1,0 @@
-{
-  "name": "monoxide",
-  "version": "1.0.0",
-  "description": "JS bindings declaration for monoxide",
-  "types": "./index.d.ts",
-  "author": ""
-}
