@@ -12,6 +12,16 @@ use std::sync::Arc;
 
 use monoxide_script::{FontParamSettings, ast::FontContext};
 
+pub struct InputContext {
+    pub settings: FontParamSettings,
+}
+
+impl InputContext {
+    fn settings(&self) -> &FontParamSettings {
+        &self.settings
+    }
+}
+
 pub fn make_font() -> Result<FontContext, ()> {
     let width = 0.5;
     let x_height = 0.5;
@@ -27,15 +37,21 @@ pub fn make_font() -> Result<FontContext, ()> {
         dot_size: 0.25 * width,
     };
 
-    let mut fcx = FontContext::new(settings);
+    let cx = InputContext {
+        settings: settings.clone(),
+    };
 
     let glyphs = [
-        ('c', (glyph::c(&fcx).into())),
-        ('i', (glyph::i(&fcx).into())),
-        ('n', (glyph::n(&fcx).into())),
-        ('o', (glyph::o(&fcx).into())),
+        ('c', (glyph::c(&cx).into())),
+        ('i', (glyph::i(&cx).into())),
+        ('n', (glyph::n(&cx).into())),
+        ('o', (glyph::o(&cx).into())),
     ];
-    fcx.set_tofu(Arc::new(glyph::tofu(&fcx).into()));
+    let tofu = Arc::new(glyph::tofu(&cx).into());
+
+    // This is the state
+    let mut fcx = FontContext::new(settings);
+    fcx.set_tofu(tofu);
 
     for (ch, gl) in glyphs {
         fcx.set_mapping(ch, Arc::new(gl));

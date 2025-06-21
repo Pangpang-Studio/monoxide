@@ -1,14 +1,17 @@
 use monoxide_curves::point::Point2D;
 use monoxide_script::{
-    ast::{FontContext, SimpleGlyph},
+    ast::SimpleGlyph,
     curl,
     dsl::{IntoOutline, IntoOutlineExt, SpiroBuilder},
     flat, g4, let_settings,
 };
 
-use crate::font::{dir::Dir, glyph::o::OShape, shape::Rect};
+use crate::{
+    InputContext,
+    font::{dir::Dir, glyph::o::OShape, shape::Rect},
+};
 
-pub fn n(fcx: &FontContext) -> SimpleGlyph {
+pub fn n(fcx: &InputContext) -> SimpleGlyph {
     let_settings! { { mid, mih, ovs, sbl, stw, xh } = fcx.settings(); }
 
     let hstw = stw / 2.;
