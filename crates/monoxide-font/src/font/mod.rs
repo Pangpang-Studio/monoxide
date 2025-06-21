@@ -3,6 +3,7 @@
 //! NOTE: This module must be named `mod.rs`, otherwise the "playground" example
 //! crate will not be able to find it.
 
+mod dir;
 mod glyph;
 mod math;
 mod shape;
