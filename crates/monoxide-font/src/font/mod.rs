@@ -32,6 +32,7 @@ pub fn make_font() -> Result<FontContext, ()> {
     let glyphs = [
         ('c', (glyph::c(&fcx).into())),
         ('i', (glyph::i(&fcx).into())),
+        ('n', (glyph::n(&fcx).into())),
         ('o', (glyph::o(&fcx).into())),
     ];
     fcx.set_tofu(Arc::new(glyph::tofu(&fcx).into()));
