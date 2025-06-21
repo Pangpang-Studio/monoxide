@@ -1,10 +1,12 @@
 use monoxide_script::{
-    ast::{FontContext, SimpleGlyph},
+    ast::SimpleGlyph,
     corner,
     dsl::{IntoOutlineExt, SpiroBuilder},
 };
 
-pub fn tofu(fcx: &FontContext) -> SimpleGlyph {
+use crate::InputContext;
+
+pub fn tofu(fcx: &InputContext) -> SimpleGlyph {
     let h = fcx.settings().cap();
     let w = fcx.settings().wth();
     let stw = fcx.settings().stw();

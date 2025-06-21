@@ -1,12 +1,15 @@
 use monoxide_script::{
-    ast::{FontContext, SimpleGlyph},
+    ast::SimpleGlyph,
     dsl::{BezierBuilder, IntoOutlineExt},
     line,
 };
 
-use crate::font::shape::{Rect, Ring};
+use crate::{
+    InputContext,
+    font::shape::{Rect, Ring},
+};
 
-pub fn c(fcx: &FontContext) -> SimpleGlyph {
+pub fn c(fcx: &InputContext) -> SimpleGlyph {
     SimpleGlyph::new()
         .outline(BezierBuilder::open((0.6, 0.)).insts([
             line!(0.8, 0.),

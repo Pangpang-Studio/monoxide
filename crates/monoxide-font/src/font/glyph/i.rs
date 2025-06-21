@@ -1,16 +1,19 @@
 use monoxide_script::{
-    ast::{FontContext, SimpleGlyph},
+    ast::SimpleGlyph,
     corner,
     dsl::{IntoOutlineExt, SpiroBuilder},
     g4, let_settings,
 };
 
-use crate::font::{
-    math::mix,
-    shape::{Rect, Ring},
+use crate::{
+    InputContext,
+    font::{
+        math::mix,
+        shape::{Rect, Ring},
+    },
 };
 
-pub fn i(fcx: &FontContext) -> SimpleGlyph {
+pub fn i(fcx: &InputContext) -> SimpleGlyph {
     let_settings! { { cap, dtr, mid, sbl, sbr, stw, xh } = fcx.settings(); }
 
     let hstw = stw / 2.;
