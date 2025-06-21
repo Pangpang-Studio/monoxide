@@ -191,7 +191,10 @@ pub fn stroke_spiro_raw(
 
     // There will be only one curve, since we know the spiro curve is a single
     // piece.
-    let cubic = curves.into_iter().next().unwrap();
+    let cubic = curves
+        .into_iter()
+        .next()
+        .expect("spiro-to-cube conversion should return at least one curve");
     // And we can transform the indices into a vector of raw indices too
     let mut indices = indices
         .into_iter()
