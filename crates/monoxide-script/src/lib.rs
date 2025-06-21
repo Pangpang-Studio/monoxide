@@ -116,3 +116,44 @@ impl FontParamSettings {
         self.dot() / 2.
     }
 }
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __let_settings_single {
+    ($meth:ident, $target:expr) => {
+        let $meth = $target.$meth();
+    };
+    ($meth:ident, $var:ident, $target:expr) => {
+        let $var = $target.$meth();
+    };
+}
+
+/// Convenience macro to extract original or derived values from
+/// [`FontParamSettings`].
+///
+/// # Examples
+///
+/// ```no_run
+/// # use monoxide_script::let_settings;
+/// # let s: monoxide_script::FontParamSettings = todo!();
+/// let_settings! { { mid, mih, ovs: o} = s; }
+/// ```
+///
+/// ... will expand to:
+///
+/// ```no_run
+/// # let s: monoxide_script::FontParamSettings = todo!();
+/// let mid = s.mid();
+/// let mih = s.mih();
+/// let o = s.ovs();
+/// ```
+#[macro_export]
+macro_rules! let_settings {
+    (
+        { $( $meth:ident $( : $var:ident )? ),+ $(,)? } = $target:expr ;
+    ) => {
+        $(
+            $crate::__let_settings_single!($meth $(, $var)? , $target);
+        )+
+    };
+}

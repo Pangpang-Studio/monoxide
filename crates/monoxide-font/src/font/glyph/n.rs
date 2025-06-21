@@ -3,20 +3,13 @@ use monoxide_script::{
     ast::{FontContext, SimpleGlyph},
     curl,
     dsl::{IntoOutline, IntoOutlineExt, SpiroBuilder},
-    flat, g4,
+    flat, g4, let_settings,
 };
 
 use crate::font::{dir::Dir, shape::Rect};
 
 pub fn n(fcx: &FontContext) -> SimpleGlyph {
-    let s = fcx.settings();
-
-    let mid = s.mid();
-    let mih = s.mih();
-    let ovs = s.ovs();
-    let sbl = s.sbl();
-    let stw = s.stw();
-    let xh = s.xh();
+    let_settings! { {mid, mih, ovs, sbl, stw, xh} = fcx.settings(); }
 
     let hstw = stw / 2.;
     let sbl1 = sbl + hstw;
