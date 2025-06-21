@@ -3,17 +3,11 @@ use monoxide_script::{
     ast::{FontContext, SimpleGlyph},
     curl,
     dsl::{IntoOutline, IntoOutlineExt, SpiroBuilder},
-    flat, g4,
+    flat, g4, let_settings,
 };
 
 pub fn o(fcx: &FontContext) -> SimpleGlyph {
-    let s = fcx.settings();
-
-    let mid = s.mid();
-    let mih = s.mih();
-    let ovs = s.ovs();
-    let sbl = s.sbl();
-    let stw = s.stw();
+    let_settings! { {mid, mih, ovs, sbl, stw} = fcx.settings(); }
 
     let hstw = stw / 2.;
 

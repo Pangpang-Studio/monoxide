@@ -2,7 +2,7 @@ use monoxide_script::{
     ast::{FontContext, SimpleGlyph},
     corner,
     dsl::{IntoOutlineExt, SpiroBuilder},
-    g4,
+    g4, let_settings,
 };
 
 use crate::font::{
@@ -11,15 +11,7 @@ use crate::font::{
 };
 
 pub fn i(fcx: &FontContext) -> SimpleGlyph {
-    let s = fcx.settings();
-
-    let cap = s.cap();
-    let mid = s.mid();
-    let sbl = s.sbl();
-    let sbr = s.sbr();
-    let stw = s.stw();
-    let xh = s.xh();
-    let dtr = s.dtr();
+    let_settings! { {cap, dtr, mid, sbl, sbr, stw, xh} = fcx.settings(); }
 
     let hstw = stw / 2.;
 
