@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, hash::Hash, sync::Arc, time::SystemTime};
+use std::{collections::BTreeMap, sync::Arc, time::SystemTime};
 
 use indexmap::IndexSet;
 use monoxide_curves::{
@@ -18,7 +18,6 @@ use crate::{
     ast::{FontContext, GlyphEntry, OutlineExpr},
     trace::EvaluationTracer,
     util::RefIdArc,
-    FontParamSettings,
 };
 
 pub struct AuxiliarySettings {
