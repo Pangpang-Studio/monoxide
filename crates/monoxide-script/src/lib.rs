@@ -4,7 +4,6 @@ pub mod eval;
 pub mod trace;
 mod util;
 
-
 use serde::{Deserialize, Serialize};
 
 /// Defines the basic em parameters for the font.
@@ -95,6 +94,11 @@ impl FontParamSettings {
     /// The horizontal midline of a half-width character.
     pub const fn mid(&self) -> f64 {
         self.wth() / 2.
+    }
+
+    /// The vertical midline of the letter `x`.
+    pub const fn mih(&self) -> f64 {
+        self.xh() / 2.
     }
 
     /// The ascender.
