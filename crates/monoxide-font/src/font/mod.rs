@@ -22,7 +22,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         cap_height: 0.7,
         stroke_width: 0.144 * width,
         side_bearing: 0.15 * width,
-        overshoot: x_height / 50.,
+        overshoot: x_height / 40.,
         dot_size: 0.25 * width,
     };
 
