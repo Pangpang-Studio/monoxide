@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use monoxide_curves::point::Point2D;
 use monoxide_script::{
-    ast::{FontContext, SimpleGlyph},
+    ast::{FontContext, OutlineExpr, SimpleGlyph},
     curl,
     dsl::{IntoOutline, IntoOutlineExt, SpiroBuilder},
     flat, g4, let_settings,
@@ -8,42 +10,71 @@ use monoxide_script::{
 
 pub fn o(fcx: &FontContext) -> SimpleGlyph {
     let_settings! { {mid, mih, ovs, sbl, stw} = fcx.settings(); }
-
     let hstw = stw / 2.;
-
     SimpleGlyph::new()
-        .outline(o_shape((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
+        .outline(OShape::new((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
 }
 
-pub fn o_shape(
-    center: impl Into<Point2D>,
-    radii: impl Into<Point2D>,
-    ovs: f64,
-) -> impl IntoOutline {
-    let Point2D { x, y } = center.into();
-    let Point2D { x: rx, y: ry } = radii.into();
+pub struct OShape {
+    pub center: Point2D,
+    pub radii: Point2D,
+    pub ovs: f64,
+}
 
-    let mid_curve_w = 0.85 * rx;
-    let mid_curve_h = (5. / 16.) * ry;
-    let end_curve_h = (13. / 16.) * ry;
+impl OShape {
+    pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
+        Self {
+            center: center.into(),
+            radii: radii.into(),
+            ovs,
+        }
+    }
 
-    let y_hi = y + ry;
-    let y_lo = y - ry;
+    pub const fn mid_curve_w(&self) -> f64 {
+        0.85 * self.radii.x
+    }
 
-    SpiroBuilder::closed().insts([
-        // Bottom arc
-        g4!(x - mid_curve_w, y_lo + mid_curve_h,),
-        g4!(x, y_lo - ovs),
-        g4!(x + mid_curve_w, y_lo + mid_curve_h),
-        // Right side
-        flat!(x + rx, y_lo + end_curve_h),
-        curl!(x + rx, y_hi - end_curve_h),
-        // Top arc
-        g4!(x + mid_curve_w, y_hi - mid_curve_h),
-        g4!(x, y_hi + ovs),
-        g4!(x - mid_curve_w, y_hi - mid_curve_h),
-        // Left side
-        flat!(x - rx, y_hi - end_curve_h),
-        curl!(x - rx, y_lo + end_curve_h),
-    ])
+    pub const fn mid_curve_h(&self) -> f64 {
+        (5. / 16.) * self.radii.y
+    }
+
+    pub const fn end_curve_h(&self) -> f64 {
+        (13. / 16.) * self.radii.y
+    }
+}
+
+impl IntoOutline for OShape {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        let Self {
+            center: Point2D { x, y },
+            radii: Point2D { x: rx, y: ry },
+            ovs,
+        } = self;
+
+        let mid_curve_w = self.mid_curve_w();
+        let mid_curve_h = self.mid_curve_h();
+        let end_curve_h = self.end_curve_h();
+
+        let y_hi = y + ry;
+        let y_lo = y - ry;
+
+        SpiroBuilder::closed()
+            .insts([
+                // Bottom arc
+                g4!(x - mid_curve_w, y_lo + mid_curve_h,),
+                g4!(x, y_lo - ovs),
+                g4!(x + mid_curve_w, y_lo + mid_curve_h),
+                // Right side
+                flat!(x + rx, y_lo + end_curve_h),
+                curl!(x + rx, y_hi - end_curve_h),
+                // Top arc
+                g4!(x + mid_curve_w, y_hi - mid_curve_h),
+                g4!(x, y_hi + ovs),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h),
+                // Left side
+                flat!(x - rx, y_hi - end_curve_h),
+                curl!(x - rx, y_lo + end_curve_h),
+            ])
+            .into_outline()
+    }
 }
