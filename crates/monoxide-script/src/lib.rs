@@ -136,7 +136,7 @@ macro_rules! __let_settings_single {
 /// ```no_run
 /// # use monoxide_script::let_settings;
 /// # let s: monoxide_script::FontParamSettings = todo!();
-/// let_settings! { { mid, mih, ovs: o} = s; }
+/// let_settings! { { mid, mih, ovs: o } = s; }
 /// ```
 ///
 /// ... will expand to:

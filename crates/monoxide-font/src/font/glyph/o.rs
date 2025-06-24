@@ -9,7 +9,7 @@ use monoxide_script::{
 };
 
 pub fn o(fcx: &FontContext) -> SimpleGlyph {
-    let_settings! { {mid, mih, ovs, sbl, stw} = fcx.settings(); }
+    let_settings! { { mid, mih, ovs, sbl, stw } = fcx.settings(); }
     let hstw = stw / 2.;
     SimpleGlyph::new()
         .outline(OShape::new((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
@@ -61,7 +61,7 @@ impl IntoOutline for OShape {
         SpiroBuilder::closed()
             .insts([
                 // Bottom arc
-                g4!(x - mid_curve_w, y_lo + mid_curve_h,),
+                g4!(x - mid_curve_w, y_lo + mid_curve_h),
                 g4!(x, y_lo - ovs),
                 g4!(x + mid_curve_w, y_lo + mid_curve_h),
                 // Right side
