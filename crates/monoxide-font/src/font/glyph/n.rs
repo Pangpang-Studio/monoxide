@@ -9,7 +9,7 @@ use monoxide_script::{
 use crate::font::{dir::Dir, glyph::o::OShape, shape::Rect};
 
 pub fn n(fcx: &FontContext) -> SimpleGlyph {
-    let_settings! { {mid, mih, ovs, sbl, stw, xh} = fcx.settings(); }
+    let_settings! { { mid, mih, ovs, sbl, stw, xh } = fcx.settings(); }
 
     let hstw = stw / 2.;
     let sbl1 = sbl + hstw;

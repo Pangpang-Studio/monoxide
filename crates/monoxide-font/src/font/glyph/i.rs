@@ -11,7 +11,7 @@ use crate::font::{
 };
 
 pub fn i(fcx: &FontContext) -> SimpleGlyph {
-    let_settings! { {cap, dtr, mid, sbl, sbr, stw, xh} = fcx.settings(); }
+    let_settings! { { cap, dtr, mid, sbl, sbr, stw, xh } = fcx.settings(); }
 
     let hstw = stw / 2.;
 
