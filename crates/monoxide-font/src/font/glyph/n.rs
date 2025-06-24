@@ -6,7 +6,7 @@ use monoxide_script::{
     flat, g4, let_settings,
 };
 
-use crate::font::{dir::Dir, shape::Rect};
+use crate::font::{dir::Dir, glyph::o::OShape, shape::Rect};
 
 pub fn n(fcx: &FontContext) -> SimpleGlyph {
     let_settings! { {mid, mih, ovs, sbl, stw, xh} = fcx.settings(); }
@@ -20,13 +20,15 @@ pub fn n(fcx: &FontContext) -> SimpleGlyph {
 }
 
 fn n_curl(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> impl IntoOutline {
-    let Point2D { x, y } = center.into();
-    let Point2D { x: rx, y: ry } = radii.into();
+    let o_shape @ OShape {
+        center: Point2D { x, y },
+        radii: Point2D { x: rx, y: ry },
+        ..
+    } = OShape::new(center, radii, ovs);
 
-    // TODO: Same values as `o_shape`, consider extracting.
-    let mid_curve_w = 0.85 * rx;
-    let mid_curve_h = (5. / 16.) * ry;
-    let end_curve_h = (13. / 16.) * ry;
+    let mid_curve_w = o_shape.mid_curve_w();
+    let mid_curve_h = o_shape.mid_curve_h();
+    let end_curve_h = o_shape.end_curve_h();
 
     let y_hi = y + ry;
 
