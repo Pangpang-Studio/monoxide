@@ -179,20 +179,17 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
 /// Check if the webui or playground server has exited. If so, return true
 fn check_exit_status(shutdown_state: &Arc<Mutex<ShutdownState>>) -> bool {
     let mut st = shutdown_state.lock().unwrap();
-    if let Some(ref mut child) = st.webui_child {
-        if let Some(status) = child.try_wait().unwrap() {
-            tracing::error!("Webui server exited with status {}. Exiting...", status);
-            return true;
-        }
+    if let Some(ref mut child) = st.webui_child
+        && let Some(status) = child.try_wait().unwrap()
+    {
+        tracing::error!("Webui server exited with {status}. Exiting...");
+        return true;
     }
-    if let Some(ref mut child) = st.playground_child {
-        if let Some(status) = child.try_wait().unwrap() {
-            tracing::error!(
-                "Playground server exited with status {}. Exiting...",
-                status
-            );
-            return true;
-        }
+    if let Some(ref mut child) = st.playground_child
+        && let Some(status) = child.try_wait().unwrap()
+    {
+        tracing::error!("Playground server exited with {status}. Exiting...");
+        return true;
     }
     false
 }
@@ -259,7 +256,7 @@ fn build_webui(pnpm: &str, dir: &Path) {
     cmd.current_dir(dir);
     let status = cmd.status().expect("Failed to run pnpm build");
     if !status.success() {
-        panic!("Failed to build playground, status: {}", status);
+        panic!("Failed to build playground, status: {status}");
     }
 }
 
@@ -274,7 +271,7 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
         cmd.arg("dev")
             .arg("--host=127.0.0.1")
             .arg("--cors")
-            .arg(format!("--port={}", port))
+            .arg(format!("--port={port}"))
             .arg("--strictPort")
             .arg("--clearScreen=false")
             .current_dir(dir)

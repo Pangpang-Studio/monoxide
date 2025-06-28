@@ -1,4 +1,4 @@
-use super::{fword, ufword, ITable};
+use super::{ITable, fword, ufword};
 
 #[derive(Debug)]
 pub struct LongHorizontalMetric {

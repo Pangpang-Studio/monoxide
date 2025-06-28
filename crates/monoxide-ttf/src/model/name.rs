@@ -7,8 +7,8 @@ pub use lang_id_ms::MSLangID;
 use widestring::U16String;
 
 use super::{
-    encoding::{PlatformId, UnicodePlatformEncoding},
     ITable,
+    encoding::{PlatformId, UnicodePlatformEncoding},
 };
 
 /// The version of the name table. Only version 1 is supported by this library.

@@ -149,7 +149,7 @@ fn debug_spiro_points<C: CurveDebugger>(
             Some(idx) => dbg.point(
                 crate::debug::DebugPointKind::Curve,
                 at,
-                format_args!("spiro({})", idx),
+                format_args!("spiro({idx})"),
             ),
             None => dbg.point(crate::debug::DebugPointKind::Curve, at, format_args!("")),
         };

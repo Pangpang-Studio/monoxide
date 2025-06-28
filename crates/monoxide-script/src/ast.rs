@@ -1,12 +1,13 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use monoxide_curves::{point::Point2D, stroke::TangentOverride, CubicBezier, SpiroCurve};
+use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D, stroke::TangentOverride};
 
-use crate::{dsl::IntoOutline, FontParamSettings};
+use crate::{FontParamSettings, dsl::IntoOutline};
 
 #[derive(Debug, Clone)]
 pub struct FontContext {
-    /// The default glyph, used for characters that do not have a glyph assigned.
+    /// The default glyph, used for characters that do not have a glyph
+    /// assigned.
     ///
     /// This glyph should usually be the tofu glyph, and additionally assigned
     /// to U+FFFD REPLACEMENT CHARACTER.

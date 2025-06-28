@@ -73,7 +73,7 @@ impl Point for Point2D {
         match axis {
             0 => Self::new(1.0, 0.0),
             1 => Self::new(0.0, 1.0),
-            _ => panic!("Invalid axis for Point2D: {}", axis),
+            _ => panic!("Invalid axis for Point2D: {axis}"),
         }
     }
 
@@ -81,7 +81,7 @@ impl Point for Point2D {
         match axis {
             0 => Self::new(value, self.y),
             1 => Self::new(self.x, value),
-            _ => panic!("Invalid axis for Point2D: {}", axis),
+            _ => panic!("Invalid axis for Point2D: {axis}"),
         }
     }
 
@@ -128,7 +128,8 @@ impl Mul<Point2D> for f64 {
     }
 }
 
-/// This is a component-wise multiplication of two points (aka Hadamard product).
+/// This is a component-wise multiplication of two points (aka Hadamard
+/// product).
 ///
 /// Since we don't have a better operator for this, we will just reuse the
 /// multiplication operator `*` on this.

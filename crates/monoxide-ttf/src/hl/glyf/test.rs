@@ -1,5 +1,5 @@
 #![cfg(test)]
-use crate::hl::glyf::{decode, encode, QuadBezier};
+use crate::hl::glyf::{QuadBezier, decode, encode};
 
 #[test]
 fn test_points_iter_1() {
