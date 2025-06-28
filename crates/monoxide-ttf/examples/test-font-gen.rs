@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use monoxide_ttf::{
     hl::{self, cmap::SeqMapping},
     model::{
-        cmap,
+        Fixed, cmap,
         glyf::{
             self,
             simple::{Coord, OutlineFlag, SimpleGlyph},
@@ -11,7 +11,7 @@ use monoxide_ttf::{
         head::{self, HeaderFlags, MacStyle},
         hhea, hmtx, name,
         os2::{self, CodePageRange, UnicodeRange},
-        post, Fixed,
+        post,
     },
 };
 

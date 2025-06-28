@@ -1,7 +1,7 @@
 use bytes::BufMut;
 use thiserror::Error;
 
-use super::{fword, ITable};
+use super::{ITable, fword};
 
 #[derive(Debug, Clone)]
 pub struct GlyphCommon {

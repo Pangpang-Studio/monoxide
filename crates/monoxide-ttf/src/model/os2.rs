@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use bytes::BufMut;
 
-use super::{fword, ufword, ITable};
+use super::{ITable, fword, ufword};
 
 #[repr(u16)]
 #[derive(Clone, Copy, PartialEq, Eq)]

@@ -270,7 +270,7 @@ fn test_cubic_bezier_interpolation() {
         })
         .collect();
 
-    println!("{:?}", points);
+    println!("{points:?}");
     assert_eq!(points.len(), 22);
     assert_eq!(points[0], (0., 0.));
     assert_eq!(points[1], (0.1, 0.));

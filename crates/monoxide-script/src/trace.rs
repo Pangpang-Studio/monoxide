@@ -1,6 +1,6 @@
 //! Provides trait for tracing the evaluation of a glyph
 
-use monoxide_curves::{debug::CurveDebugger, point::Point2D, CubicBezier};
+use monoxide_curves::{CubicBezier, debug::CurveDebugger, point::Point2D};
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
 pub trait EvaluationTracer {

@@ -1,6 +1,6 @@
 //! The `post` table.
 
-use super::{fword, Fixed, ITable};
+use super::{Fixed, ITable, fword};
 
 pub struct TableV3 {
     // version: u32 = 0x00030000,

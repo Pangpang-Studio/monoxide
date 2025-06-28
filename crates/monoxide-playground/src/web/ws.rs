@@ -118,7 +118,7 @@ async fn send_ws_task(
             super::RenderedFontState::Error(error) => {
                 debug!("error received: {:?}", error);
                 let msg = WsServerMsg::Error {
-                    msg: format!("{:?}", error),
+                    msg: format!("{error:?}"),
                 };
                 let msg = serde_json::to_string(&msg)?;
                 ws.send(Message::Text(msg.into())).await?;

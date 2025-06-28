@@ -2,15 +2,15 @@ use std::{collections::BTreeMap, sync::Arc, time::SystemTime};
 
 use indexmap::IndexSet;
 use monoxide_curves::{
+    CubicBezier,
     point::Point2D,
     stroke::{StrokeResult, TangentOverride},
-    CubicBezier,
 };
 use monoxide_ttf::{
     hl,
     model::{
-        cmap, fword, glyf, head, hhea, hmtx, name, os2, post, ufword, FontFile, Outline,
-        TrueTypeTables,
+        FontFile, Outline, TrueTypeTables, cmap, fword, glyf, head, hhea, hmtx, name, os2, post,
+        ufword,
     },
 };
 

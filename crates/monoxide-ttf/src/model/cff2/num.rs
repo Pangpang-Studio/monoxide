@@ -139,7 +139,7 @@ impl Cff2Decimal {
                 let mut buf = [0u8; 39];
                 let buf_len = buf.len();
                 let mut write_buf = &mut buf[..];
-                write!(&mut write_buf, "{}", mantissa).unwrap();
+                write!(&mut write_buf, "{mantissa}").unwrap();
                 let written_len = buf_len - write_buf.len();
                 for &digit in &buf[..written_len] {
                     w.write_nibble(digit - b'0');
@@ -154,7 +154,7 @@ impl Cff2Decimal {
                 let mut buf = [0u8; 10];
                 let buf_len = buf.len();
                 let mut write_buf = &mut buf[..];
-                write!(&mut write_buf, "{}", scale).unwrap();
+                write!(&mut write_buf, "{scale}").unwrap();
                 let written_len = buf_len - write_buf.len();
                 for &digit in &buf[..written_len] {
                     w.write_nibble(digit - b'0');

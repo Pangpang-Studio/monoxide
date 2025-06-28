@@ -180,7 +180,9 @@ pub enum SimpleGlyphVerifyError {
     TooManyCoords { axis: char, count: usize },
     #[error("Too few coordinates in axis {axis}, expecting at least {count}")]
     TooFewCoords { axis: char, count: usize },
-    #[error("Format mismatch for coordinate {idx} in axis {axis}, expected is_short={expected}, got is_short={got}")]
+    #[error(
+        "Format mismatch for coordinate {idx} in axis {axis}, expected is_short={expected}, got is_short={got}"
+    )]
     CoordFormatMismatch {
         axis: char,
         idx: usize,

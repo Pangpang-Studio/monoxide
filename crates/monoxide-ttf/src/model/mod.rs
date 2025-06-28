@@ -304,14 +304,11 @@ fn assert_table_invariants(actual_offset: usize, tbl: &TableRecord, table_tag_st
     debug_assert_eq!(
         actual_offset % 4,
         0,
-        "table {} should be aligned to 4 bytes, offset={}",
-        table_tag_string,
-        actual_offset
+        "table {table_tag_string} should be aligned to 4 bytes, offset={actual_offset}"
     );
     debug_assert_eq!(
         actual_offset, tbl.offset as usize,
-        "offset mismatch for table {}",
-        table_tag_string
+        "offset mismatch for table {table_tag_string}"
     );
 }
 

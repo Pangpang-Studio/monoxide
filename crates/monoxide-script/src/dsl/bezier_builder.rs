@@ -99,11 +99,10 @@ impl BezierBuilder {
 
     pub fn build(mut self) -> OutlineExpr {
         let mut b = CubicBezierBuilder::new(self.start);
-        if self.is_closed {
-            if let Some(BezierInst::Line(pt) | BezierInst::Curve(_, _, pt)) = self.insts.last_mut()
-            {
-                *pt = self.start;
-            }
+        if self.is_closed
+            && let Some(BezierInst::Line(pt) | BezierInst::Curve(_, _, pt)) = self.insts.last_mut()
+        {
+            *pt = self.start;
         }
         for inst in self.insts {
             match inst {
