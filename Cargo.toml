@@ -1,9 +1,9 @@
 [package]
 name = "monoxide"
-version = "0.0.1"
-edition = "2021"
-homepage = "https://github.com/rami3l/monoxide"
-repository = "https://github.com/rami3l/monoxide"
+version.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
 readme = "README.md"
 
 [dependencies]
@@ -40,6 +40,12 @@ members = [
     "crates/monoxide-ttf",
     "xtask",
 ]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+homepage = "https://github.com/Pangpang-Studio/monoxide"
+repository = "https://github.com/Pangpang-Studio/monoxide"
 
 [workspace.dependencies]
 # Monoxide itself
