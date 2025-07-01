@@ -1,31 +1,38 @@
-use std::{hash::Hash, sync::Arc};
+use std::hash::Hash;
 
-/// A wrapper around [`Arc`] that uses the underlying pointer for comparison.
+/// A borrowed pointer which uses the underlying pointer for equality.
 #[derive(Debug)]
-pub struct RefIdArc<T>(Arc<T>);
+pub struct RefId<'a, T>(&'a T);
 
-impl<T> PartialEq for RefIdArc<T> {
+impl<'a, T> RefId<'a, T> {
+    /// Create a new `RefId` from a reference.
+    pub fn new(reference: impl Into<&'a T>) -> Self {
+        RefId(reference.into())
+    }
+
+    /// Get the underlying reference.
+    pub fn as_ref(&self) -> &'a T {
+        self.0
+    }
+}
+
+impl<'a, T> From<&'a T> for RefId<'a, T> {
+    fn from(reference: &'a T) -> Self {
+        RefId(reference)
+    }
+}
+
+impl<'a, T> PartialEq for RefId<'a, T> {
     fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0)
+        std::ptr::eq(self.0, other.0)
     }
 }
 
-impl<T> Eq for RefIdArc<T> {}
+impl<'a, T> Eq for RefId<'a, T> {}
 
-impl<T> Hash for RefIdArc<T> {
+impl<'a, T> Hash for RefId<'a, T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        state.write_usize(Arc::as_ptr(&self.0) as usize)
-    }
-}
-
-impl<T> From<Arc<T>> for RefIdArc<T> {
-    fn from(value: Arc<T>) -> Self {
-        RefIdArc(value)
-    }
-}
-
-impl<T> From<RefIdArc<T>> for Arc<T> {
-    fn from(value: RefIdArc<T>) -> Self {
-        value.0
+        let ptr = self.0 as *const T;
+        ptr.hash(state);
     }
 }

@@ -1,6 +1,5 @@
 use std::{collections::BTreeMap, sync::Arc, time::SystemTime};
 
-use indexmap::IndexSet;
 use monoxide_curves::{
     CubicBezier,
     point::Point2D,
@@ -15,10 +14,12 @@ use monoxide_ttf::{
 };
 
 use crate::{
-    ast::{FontContext, GlyphEntry, OutlineExpr},
+    ast::{FontContext, OutlineExpr},
+    eval::layout::layout_glyphs,
     trace::EvaluationTracer,
-    util::RefIdArc,
 };
+
+mod layout;
 
 pub struct AuxiliarySettings {
     /// Points per em when converting floating-point point data into
@@ -27,59 +28,56 @@ pub struct AuxiliarySettings {
     pub font_name: String,
 }
 
+pub enum SerializedGlyphEntryKind {
+    /// A simple glyph represented as a number of outlines
+    Simple(Vec<Arc<OutlineExpr>>),
+    /// A compound glyph composed of multiple components, represented here as
+    /// component indices.
+    ///
+    /// TODO: transformations of glyphs
+    Compound(Vec<usize>),
+}
+
+pub struct SerializedGlyph {
+    pub kind: SerializedGlyphEntryKind,
+    pub advance: Option<f64>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum HighEvalError {
+    #[error("Tofu glyph is unset")]
+    TofuUnset,
+}
+
 /// A [`FontContext`] with only reachable glyphs and the layout determined.
 ///
 /// The implementor should ensure that `glyph_list[0]` is the TOFU glyph.
 pub struct SerializedFontContext {
-    pub glyph_list: Vec<Arc<GlyphEntry>>,
+    pub glyph_list: Vec<SerializedGlyph>,
     pub cmap: BTreeMap<char, usize>,
 }
 
-pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> monoxide_ttf::model::FontFile {
-    let scx = layout_glyphs(cx);
+pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> Result<FontFile, HighEvalError> {
+    let scx = layout_glyphs(cx)?;
     if scx.glyph_list.len() == 1 {
         panic!("Windows font reader disallow single-glyph fonts")
     }
     let glyphs = eval_glyphs(aux, &scx);
-    create_tables(cx, &scx, aux, glyphs)
-}
-
-/// Lays out all glyphs referenced within a [`FontContext`] into a linear list.
-pub fn layout_glyphs(cx: &FontContext) -> SerializedFontContext {
-    let mut res = IndexSet::<RefIdArc<GlyphEntry>>::new();
-
-    let tofu_id = res
-        .insert_full(cx.tofu.clone().expect("Tofu unset").into())
-        .0;
-    assert_eq!(tofu_id, 0, "Tofu glyph must be the first glyph in the font");
-
-    let mut cmap = BTreeMap::new();
-    for (&c, g) in &cx.cmap {
-        let id = res.insert_full(g.clone().into()).0;
-        cmap.insert(c, id);
-
-        if let GlyphEntry::Compound(_) = &**g {
-            todo!("DFS on compound glyphs");
-        }
-    }
-
-    SerializedFontContext {
-        glyph_list: res.into_iter().map(|x| x.into()).collect(),
-        cmap,
-    }
+    let res = create_tables(cx, &scx, aux, glyphs);
+    Ok(res)
 }
 
 fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<glyf::Glyph> {
     let mut glyphs = vec![];
     for glyph in scx.glyph_list.iter() {
-        match &**glyph {
-            crate::ast::GlyphEntry::Simple(simple_glyph) => {
-                let mut outlines = vec![];
-                for it in &simple_glyph.outlines {
-                    eval_outline(it, &mut outlines, &mut ()).expect("Eval error!");
+        match &glyph.kind {
+            SerializedGlyphEntryKind::Simple(outlines) => {
+                let mut res_outlines = vec![];
+                for it in outlines {
+                    eval_outline(it, &mut res_outlines, &mut ()).expect("Eval error!");
                     // FIXME: handle errors
                 }
-                let quads = outlines
+                let quads = res_outlines
                     .into_iter()
                     .map(|x| monoxide_curves::convert::cube_to_quad(x, 0.00001))
                     .map(|x| x.cast(|x| x * (aux.point_per_em as f64)))
@@ -94,7 +92,7 @@ fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<glyf
                 let simple_glyph = hl::glyf::encode(&quads).unwrap();
                 glyphs.push(glyf::Glyph::Simple(simple_glyph));
             }
-            crate::ast::GlyphEntry::Compound(..) => todo!("Compound is not supported"),
+            SerializedGlyphEntryKind::Compound(..) => todo!("Compound is not supported"),
         }
     }
     glyphs

@@ -13,10 +13,10 @@ pub struct FontContext {
     /// to U+FFFD REPLACEMENT CHARACTER.
     ///
     /// Finalizing the context without setting this will result in an error.
-    pub(crate) tofu: Option<Arc<GlyphEntry>>,
+    pub(crate) tofu: Option<Glyph>,
     /// The regular character mapping. This mapping is used when no other
     /// replacements override the characters.
-    pub(crate) cmap: BTreeMap<char, Arc<GlyphEntry>>,
+    pub(crate) cmap: BTreeMap<char, Glyph>,
     pub(crate) settings: FontParamSettings,
 }
 
@@ -30,14 +30,14 @@ impl FontContext {
     }
 
     /// Set the default glyph for the font. Also sets the tofu glyph to U+FFFD.
-    pub fn set_tofu(&mut self, tofu: Arc<GlyphEntry>) {
+    pub fn set_tofu(&mut self, tofu: Glyph) {
         self.tofu = Some(tofu.clone());
         self.cmap.insert('\u{FFFD}', tofu);
     }
 
     /// Set the glyph of the given character. Returns the previous glyph
     /// if it was set, otherwise `None`.
-    pub fn set_mapping(&mut self, ch: char, glyph: Arc<GlyphEntry>) -> Option<Arc<GlyphEntry>> {
+    pub fn set_mapping(&mut self, ch: char, glyph: Glyph) -> Option<Glyph> {
         self.cmap.insert(ch, glyph)
     }
 
@@ -46,42 +46,55 @@ impl FontContext {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GlyphId(pub usize);
+/// An opaque glyph type that cannot be modified once built.
+///
+/// For building a [`Glyph`], see [`GlyphBuilder`], or [`Glyph::build()`].
+#[derive(Debug, Clone, Default)]
+pub struct Glyph(Arc<GlyphInner>);
 
-#[derive(Debug, Clone)]
-pub enum GlyphEntry {
-    Simple(SimpleGlyph),
-    Compound(CompoundGlyph),
-}
-
-impl From<SimpleGlyph> for GlyphEntry {
-    fn from(glyph: SimpleGlyph) -> Self {
-        GlyphEntry::Simple(glyph)
+impl Glyph {
+    /// Create a new glyph using [`GlyphBuilder`].
+    pub fn build() -> GlyphBuilder {
+        GlyphBuilder::new()
     }
-}
 
-impl From<CompoundGlyph> for GlyphEntry {
-    fn from(glyph: CompoundGlyph) -> Self {
-        GlyphEntry::Compound(glyph)
+    pub(crate) fn from_inner(inner: GlyphInner) -> Self {
+        Glyph(Arc::new(inner))
+    }
+
+    pub(crate) fn inner(&self) -> &GlyphInner {
+        &self.0
     }
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct SimpleGlyph {
+pub(crate) struct GlyphInner {
+    /// The outlines contained by this glyph.
+    ///
+    /// If both `outlines` and `subglyphs`
     pub outlines: Vec<Arc<OutlineExpr>>,
+
+    /// The other glyphs that are inserted into this glyph.
+    pub components: Vec<Glyph>,
+
     /// The advance width of the glyph. If unset, uses the default advance width
     /// of the font.
     pub advance: Option<f64>,
 }
 
-impl SimpleGlyph {
+/// The type to use for building a glyph.
+#[derive(Debug, Clone, Default)]
+pub struct GlyphBuilder {
+    inner: GlyphInner,
+}
+
+impl GlyphBuilder {
     pub fn new() -> Self {
         Self::default()
     }
 
     pub fn outline(mut self, outline: impl IntoOutline) -> Self {
-        self.outlines.push(outline.into_outline());
+        self.inner.outlines.push(outline.into_outline());
         self
     }
 
@@ -93,8 +106,12 @@ impl SimpleGlyph {
     }
 
     pub fn advance(mut self, advance: impl Into<Option<f64>>) -> Self {
-        self.advance = advance.into();
+        self.inner.advance = advance.into();
         self
+    }
+
+    pub fn build(self) -> Glyph {
+        Glyph(Arc::new(self.inner))
     }
 }
 
@@ -116,12 +133,4 @@ impl OutlineExpr {
     pub fn stroked(self: Arc<Self>, width: f64) -> Arc<Self> {
         Arc::new(OutlineExpr::Stroked(self, width))
     }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct CompoundGlyph {
-    /// Index into the glyphs array of the font context.
-    ///
-    /// TODO: compound glyphs can transform their components
-    pub components: Vec<Arc<GlyphEntry>>,
 }
