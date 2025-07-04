@@ -1,5 +1,4 @@
 mod model;
-mod svg;
 mod web;
 
 use std::{fmt::Debug, sync::Arc};
