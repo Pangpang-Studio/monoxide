@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use monoxide_curves::point::Point2D;
 use monoxide_script::{
-    ast::{OutlineExpr, SimpleGlyph},
+    ast::{Glyph, OutlineExpr},
     curl,
     dsl::{IntoOutline, IntoOutlineExt, SpiroBuilder},
     flat, g4, let_settings,
@@ -10,12 +10,13 @@ use monoxide_script::{
 
 use crate::InputContext;
 
-pub fn o(fcx: &InputContext) -> SimpleGlyph {
+pub fn o(fcx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw } = fcx.settings(); }
 
     let hstw = stw / 2.;
-    SimpleGlyph::new()
+    Glyph::build()
         .outline(OShape::new((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
+        .build()
 }
 
 pub struct OShape {

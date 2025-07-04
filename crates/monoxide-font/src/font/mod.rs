@@ -8,8 +8,6 @@ mod glyph;
 mod math;
 mod shape;
 
-use std::sync::Arc;
-
 use monoxide_script::{FontParamSettings, ast::FontContext};
 
 pub struct InputContext {
@@ -42,19 +40,19 @@ pub fn make_font() -> Result<FontContext, ()> {
     };
 
     let glyphs = [
-        ('c', (glyph::c(&cx).into())),
-        ('i', (glyph::i(&cx).into())),
-        ('n', (glyph::n(&cx).into())),
-        ('o', (glyph::o(&cx).into())),
+        ('c', glyph::c(&cx)),
+        ('i', glyph::i(&cx)),
+        ('n', glyph::n(&cx)),
+        ('o', glyph::o(&cx)),
     ];
-    let tofu = Arc::new(glyph::tofu(&cx).into());
+    let tofu = glyph::tofu(&cx);
 
     // This is the state
     let mut fcx = FontContext::new(settings);
     fcx.set_tofu(tofu);
 
     for (ch, gl) in glyphs {
-        fcx.set_mapping(ch, Arc::new(gl));
+        fcx.set_mapping(ch, gl);
     }
     Ok(fcx)
 }
