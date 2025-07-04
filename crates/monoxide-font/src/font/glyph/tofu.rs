@@ -4,7 +4,7 @@ use monoxide_script::{
     dsl::{IntoOutlineExt, SpiroBuilder},
 };
 
-use crate::InputContext;
+use super::InputContext;
 
 pub fn tofu(fcx: &InputContext) -> Glyph {
     let h = fcx.settings().cap();
