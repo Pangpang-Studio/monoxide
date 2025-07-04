@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     Json,
     extract::{Path, State},
@@ -6,8 +8,8 @@ use axum::{
 };
 use monoxide_curves::debug::CurveDebugger;
 use monoxide_script::{
-    ast::{FontContext, SimpleGlyph},
-    eval::eval_outline,
+    ast::{FontContext, OutlineExpr},
+    eval::{SerializedGlyphKind, eval_outline},
     trace::EvaluationTracer,
 };
 
@@ -33,19 +35,20 @@ pub async fn glyph_detail(
         crate::web::RenderedFontState::Font(cx, ser_fcx) => (cx, ser_fcx),
     };
 
-    let glyph = &**ser_fcx.glyph_list.get(id).ok_or_else(|| {
+    let glyph = ser_fcx.glyph_list.get(id).ok_or_else(|| {
         Response::builder()
             .status(StatusCode::NOT_FOUND)
             .body("Glyph not found".into())
             .unwrap()
     })?;
 
-    match glyph {
-        monoxide_script::ast::GlyphEntry::Simple(simple_glyph) => {
-            let detail = simple_glyph_to_detail(id, cx, simple_glyph);
+    let advance = glyph.advance.unwrap_or(cx.settings().width);
+    match &glyph.kind {
+        SerializedGlyphKind::Simple(simple_glyph) => {
+            let detail = simple_glyph_to_detail(id, cx, simple_glyph, advance);
             Ok(Json(detail))
         }
-        monoxide_script::ast::GlyphEntry::Compound(_compound_glyph) => {
+        SerializedGlyphKind::Compound(_compound_glyph) => {
             // we don't support compound glyphs yet
             Err(Response::builder()
                 .status(StatusCode::NOT_IMPLEMENTED)
@@ -58,7 +61,8 @@ pub async fn glyph_detail(
 fn simple_glyph_to_detail(
     id: usize,
     cx: &FontContext,
-    glyph: &monoxide_script::ast::SimpleGlyph,
+    outlines: &Vec<Arc<OutlineExpr>>,
+    advance: f64,
 ) -> GlyphDetail {
     let mut tracer = GlyphDetailTracer::new();
 
@@ -66,7 +70,7 @@ fn simple_glyph_to_detail(
     let mut out_ids = vec![];
     let mut out_errs = vec![];
 
-    for outline in &glyph.outlines {
+    for outline in outlines {
         let id_or_err = eval_outline(outline, &mut output_outline, &mut tracer);
         match id_or_err {
             Ok(id) => out_ids.push(id),
@@ -83,7 +87,7 @@ fn simple_glyph_to_detail(
         error: None,
         advance: cx.settings().width,
     };
-    let guidelines = make_guidelines(cx, glyph);
+    let guidelines = make_guidelines(cx, advance);
 
     GlyphDetail {
         overview,
@@ -94,7 +98,7 @@ fn simple_glyph_to_detail(
     }
 }
 
-fn make_guidelines(cx: &FontContext, glyph: &SimpleGlyph) -> Guidelines {
+fn make_guidelines(cx: &FontContext, advance: f64) -> Guidelines {
     let settings = cx.settings();
     Guidelines {
         h: vec![
@@ -121,7 +125,7 @@ fn make_guidelines(cx: &FontContext, glyph: &SimpleGlyph) -> Guidelines {
                 label: None,
             },
             Guideline {
-                pos: glyph.advance.unwrap_or(settings.width),
+                pos: advance,
                 label: Some("advance".to_string()),
             },
         ],

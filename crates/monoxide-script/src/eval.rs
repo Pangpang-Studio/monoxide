@@ -15,11 +15,11 @@ use monoxide_ttf::{
 
 use crate::{
     ast::{FontContext, OutlineExpr},
-    eval::layout::layout_glyphs,
     trace::EvaluationTracer,
 };
 
 mod layout;
+pub use layout::layout_glyphs;
 
 pub struct AuxiliarySettings {
     /// Points per em when converting floating-point point data into
@@ -28,7 +28,7 @@ pub struct AuxiliarySettings {
     pub font_name: String,
 }
 
-pub enum SerializedGlyphEntryKind {
+pub enum SerializedGlyphKind {
     /// A simple glyph represented as a number of outlines
     Simple(Vec<Arc<OutlineExpr>>),
     /// A compound glyph composed of multiple components, represented here as
@@ -39,7 +39,7 @@ pub enum SerializedGlyphEntryKind {
 }
 
 pub struct SerializedGlyph {
-    pub kind: SerializedGlyphEntryKind,
+    pub kind: SerializedGlyphKind,
     pub advance: Option<f64>,
 }
 
@@ -71,7 +71,7 @@ fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<glyf
     let mut glyphs = vec![];
     for glyph in scx.glyph_list.iter() {
         match &glyph.kind {
-            SerializedGlyphEntryKind::Simple(outlines) => {
+            SerializedGlyphKind::Simple(outlines) => {
                 let mut res_outlines = vec![];
                 for it in outlines {
                     eval_outline(it, &mut res_outlines, &mut ()).expect("Eval error!");
@@ -92,7 +92,7 @@ fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<glyf
                 let simple_glyph = hl::glyf::encode(&quads).unwrap();
                 glyphs.push(glyf::Glyph::Simple(simple_glyph));
             }
-            SerializedGlyphEntryKind::Compound(..) => todo!("Compound is not supported"),
+            SerializedGlyphKind::Compound(..) => todo!("Compound is not supported"),
         }
     }
     glyphs
