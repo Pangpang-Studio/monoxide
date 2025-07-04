@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     ast::{FontContext, Glyph, GlyphInner},
-    eval::{HighEvalError, SerializedFontContext, SerializedGlyph, SerializedGlyphEntryKind},
+    eval::{HighEvalError, SerializedFontContext, SerializedGlyph, SerializedGlyphKind},
     util::RefId,
 };
 
@@ -132,7 +132,7 @@ impl<'a> GlyphSerializer<'a> {
                     let inner = glyph.inner();
                     let advance = inner.advance;
                     let kind = if inner.components.is_empty() {
-                        SerializedGlyphEntryKind::Simple(inner.outlines.clone())
+                        SerializedGlyphKind::Simple(inner.outlines.clone())
                     } else {
                         let mut components = vec![];
                         if let Some(simple_glyph) = self.split_glyphs.get(&inner.into()) {
@@ -146,7 +146,7 @@ impl<'a> GlyphSerializer<'a> {
                         components.extend(inner.components.iter().map(|c| {
                             *self.map.get(&c.inner().into()).expect("Should be assigned")
                         }));
-                        SerializedGlyphEntryKind::Compound(components)
+                        SerializedGlyphKind::Compound(components)
                     };
                     SerializedGlyph { kind, advance }
                 })

@@ -9,7 +9,7 @@ use axum::{
 };
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use monoxide_curves::{CubicBezier, point::Point2D};
-use monoxide_script::eval::eval_outline;
+use monoxide_script::eval::{SerializedGlyph, SerializedGlyphKind, eval_outline, layout_glyphs};
 use serde::Serialize;
 use tokio::sync::watch;
 use tracing::{debug, info};
@@ -130,17 +130,15 @@ async fn send_ws_task(
     }
 }
 
-fn render_glyph_to_beziers(
-    glyph: &monoxide_script::ast::GlyphEntry,
-) -> anyhow::Result<Vec<CubicBezier<Point2D>>> {
+fn render_glyph_to_beziers(glyph: &SerializedGlyph) -> anyhow::Result<Vec<CubicBezier<Point2D>>> {
     let mut rendered = vec![];
-    match glyph {
-        monoxide_script::ast::GlyphEntry::Simple(simple_glyph) => {
-            for outline in &simple_glyph.outlines {
+    match &glyph.kind {
+        SerializedGlyphKind::Simple(outlines) => {
+            for outline in outlines {
                 eval_outline(outline, &mut rendered, &mut ())?;
             }
         }
-        monoxide_script::ast::GlyphEntry::Compound(_) => todo!(),
+        SerializedGlyphKind::Compound(_) => todo!(),
     }
     Ok(rendered)
 }

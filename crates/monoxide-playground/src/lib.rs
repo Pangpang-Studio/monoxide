@@ -54,22 +54,31 @@ impl Playground {
 
         loop {
             debug!("Evaluating playground...");
-            match make_font() {
-                Ok(fcx) => {
-                    debug!("Successfully evaluated playground");
-                    let ser_fcx = layout_glyphs(&fcx);
-                    render_tx
-                        .send(Arc::new(web::RenderedFontState::Font(fcx, ser_fcx)))
-                        .unwrap();
-                }
+            let fcx = match make_font() {
+                Ok(fcx) => fcx,
                 Err(e) => {
-                    tracing::error!("{e:?}");
-                    render_tx
-                        .send(Arc::new(web::RenderedFontState::Error(anyhow!("{e:?}"))))
-                        .unwrap();
+                    send_error(e, &render_tx);
+                    continue;
                 }
-            }
-            rx.next().await;
+            };
+            let ser_fcx = match layout_glyphs(&fcx) {
+                Ok(ser_fcx) => ser_fcx,
+                Err(e) => {
+                    send_error(e, &render_tx);
+                    continue;
+                }
+            };
+            debug!("Successfully evaluated playground");
+            render_tx
+                .send(Arc::new(web::RenderedFontState::Font(fcx, ser_fcx)))
+                .unwrap();
         }
     }
+}
+
+fn send_error(e: impl Debug, render_tx: &watch::Sender<Arc<web::RenderedFontState>>) {
+    tracing::error!("{e:?}");
+    render_tx
+        .send(Arc::new(web::RenderedFontState::Error(anyhow!("{e:?}"))))
+        .unwrap();
 }
