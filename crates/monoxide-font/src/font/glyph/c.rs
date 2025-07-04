@@ -4,10 +4,8 @@ use monoxide_script::{
     line,
 };
 
-use crate::{
-    InputContext,
-    font::shape::{Rect, Ring},
-};
+use super::InputContext;
+use crate::font::shape::{Rect, Ring};
 
 pub fn c(fcx: &InputContext) -> Glyph {
     Glyph::build()

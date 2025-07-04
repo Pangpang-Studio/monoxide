@@ -5,12 +5,10 @@ use monoxide_script::{
     g4, let_settings,
 };
 
-use crate::{
-    InputContext,
-    font::{
-        math::mix,
-        shape::{Rect, Ring},
-    },
+use super::InputContext;
+use crate::font::{
+    math::mix,
+    shape::{Rect, Ring},
 };
 
 pub fn i(fcx: &InputContext) -> Glyph {

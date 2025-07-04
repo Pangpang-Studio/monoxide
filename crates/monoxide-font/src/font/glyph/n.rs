@@ -6,10 +6,8 @@ use monoxide_script::{
     flat, g4, let_settings,
 };
 
-use crate::{
-    InputContext,
-    font::{dir::Dir, glyph::o::OShape, shape::Rect},
-};
+use super::InputContext;
+use crate::font::{dir::Dir, glyph::o::OShape, shape::Rect};
 
 pub fn n(fcx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw, xh } = fcx.settings(); }

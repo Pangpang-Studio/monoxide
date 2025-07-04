@@ -14,3 +14,5 @@ glyph_mods! {
     o;
     tofu;
 }
+
+use super::InputContext;

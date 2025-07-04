@@ -8,7 +8,7 @@ use monoxide_script::{
     flat, g4, let_settings,
 };
 
-use crate::InputContext;
+use super::InputContext;
 
 pub fn o(fcx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw } = fcx.settings(); }
