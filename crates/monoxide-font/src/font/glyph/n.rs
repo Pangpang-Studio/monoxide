@@ -1,6 +1,6 @@
 use monoxide_curves::point::Point2D;
 use monoxide_script::{
-    ast::SimpleGlyph,
+    ast::Glyph,
     curl,
     dsl::{IntoOutline, IntoOutlineExt, SpiroBuilder},
     flat, g4, let_settings,
@@ -11,15 +11,16 @@ use crate::{
     font::{dir::Dir, glyph::o::OShape, shape::Rect},
 };
 
-pub fn n(fcx: &InputContext) -> SimpleGlyph {
+pub fn n(fcx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw, xh } = fcx.settings(); }
 
     let hstw = stw / 2.;
     let sbl1 = sbl + hstw;
 
-    SimpleGlyph::new()
+    Glyph::build()
         .outline(Rect::new((sbl1, 0.), (sbl1, xh), stw))
         .outline(n_curl((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
+        .build()
 }
 
 fn n_curl(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> impl IntoOutline {

@@ -1,5 +1,5 @@
 use monoxide_script::{
-    ast::SimpleGlyph,
+    ast::Glyph,
     corner,
     dsl::{IntoOutlineExt, SpiroBuilder},
     g4, let_settings,
@@ -13,12 +13,12 @@ use crate::{
     },
 };
 
-pub fn i(fcx: &InputContext) -> SimpleGlyph {
+pub fn i(fcx: &InputContext) -> Glyph {
     let_settings! { { cap, dtr, mid, sbl, sbr, stw, xh } = fcx.settings(); }
 
     let hstw = stw / 2.;
 
-    SimpleGlyph::new()
+    Glyph::build()
         .outline(
             SpiroBuilder::open()
                 .insts([
@@ -30,4 +30,5 @@ pub fn i(fcx: &InputContext) -> SimpleGlyph {
         )
         .outline(Rect::new((sbl, hstw), (sbr, hstw), stw))
         .outline(Ring::at((mid, cap - dtr), (dtr, dtr)))
+        .build()
 }
