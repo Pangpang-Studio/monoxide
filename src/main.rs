@@ -10,7 +10,8 @@ fn main() {
             point_per_em: 2048,
             font_name: "Monoxide".into(),
         },
-    );
+    )
+    .expect("Failed to evaluate font context");
     let fout = "out.ttf";
     res.write(std::fs::File::create(fout).expect("Failed to open file"))
         .expect("Failed to write font");
