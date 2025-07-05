@@ -10,7 +10,7 @@ use std::{
 use anyhow::bail;
 use axum::{
     Router,
-    extract::{Request, State},
+    extract::State,
     routing::{any, method_routing::get},
 };
 use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
@@ -89,16 +89,9 @@ pub enum RenderedFontState {
     Error(anyhow::Error),
 }
 
-pub struct RenderedFont {
-    epoch: u64,
-    cx: FontContext,
-}
-
 /// Extracted app state from the request.
 type XAppState = State<Arc<AppState>>;
 
 async fn reply_200() -> &'static str {
     "OK"
 }
-
-async fn redirect(req: Request) {}
