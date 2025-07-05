@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap, HashSet},
-    ops::Not,
-};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::{
     ast::{FontContext, Glyph, GlyphInner},

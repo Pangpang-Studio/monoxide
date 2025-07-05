@@ -9,7 +9,7 @@ use axum::{
 };
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use monoxide_curves::{CubicBezier, point::Point2D};
-use monoxide_script::eval::{SerializedGlyph, SerializedGlyphKind, eval_outline, layout_glyphs};
+use monoxide_script::eval::{SerializedGlyph, SerializedGlyphKind, eval_outline};
 use serde::Serialize;
 use tokio::sync::watch;
 use tracing::{debug, info};

@@ -6,9 +6,9 @@ use std::{fmt::Debug, sync::Arc};
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use dioxus_devtools::subsecond;
+use futures_util::StreamExt;
 use monoxide_script::{ast::FontContext, eval::layout_glyphs};
 use tokio::sync::watch;
-use tokio_stream::StreamExt;
 use tracing::debug;
 
 #[derive(Parser)]
@@ -51,7 +51,7 @@ impl Playground {
             Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
         };
 
-        loop {
+        while rx.next().await.is_some() {
             debug!("Evaluating playground...");
             let fcx = match make_font() {
                 Ok(fcx) => fcx,
@@ -72,6 +72,8 @@ impl Playground {
                 .send(Arc::new(web::RenderedFontState::Font(fcx, ser_fcx)))
                 .unwrap();
         }
+
+        Ok(())
     }
 }
 
