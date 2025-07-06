@@ -92,6 +92,10 @@ impl Point for Point2D {
     fn dot(&self, other: &Self) -> f64 {
         Point2D::dot(*self, *other)
     }
+
+    fn is_zero(&self) -> bool {
+        self.x == 0.0 && self.y == 0.0
+    }
 }
 
 impl RealPoint for Point2D {

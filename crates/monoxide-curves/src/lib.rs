@@ -29,6 +29,7 @@ pub trait Point: PartialEq {
     fn point_add(&self, other: &Self) -> Self;
     fn point_sub(&self, other: &Self) -> Self;
     fn dot(&self, other: &Self) -> Self::Scalar;
+    fn is_zero(&self) -> bool;
 }
 
 impl<N: Num + Copy> Point for (N, N) {
@@ -72,6 +73,10 @@ impl<N: Num + Copy> Point for (N, N) {
 
     fn dot(&self, other: &Self) -> Self::Scalar {
         self.0 * other.0 + self.1 * other.1
+    }
+
+    fn is_zero(&self) -> bool {
+        self.0.is_zero() && self.1.is_zero()
     }
 }
 
@@ -125,6 +130,10 @@ impl Point for f64 {
 
     fn dot(&self, other: &Self) -> Self::Scalar {
         self * other
+    }
+
+    fn is_zero(&self) -> bool {
+        *self == 0.0
     }
 }
 
