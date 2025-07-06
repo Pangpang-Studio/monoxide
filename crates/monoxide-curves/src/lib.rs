@@ -5,6 +5,7 @@ pub mod debug;
 pub mod point;
 pub mod quad;
 pub mod stroke;
+pub mod xform;
 pub use cube::{CubicBezier, CubicSegment};
 use num_traits::{Num, real::Real};
 pub use quad::{QuadBezier, QuadSegment};
@@ -27,6 +28,7 @@ pub trait Point: PartialEq {
     fn scale(&self, vector: &Self) -> Self;
     fn point_add(&self, other: &Self) -> Self;
     fn point_sub(&self, other: &Self) -> Self;
+    fn dot(&self, other: &Self) -> Self::Scalar;
 }
 
 impl<N: Num + Copy> Point for (N, N) {
@@ -66,6 +68,10 @@ impl<N: Num + Copy> Point for (N, N) {
 
     fn point_sub(&self, other: &Self) -> Self {
         (self.0 - other.0, self.1 - other.1)
+    }
+
+    fn dot(&self, other: &Self) -> Self::Scalar {
+        self.0 * other.0 + self.1 * other.1
     }
 }
 
@@ -116,10 +122,49 @@ impl Point for f64 {
     fn point_sub(&self, other: &Self) -> Self {
         self - other
     }
+
+    fn dot(&self, other: &Self) -> Self::Scalar {
+        self * other
+    }
 }
 
 impl RealPoint for f64 {
     fn norm(&self) -> f64 {
         self.abs()
+    }
+}
+
+/// A trait for 2D points
+pub trait IPoint2D: Point + Sized {
+    fn make(x: Self::Scalar, y: Self::Scalar) -> Self;
+    fn x(&self) -> Self::Scalar;
+    fn y(&self) -> Self::Scalar;
+    fn with_x(&self, x: Self::Scalar) -> Self {
+        self.with_axis(0, x)
+    }
+    fn with_y(&self, y: Self::Scalar) -> Self {
+        self.with_axis(1, y)
+    }
+}
+
+impl<N: Num + Copy> IPoint2D for (N, N) {
+    fn make(x: N, y: N) -> Self {
+        (x, y)
+    }
+
+    fn x(&self) -> N {
+        self.0
+    }
+
+    fn y(&self) -> N {
+        self.1
+    }
+
+    fn with_x(&self, x: N) -> Self {
+        (x, self.1)
+    }
+
+    fn with_y(&self, y: N) -> Self {
+        (self.0, y)
     }
 }

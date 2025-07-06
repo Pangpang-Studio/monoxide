@@ -88,6 +88,10 @@ impl Point for Point2D {
     fn scale(&self, vector: &Self) -> Self {
         *self * *vector
     }
+
+    fn dot(&self, other: &Self) -> f64 {
+        Point2D::dot(*self, *other)
+    }
 }
 
 impl RealPoint for Point2D {
