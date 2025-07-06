@@ -1,8 +1,10 @@
 mod compat;
 mod exchange;
 
-use num_traits::Num;
+use num_traits::{Num, real::Real};
 use serde::{Deserialize, Serialize};
+
+use crate::{IPoint2D, xform::Affine2D};
 
 use super::Point;
 
@@ -33,6 +35,13 @@ impl<P: Copy> CubicSegment<P> {
         match self {
             CubicSegment::Line(p) => *p,
             CubicSegment::Curve(_, _, p) => *p,
+        }
+    }
+
+    pub fn map<P1>(&self, f: impl Fn(P) -> P1) -> CubicSegment<P1> {
+        match self {
+            CubicSegment::Line(p) => CubicSegment::Line(f(*p)),
+            CubicSegment::Curve(p1, p2, p3) => CubicSegment::Curve(f(*p1), f(*p2), f(*p3)),
         }
     }
 }
@@ -112,6 +121,24 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
                 (start_point.mul_scalar(one_minus_t)).point_add(&end.mul_scalar(t))
             }
             CubicSegment::Curve(p1, p2, p3) => sample(start_point, *p1, *p2, *p3, t),
+        }
+    }
+}
+
+impl<P: IPoint2D<Scalar = N> + Copy, N: Real + Copy> CubicBezier<P> {
+    /// Applies the given affine transformation to the cubic bezier curve.
+    ///
+    /// Applying an affine transformation to a cubic bezier curve is equivalent
+    /// to applying the same transformation to each point in the curve.
+    pub fn xform(&self, xform: Affine2D<P>) -> Self {
+        CubicBezier {
+            start: xform.apply(&self.start),
+            segments: self
+                .segments
+                .iter()
+                .map(|seg| seg.map(|p| xform.apply(&p)))
+                .collect(),
+            closed: self.closed,
         }
     }
 }
