@@ -13,7 +13,7 @@ pub struct Affine2D<P> {
     mat: [P; 2],
 }
 
-impl<P: IPoint2D<Scalar = S>, S: Real> Affine2D<P> {
+impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
     /// Creates an identity affine transformation.
     pub fn id() -> Self {
         Affine2D {
@@ -79,5 +79,38 @@ impl<P: IPoint2D<Scalar = S>, S: Real> Affine2D<P> {
     /// Create a transformation that scales the point by `scale`.
     pub fn scaled(scale: P::Scalar) -> Self {
         Self::id().scale(scale)
+    }
+
+    // Info to simplify the transformation in pipeline stages
+    /// Returns whether the transformation is the identity transformation
+    /// (i.e. does nothing).
+    pub fn is_identity(&self) -> bool {
+        self.trans.is_zero() && self.mat[0] == P::unit(0) && self.mat[1] == P::unit(1)
+    }
+
+    /// Returns `Some(vector)` if the transformation only contains a translation,
+    /// `None` otherwise.
+    pub fn is_only_translation(&self) -> Option<P> {
+        if self.mat[0] == P::unit(0) && self.mat[1] == P::unit(1) {
+            Some(self.trans.clone())
+        } else {
+            None
+        }
+    }
+
+    /// Returns `Some((scale_x, scale_y))` if the transformation only contains a
+    /// scaling operation, `None` otherwise.
+    pub fn is_only_scale(&self) -> Option<(P::Scalar, P::Scalar)> {
+        if self.trans.is_zero() {
+            let scale_x = self.mat[0].x();
+            let scale_y = self.mat[1].y();
+            if self.mat[0].y().is_zero() && self.mat[1].x().is_zero() {
+                Some((scale_x, scale_y))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 }
