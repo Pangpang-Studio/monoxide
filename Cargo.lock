@@ -438,15 +438,15 @@ dependencies = [
 
 [[package]]
 name = "dioxus-cli-config"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fd0ba83fe297b4509423853acb11bf0ef0dffa8c603b0857d8fd07d0da5107c"
+checksum = "3d0794a71fa505e45c7d0bb8dc85dace319b7e3b4df019a32117610a59a34636"
 
 [[package]]
 name = "dioxus-core"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0a6891a06145a8c7e27892f7532efafd3e0e5e0fe3dd156ce87067bb0040aab"
+checksum = "b41f4e080725b5d84857ec9d2ed0aeb1d05d1ebb04829479aa9759007e7678ae"
 dependencies = [
  "const_format",
  "dioxus-core-types",
@@ -466,15 +466,15 @@ dependencies = [
 
 [[package]]
 name = "dioxus-core-types"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aaf7456e7733e3fc014f0f860680f5b0b8f4a7a70ae31143f99b1ef74b6c9ba2"
+checksum = "a8c15db9a8003e786b1641639771ca55cf72e0667be6b3776b76c3ee947e8253"
 
 [[package]]
 name = "dioxus-devtools"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "694419010472aa7a9787cb3a299aecc0a6c08eb5c277e9f51a4520a669b2ba46"
+checksum = "f5cc8edaddba6261c567035d33f46e5758bbea7e3829cb504fd221e2bc140708"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -485,15 +485,15 @@ dependencies = [
  "subsecond",
  "thiserror 2.0.12",
  "tracing",
- "tungstenite 0.26.2",
+ "tungstenite 0.27.0",
  "warnings",
 ]
 
 [[package]]
 name = "dioxus-devtools-types"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7da8e3e136b6714ce769d4cf3e1c27d29fc0da3818042fad85a21aef2f3268d"
+checksum = "e36f16244d611b8c6bf90025e189d8b7dff9ef0232f3f7b9cc59be01eb6467ef"
 dependencies = [
  "dioxus-core",
  "serde",
@@ -502,9 +502,9 @@ dependencies = [
 
 [[package]]
 name = "dioxus-signals"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87aac5473b2a6a78fa0d386276f42e313df10ef5c297b33bdb2d962404161750"
+checksum = "25568e8fd4dbe0680a49ff43fc59a7829c67ab04e7fc214fae566b4e5156da9f"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -669,9 +669,9 @@ dependencies = [
 
 [[package]]
 name = "generational-box"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b653b09dec5836ba2dcbfafcc9cdf4afedec51e89beccb908a588cb8fbb4863"
+checksum = "1725e2458ed0d47c6f156c7a30c00c603068ce0b526a661f29b8e03be6426919"
 dependencies = [
  "parking_lot",
  "tracing",
@@ -1949,9 +1949,9 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "subsecond"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43c5b40acd555d02d9a0b5bf4080dbf2cd085d5e2eb2ae7851cb14b9bf5af15c"
+checksum = "874a6e5170ad449629ee48363515d10fdbf6cd4073e7f53552c3c9208462f46e"
 dependencies = [
  "js-sys",
  "libc",
@@ -1968,9 +1968,9 @@ dependencies = [
 
 [[package]]
 name = "subsecond-types"
-version = "0.7.0-alpha.1"
+version = "0.7.0-alpha.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bedadae58a56e137ac970c38c44bff38cee24400fef64c37d5a188a065b1ec1f"
+checksum = "09047ac84d57ecbeba123eaa8f060687f83cf063ba52fd166439573ffcd3c701"
 dependencies = [
  "serde",
 ]
@@ -2339,6 +2339,23 @@ name = "tungstenite"
 version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4793cb5e56680ecbb1d843515b23b6de9a75eb04b66643e256a396d43be33c13"
+dependencies = [
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "rand 0.9.1",
+ "sha1",
+ "thiserror 2.0.12",
+ "utf-8",
+]
+
+[[package]]
+name = "tungstenite"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eadc29d668c91fcc564941132e17b28a7ceb2f3ebf0b9dae3e03fd7a6748eb0d"
 dependencies = [
  "bytes",
  "data-encoding",
