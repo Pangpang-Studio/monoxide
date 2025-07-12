@@ -43,13 +43,17 @@ impl Playground {
 
         // Establish the connection to the subsecond launcher.
         dioxus_devtools::connect_subsecond();
-        subsecond::register_handler(Arc::new(move || {
+        let send = Arc::new(move || {
             _ = tx.try_send(());
-        }));
+        });
+        subsecond::register_handler(send.clone());
 
         let _fut = match args.cmd {
             Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
         };
+
+        // Send an initial message to trigger the evaluation.
+        send();
 
         while rx.next().await.is_some() {
             debug!("Evaluating playground...");
