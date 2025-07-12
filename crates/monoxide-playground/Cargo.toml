@@ -8,7 +8,7 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 axum = { version = "0.8.3", features = ["macros", "ws"] }
-axum-reverse-proxy = "0.8.0"
+axum-reverse-proxy = "1.0.3"
 clap.workspace = true
 dioxus-devtools.workspace = true
 futures-util = { version = "0.3", default-features = false, features = [
