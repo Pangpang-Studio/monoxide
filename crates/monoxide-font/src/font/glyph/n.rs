@@ -15,7 +15,7 @@ pub fn n(fcx: &InputContext) -> Glyph {
     let hstw = stw / 2.;
     let sbl1 = sbl + hstw;
 
-    Glyph::build()
+    Glyph::builder()
         .outline(Rect::new((sbl1, 0.), (sbl1, xh), stw))
         .outline(n_curl((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
         .build()
