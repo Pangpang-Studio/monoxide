@@ -5,7 +5,7 @@ use num_traits::real::Real;
 use crate::IPoint2D;
 
 /// Represents a 2D affine transformation.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Affine2D<P> {
     /// The translation vector, applied after scaling and rotation.
     trans: P,
@@ -27,6 +27,14 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
             trans: translation,
             mat: matrix,
         }
+    }
+
+    pub fn translation(&self) -> P {
+        self.trans.clone()
+    }
+
+    pub fn matrix(&self) -> [P; 2] {
+        self.mat.clone()
     }
 
     pub fn translate(self, translation: P) -> Self {
@@ -82,33 +90,32 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
     }
 
     // Info to simplify the transformation in pipeline stages
-    /// Returns whether the transformation is the identity transformation
-    /// (i.e. does nothing).
-    pub fn is_identity(&self) -> bool {
-        self.trans.is_zero() && self.mat[0] == P::unit(0) && self.mat[1] == P::unit(1)
+    /// Returns whether the transform does not scale the point.
+    pub fn scale_is_identity(&self) -> bool {
+        self.mat[0] == P::unit(0) && self.mat[1] == P::unit(1)
     }
 
-    /// Returns `Some(vector)` if the transformation only contains a translation,
-    /// `None` otherwise.
-    pub fn is_only_translation(&self) -> Option<P> {
-        if self.mat[0] == P::unit(0) && self.mat[1] == P::unit(1) {
-            Some(self.trans.clone())
+    /// Returns `Some(scale)` if the transformation's matrix part
+    /// only contains a uniform scaling operation, `None` otherwise.
+    pub fn scale_is_uniform(&self) -> Option<P::Scalar> {
+        if self.mat[0].x() == self.mat[1].y()
+            && self.mat[0].y().is_zero()
+            && self.mat[1].x().is_zero()
+        {
+            Some(self.mat[0].x())
         } else {
             None
         }
     }
 
-    /// Returns `Some((scale_x, scale_y))` if the transformation only contains a
-    /// scaling operation, `None` otherwise.
-    pub fn is_only_scale(&self) -> Option<(P::Scalar, P::Scalar)> {
-        if self.trans.is_zero() {
-            let scale_x = self.mat[0].x();
-            let scale_y = self.mat[1].y();
-            if self.mat[0].y().is_zero() && self.mat[1].x().is_zero() {
-                Some((scale_x, scale_y))
-            } else {
-                None
-            }
+    /// Returns `Some((scale_x, scale_y))` if the transformation's matrix part
+    /// only contains a scaling operation, `None` otherwise. This function does
+    /// not check the translation part.
+    pub fn mat_is_only_scale(&self) -> Option<(P::Scalar, P::Scalar)> {
+        let scale_x = self.mat[0].x();
+        let scale_y = self.mat[1].y();
+        if self.mat[0].y().is_zero() && self.mat[1].x().is_zero() {
+            Some((scale_x, scale_y))
         } else {
             None
         }

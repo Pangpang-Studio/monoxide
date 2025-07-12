@@ -12,3 +12,4 @@ monoxide-ttf.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 indexmap.workspace = true
+petgraph.workspace = true

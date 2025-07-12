@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use monoxide_spiro::SpiroCp;
 use serde::{Deserialize, Serialize};
 
-use crate::{Point, RealPoint};
+use crate::{IPoint2D, Point, RealPoint};
 
 #[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct Point2D {
@@ -229,5 +229,27 @@ impl flo_curves::Coordinate2D for Point2D {
 
     fn y(&self) -> f64 {
         self.y
+    }
+}
+
+impl IPoint2D for Point2D {
+    fn make(x: Self::Scalar, y: Self::Scalar) -> Self {
+        Point2D::new(x, y)
+    }
+
+    fn x(&self) -> Self::Scalar {
+        self.x
+    }
+
+    fn y(&self) -> Self::Scalar {
+        self.y
+    }
+
+    fn with_x(&self, x: Self::Scalar) -> Self {
+        Point2D::new(x, self.y)
+    }
+
+    fn with_y(&self, y: Self::Scalar) -> Self {
+        Point2D::new(self.x, y)
     }
 }
