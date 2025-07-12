@@ -2,14 +2,14 @@ use monoxide_script::{
     ast::Glyph,
     corner,
     dsl::{IntoOutlineExt, SpiroBuilder},
+    let_settings,
 };
 
 use super::InputContext;
 
 pub fn tofu(fcx: &InputContext) -> Glyph {
-    let h = fcx.settings().cap();
-    let w = fcx.settings().wth();
-    let stw = fcx.settings().stw();
+    let_settings! { { cap: h, wth: w, stw } = fcx.settings(); }
+
     Glyph::builder()
         .outline(
             SpiroBuilder::closed()
@@ -19,7 +19,7 @@ pub fn tofu(fcx: &InputContext) -> Glyph {
                     corner!(w - stw, h - stw),
                     corner!(stw, h - stw),
                 ])
-                .stroked(fcx.settings().stw()),
+                .stroked(stw),
         )
         .build()
 }
