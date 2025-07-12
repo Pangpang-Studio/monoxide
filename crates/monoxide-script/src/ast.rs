@@ -54,7 +54,7 @@ pub struct Glyph(Arc<GlyphInner>);
 
 impl Glyph {
     /// Create a new glyph using [`GlyphBuilder`].
-    pub fn build() -> GlyphBuilder {
+    pub fn builder() -> GlyphBuilder {
         GlyphBuilder::new()
     }
 

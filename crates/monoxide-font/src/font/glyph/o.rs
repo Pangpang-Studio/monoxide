@@ -14,7 +14,7 @@ pub fn o(fcx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw } = fcx.settings(); }
 
     let hstw = stw / 2.;
-    Glyph::build()
+    Glyph::builder()
         .outline(OShape::new((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
         .build()
 }

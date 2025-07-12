@@ -16,7 +16,7 @@ pub fn i(fcx: &InputContext) -> Glyph {
 
     let hstw = stw / 2.;
 
-    Glyph::build()
+    Glyph::builder()
         .outline(
             SpiroBuilder::open()
                 .insts([

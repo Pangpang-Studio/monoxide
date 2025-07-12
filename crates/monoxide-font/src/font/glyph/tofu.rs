@@ -10,7 +10,7 @@ pub fn tofu(fcx: &InputContext) -> Glyph {
     let h = fcx.settings().cap();
     let w = fcx.settings().wth();
     let stw = fcx.settings().stw();
-    Glyph::build()
+    Glyph::builder()
         .outline(
             SpiroBuilder::closed()
                 .insts([
