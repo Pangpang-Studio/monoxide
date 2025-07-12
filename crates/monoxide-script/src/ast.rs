@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use crate::{FontParamSettings, dsl::IntoOutline};
+use crate::{FontParamSettings, ast::compound::GlyphComponent, dsl::IntoOutline};
 
 mod compound;
 mod simple;
@@ -78,7 +78,7 @@ pub(crate) struct GlyphInner {
     pub outlines: Vec<Arc<OutlineExpr>>,
 
     /// The other glyphs that are inserted into this glyph.
-    pub components: Vec<Glyph>,
+    pub components: Vec<GlyphComponent>,
 
     /// The advance width of the glyph. If unset, uses the default advance width
     /// of the font.

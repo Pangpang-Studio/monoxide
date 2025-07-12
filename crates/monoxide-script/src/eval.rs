@@ -1,15 +1,17 @@
 use std::{collections::BTreeMap, sync::Arc, time::SystemTime};
 
+use monoxide_curves::{point::Point2D, xform::Affine2D};
 use monoxide_ttf::{
     hl,
     model::{
-        FontFile, Outline, TrueTypeTables, cmap, fword, glyf, head, hhea, hmtx, name, os2, post,
-        ufword,
+        FontFile, Outline, TrueTypeTables, cmap, glyf, head, hhea, hmtx, name, os2, post, ufword,
     },
 };
+use petgraph::prelude::DiGraphMap;
 
 use crate::ast::{FontContext, OutlineExpr};
 
+mod glyphs;
 mod layout;
 mod outline;
 pub use layout::layout_glyphs;
@@ -22,6 +24,11 @@ pub struct AuxiliarySettings {
     pub font_name: String,
 }
 
+pub struct SerializedComponent {
+    pub index: usize,
+    pub xform: Affine2D<Point2D>,
+}
+
 pub enum SerializedGlyphKind {
     /// A simple glyph represented as a number of outlines
     Simple(Vec<Arc<OutlineExpr>>),
@@ -29,7 +36,7 @@ pub enum SerializedGlyphKind {
     /// component indices.
     ///
     /// TODO: transformations of glyphs
-    Compound(Vec<usize>),
+    Compound(Vec<SerializedComponent>),
 }
 
 pub struct SerializedGlyph {
@@ -49,6 +56,9 @@ pub enum HighEvalError {
 pub struct SerializedFontContext {
     pub glyph_list: Vec<SerializedGlyph>,
     pub cmap: BTreeMap<char, usize>,
+
+    /// The reference relationship in the glyph list.
+    pub glyph_map: DiGraphMap<usize, ()>,
 }
 
 pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> Result<FontFile, HighEvalError> {
@@ -56,40 +66,9 @@ pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> Result<FontFile, HighE
     if scx.glyph_list.len() == 1 {
         panic!("Windows font reader disallow single-glyph fonts")
     }
-    let glyphs = eval_glyphs(aux, &scx);
+    let glyphs = glyphs::eval_glyphs(aux, &scx);
     let res = create_tables(cx, &scx, aux, glyphs);
     Ok(res)
-}
-
-fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<glyf::Glyph> {
-    let mut glyphs = vec![];
-    for glyph in scx.glyph_list.iter() {
-        match &glyph.kind {
-            SerializedGlyphKind::Simple(outlines) => {
-                let mut res_outlines = vec![];
-                for it in outlines {
-                    eval_outline(it, &mut res_outlines, &mut ()).expect("Eval error!");
-                    // FIXME: handle errors
-                }
-                let quads = res_outlines
-                    .into_iter()
-                    .map(|x| monoxide_curves::convert::cube_to_quad(x, 0.00001))
-                    .map(|x| x.cast(|x| x * (aux.point_per_em as f64)))
-                    .map(|x| {
-                        x.cast(|v| {
-                            let x_fword = v.x as fword;
-                            let y_fword = v.y as fword;
-                            (x_fword, y_fword)
-                        })
-                    })
-                    .collect::<Vec<_>>();
-                let simple_glyph = hl::glyf::encode(&quads).unwrap();
-                glyphs.push(glyf::Glyph::Simple(simple_glyph));
-            }
-            SerializedGlyphKind::Compound(..) => todo!("Compound is not supported"),
-        }
-    }
-    glyphs
 }
 
 fn create_tables(

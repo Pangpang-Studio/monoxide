@@ -44,6 +44,13 @@ pub struct GlyphVerifyError {
 }
 
 impl Glyph {
+    pub fn common(&self) -> &GlyphCommon {
+        match self {
+            Glyph::Simple(simple_glyph) => &simple_glyph.common,
+            Glyph::Compound(compound_glyph) => &compound_glyph.common,
+        }
+    }
+
     pub fn n_points(&self, glyphs: &[Glyph]) -> usize {
         match self {
             Glyph::Simple(g) => g.n_points(),

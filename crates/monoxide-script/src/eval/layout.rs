@@ -1,8 +1,14 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+use monoxide_curves::xform::Affine2D;
+use petgraph::prelude::DiGraphMap;
+
 use crate::{
     ast::{FontContext, Glyph, GlyphInner},
-    eval::{HighEvalError, SerializedFontContext, SerializedGlyph, SerializedGlyphKind},
+    eval::{
+        HighEvalError, SerializedComponent, SerializedFontContext, SerializedGlyph,
+        SerializedGlyphKind,
+    },
     util::RefId,
 };
 
@@ -116,41 +122,64 @@ impl<'a> GlyphSerializer<'a> {
                 if let Some(simple_glyph) = self.split_glyphs.get(&glyph.inner().into()) {
                     self.stack.push(simple_glyph.clone());
                 }
-                self.stack.extend(glyph.inner().components.iter().cloned());
+                self.stack
+                    .extend(glyph.inner().components.iter().map(|x| x.component.clone()));
             }
         }
     }
 
     fn build(&self) -> SerializedFontContext {
-        let ser_glyphs =
-            self.glyphs
-                .iter()
-                .map(|glyph| {
-                    let inner = glyph.inner();
-                    let advance = inner.advance;
-                    let kind = if inner.components.is_empty() {
-                        SerializedGlyphKind::Simple(inner.outlines.clone())
-                    } else {
-                        let mut components = vec![];
-                        if let Some(simple_glyph) = self.split_glyphs.get(&inner.into()) {
-                            components.push(
-                                *self
-                                    .map
-                                    .get(&simple_glyph.inner().into())
-                                    .expect("Should be assigned"),
-                            );
-                        }
-                        components.extend(inner.components.iter().map(|c| {
-                            *self.map.get(&c.inner().into()).expect("Should be assigned")
-                        }));
-                        SerializedGlyphKind::Compound(components)
-                    };
-                    SerializedGlyph { kind, advance }
-                })
-                .collect();
-        SerializedFontContext {
-            glyph_list: ser_glyphs,
-            cmap: self.cmap.clone(),
+        let mut glyph_list = Vec::new();
+        let mut glyph_map = DiGraphMap::new();
+        for (idx, glyph) in self.glyphs.iter().enumerate() {
+            let serialized = self.convert_to_serialized_glyph(glyph);
+
+            glyph_map.add_node(idx);
+            match &serialized.kind {
+                SerializedGlyphKind::Simple(_) => {}
+                SerializedGlyphKind::Compound(components) => {
+                    for it in components {
+                        glyph_map.add_edge(idx, it.index, ());
+                    }
+                }
+            }
+            glyph_list.push(serialized);
         }
+
+        SerializedFontContext {
+            glyph_list,
+            cmap: self.cmap.clone(),
+            glyph_map,
+        }
+    }
+
+    fn convert_to_serialized_glyph(&self, glyph: &Glyph) -> SerializedGlyph {
+        let inner = glyph.inner();
+        let advance = inner.advance;
+        let kind = if inner.components.is_empty() {
+            SerializedGlyphKind::Simple(inner.outlines.clone())
+        } else {
+            let mut components = vec![];
+
+            if let Some(simple_glyph) = self.split_glyphs.get(&inner.into()) {
+                let index = *self
+                    .map
+                    .get(&simple_glyph.inner().into())
+                    .expect("Should be assigned");
+                let xform = Affine2D::id();
+                components.push(SerializedComponent { index, xform });
+            }
+
+            components.extend(inner.components.iter().map(|c| {
+                let index = *self
+                    .map
+                    .get(&c.component.inner().into())
+                    .expect("Should be assigned");
+                let xform = c.xform;
+                SerializedComponent { index, xform }
+            }));
+            SerializedGlyphKind::Compound(components)
+        };
+        SerializedGlyph { kind, advance }
     }
 }
