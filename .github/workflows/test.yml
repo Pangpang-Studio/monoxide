@@ -10,12 +10,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  linux-rust-test:
+  rust:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
       - uses: dtolnay/rust-toolchain@stable
 
@@ -25,5 +25,5 @@ jobs:
       - name: Run simple tests
         run: cargo test --workspace
 
-      # - name: Run heavy tests
-      #   run: cargo test --workspace -- --ignored
+      - name: Run heavy tests
+        run: cargo test --workspace -- --ignored
