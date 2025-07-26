@@ -24,13 +24,14 @@ impl InputContext {
 
 pub fn make_font() -> Result<FontContext, ()> {
     let width = 0.5;
-    let x_height = 0.5;
+    let cap_height = 0.7;
+    let x_height = 0.75 * cap_height;
 
     let settings = FontParamSettings {
         width,
+        cap_height,
         x_height,
         descender: -0.2,
-        cap_height: 0.7,
         stroke_width: 0.144 * width,
         side_bearing: 0.15 * width,
         overshoot: x_height / 40.,
