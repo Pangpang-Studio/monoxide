@@ -43,7 +43,7 @@ impl OShape {
     }
 
     pub const fn end_curve_h(&self) -> f64 {
-        (13. / 16.) * self.radii.y
+        (15. / 16.) * self.radii.y
     }
 }
 
