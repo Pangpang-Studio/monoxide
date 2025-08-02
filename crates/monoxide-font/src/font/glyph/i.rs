@@ -27,6 +27,6 @@ pub fn i(fcx: &InputContext) -> Glyph {
                 .stroked(stw),
         )
         .outline(Rect::new((sbl, hstw), (sbr, hstw), stw))
-        .outline(Ring::at((mid, cap - dtr), (dtr, dtr)))
+        .outline(Ring::at((mix(mid, sbl, 0.95), cap), (dtr, dtr)))
         .build()
 }
