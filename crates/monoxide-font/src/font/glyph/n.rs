@@ -30,14 +30,13 @@ fn n_curl(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> im
 
     let mid_curve_w = o_shape.mid_curve_w();
     let mid_curve_h = o_shape.mid_curve_h();
-    let end_curve_h = o_shape.end_curve_h();
 
     let y_hi = y + ry;
 
     SpiroBuilder::open().insts([
         // Right side
         flat!(x + rx, 0.),
-        curl!(x + rx, y_hi - end_curve_h),
+        curl!(x + rx, y + ry / 3.),
         // Top arc
         g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.),
         g4!(x, y_hi + ovs).width(1.),
