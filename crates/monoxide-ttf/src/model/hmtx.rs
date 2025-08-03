@@ -1,6 +1,6 @@
 use super::{ITable, fword, ufword};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LongHorizontalMetric {
     pub advance_width: ufword,
     pub left_side_bearing: fword,
