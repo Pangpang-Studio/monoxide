@@ -1,10 +1,11 @@
-use std::{collections::BTreeMap, sync::Arc};
+use std::{collections::BTreeMap, ops::Deref, sync::Arc};
 
-use crate::{FontParamSettings, ast::compound::GlyphComponent, dsl::IntoOutline};
+use crate::{FontParamSettings, dsl::IntoOutline};
 
 mod compound;
 mod simple;
 
+pub use compound::GlyphComponent;
 pub use simple::OutlineExpr;
 
 #[derive(Debug, Clone)]
@@ -70,19 +71,27 @@ impl Glyph {
     }
 }
 
+impl Deref for Glyph {
+    type Target = GlyphInner;
+
+    fn deref(&self) -> &Self::Target {
+        self.inner()
+    }
+}
+
 #[derive(Debug, Clone, Default)]
-pub(crate) struct GlyphInner {
+pub struct GlyphInner {
     /// The outlines contained by this glyph.
     ///
     /// If both `outlines` and `subglyphs`
-    pub outlines: Vec<Arc<OutlineExpr>>,
+    pub(crate) outlines: Vec<Arc<OutlineExpr>>,
 
     /// The other glyphs that are inserted into this glyph.
-    pub components: Vec<GlyphComponent>,
+    pub(crate) components: Vec<GlyphComponent>,
 
     /// The advance width of the glyph. If unset, uses the default advance width
     /// of the font.
-    pub advance: Option<f64>,
+    pub(crate) advance: Option<f64>,
 }
 
 /// The type to use for building a glyph.
@@ -104,6 +113,21 @@ impl GlyphBuilder {
     pub fn outlines<I: IntoOutline>(mut self, outlines: impl IntoIterator<Item = I>) -> Self {
         for outline in outlines {
             self = self.outline(outline);
+        }
+        self
+    }
+
+    pub fn component<C: Into<GlyphComponent>>(mut self, component: C) -> Self {
+        self.inner.components.push(component.into());
+        self
+    }
+
+    pub fn components<I: Into<GlyphComponent>>(
+        mut self,
+        components: impl IntoIterator<Item = I>,
+    ) -> Self {
+        for component in components {
+            self = self.component(component);
         }
         self
     }

@@ -1,5 +1,9 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    sync::Arc,
+};
 
+use by_address::ByAddress;
 use monoxide_curves::xform::Affine2D;
 use petgraph::prelude::DiGraphMap;
 
@@ -9,7 +13,6 @@ use crate::{
         HighEvalError, SerializedComponent, SerializedFontContext, SerializedGlyph,
         SerializedGlyphKind,
     },
-    util::RefId,
 };
 
 /// Lays out all glyphs referenced within a [`FontContext`] into a linear list.
@@ -33,21 +36,21 @@ pub fn layout_glyphs(cx: &FontContext) -> Result<SerializedFontContext, HighEval
 ///
 /// After this function finishes, one will only need to check if the compound
 /// part is empty to determine if the glyph is simple or compound.
-fn split(cx: &FontContext) -> HashMap<RefId<GlyphInner>, Glyph> {
-    let mut vis = HashSet::<RefId<GlyphInner>>::new();
-    let mut res = HashMap::<RefId<GlyphInner>, Glyph>::new();
-    let mut stack = Vec::<&GlyphInner>::new();
+fn split(cx: &FontContext) -> HashMap<ByAddress<Glyph>, Glyph> {
+    let mut vis = HashSet::<ByAddress<Glyph>>::new();
+    let mut res = HashMap::<ByAddress<Glyph>, Glyph>::new();
+    let mut stack = Vec::<&Glyph>::new();
 
-    stack.push(cx.tofu.as_ref().expect("Should be checked").inner());
+    stack.push(cx.tofu.as_ref().expect("Should be checked"));
     for glyph in cx.cmap.values() {
-        stack.push(glyph.inner());
+        stack.push(glyph);
     }
 
     while let Some(glyph) = stack.pop() {
-        if vis.contains(&glyph.into()) {
+        if vis.contains(ByAddress::from_ref(glyph)) {
             continue;
         }
-        vis.insert(glyph.into());
+        vis.insert(glyph.clone().into());
 
         if !glyph.outlines.is_empty() && !glyph.components.is_empty() {
             // This glyph needs to split into simple and compound parts.
@@ -56,7 +59,7 @@ fn split(cx: &FontContext) -> HashMap<RefId<GlyphInner>, Glyph> {
                 components: vec![],
                 advance: glyph.advance,
             });
-            res.insert(glyph.into(), new_glyph);
+            res.insert(glyph.clone().into(), new_glyph);
         }
     }
 
@@ -65,10 +68,10 @@ fn split(cx: &FontContext) -> HashMap<RefId<GlyphInner>, Glyph> {
 
 struct GlyphSerializer<'a> {
     cx: &'a FontContext,
-    split_glyphs: HashMap<RefId<'a, GlyphInner>, Glyph>,
+    split_glyphs: HashMap<ByAddress<Glyph>, Glyph>,
 
     /// Map from glyph instances to their assigned IDs in the glyph list.
-    map: HashMap<RefId<'a, GlyphInner>, usize>,
+    map: HashMap<ByAddress<Glyph>, usize>,
     /// Built `cmap` table
     cmap: BTreeMap<char, usize>,
 
@@ -79,7 +82,7 @@ struct GlyphSerializer<'a> {
 }
 
 impl<'a> GlyphSerializer<'a> {
-    fn new(cx: &'a FontContext, split_glyphs: HashMap<RefId<'a, GlyphInner>, Glyph>) -> Self {
+    fn new(cx: &'a FontContext, split_glyphs: HashMap<ByAddress<Glyph>, Glyph>) -> Self {
         Self {
             cx,
             split_glyphs,
@@ -90,12 +93,12 @@ impl<'a> GlyphSerializer<'a> {
         }
     }
 
-    fn assign_id(&mut self, glyph: &'a Glyph) -> usize {
+    fn assign_id(&mut self, glyph: &Glyph) -> usize {
         let next_id = self.glyphs.len();
-        if let Some(id) = self.map.get(&glyph.inner().into()) {
+        if let Some(id) = self.map.get(ByAddress::from_ref(glyph)) {
             return *id;
         }
-        self.map.insert(glyph.inner().into(), next_id);
+        self.map.insert(glyph.clone().into(), next_id);
         self.glyphs.push(glyph.clone());
         next_id
     }
@@ -116,14 +119,16 @@ impl<'a> GlyphSerializer<'a> {
 
         // Now we can start the DFS.
         while let Some(glyph) = self.stack.pop() {
+            self.assign_id(&glyph);
             if glyph.inner().components.is_empty() {
                 // Simple glyph
             } else {
-                if let Some(simple_glyph) = self.split_glyphs.get(&glyph.inner().into()) {
+                if let Some(simple_glyph) = self.split_glyphs.get(ByAddress::from_ref(&glyph)) {
                     self.stack.push(simple_glyph.clone());
                 }
-                self.stack
-                    .extend(glyph.inner().components.iter().map(|x| x.component.clone()));
+                for cmp in &glyph.inner().components {
+                    self.stack.push(cmp.component.clone());
+                }
             }
         }
     }
@@ -161,10 +166,10 @@ impl<'a> GlyphSerializer<'a> {
         } else {
             let mut components = vec![];
 
-            if let Some(simple_glyph) = self.split_glyphs.get(&inner.into()) {
+            if let Some(simple_glyph) = self.split_glyphs.get(ByAddress::from_ref(glyph)) {
                 let index = *self
                     .map
-                    .get(&simple_glyph.inner().into())
+                    .get(ByAddress::from_ref(simple_glyph))
                     .expect("Should be assigned");
                 let xform = Affine2D::id();
                 components.push(SerializedComponent { index, xform });
@@ -173,7 +178,7 @@ impl<'a> GlyphSerializer<'a> {
             components.extend(inner.components.iter().map(|c| {
                 let index = *self
                     .map
-                    .get(&c.component.inner().into())
+                    .get(ByAddress::from_ref(&c.component))
                     .expect("Should be assigned");
                 let xform = c.xform;
                 SerializedComponent { index, xform }

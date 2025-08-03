@@ -11,3 +11,26 @@ pub struct GlyphComponent {
     /// The transformation applied to the component glyph.
     pub xform: Affine2D<Point2D>,
 }
+
+impl GlyphComponent {
+    pub fn from_glyph(glyph: Glyph) -> Self {
+        GlyphComponent {
+            component: glyph,
+            xform: Affine2D::id(),
+        }
+    }
+
+    pub fn with_xform(mut self, xform: Affine2D<Point2D>) -> Self {
+        self.xform = xform;
+        self
+    }
+}
+
+impl From<Glyph> for GlyphComponent {
+    fn from(val: Glyph) -> Self {
+        GlyphComponent {
+            component: val,
+            xform: Affine2D::id(),
+        }
+    }
+}
