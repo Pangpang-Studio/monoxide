@@ -121,3 +121,9 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         }
     }
 }
+
+impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Default for Affine2D<P> {
+    fn default() -> Self {
+        Self::id()
+    }
+}

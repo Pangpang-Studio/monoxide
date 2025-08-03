@@ -9,6 +9,7 @@ readme = "README.md"
 [dependencies]
 monoxide-font.workspace = true
 monoxide-script.workspace = true
+tracing-subscriber.workspace = true
 
 [build-dependencies]
 
@@ -70,3 +71,4 @@ tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 thiserror = "2.0"
 petgraph = "0.8.2"
+by_address = "1.2.1"

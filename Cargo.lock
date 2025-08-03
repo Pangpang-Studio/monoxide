@@ -308,6 +308,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46c5e41b57b8bba42a04676d81cb89e9ee8e859a1a66f80a5a72e1cb76b34d43"
 
 [[package]]
+name = "by_address"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64fa3c856b712db6612c019f14756e64e4bcea13337a6b33b696333a9eaa2d06"
+
+[[package]]
 name = "bytemuck"
 version = "1.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1332,6 +1338,7 @@ version = "0.1.0"
 dependencies = [
  "monoxide-font",
  "monoxide-script",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -1383,6 +1390,7 @@ dependencies = [
 name = "monoxide-script"
 version = "0.1.0"
 dependencies = [
+ "by_address",
  "indexmap",
  "monoxide-curves",
  "monoxide-spiro",

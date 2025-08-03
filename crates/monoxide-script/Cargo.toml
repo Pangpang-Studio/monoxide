@@ -13,3 +13,4 @@ serde.workspace = true
 thiserror.workspace = true
 indexmap.workspace = true
 petgraph.workspace = true
+by_address.workspace = true
