@@ -31,7 +31,7 @@ impl Args {
     }
 
     pub fn add_my_flags(&self, mut flags: ComponentFlags) -> ComponentFlags {
-        if self.in_short_format() {
+        if !self.in_short_format() {
             flags |= ComponentFlags::ARG_1_AND_2_ARE_WORDS
         }
         if matches!(self, Self::Offset { .. }) {
