@@ -23,6 +23,7 @@ impl GlyphCommon {
 pub mod compound;
 pub mod simple;
 
+#[derive(Debug)]
 pub enum Glyph {
     Simple(simple::SimpleGlyph),
     Compound(compound::CompoundGlyph),
