@@ -63,6 +63,7 @@ impl Args {
     }
 }
 
+#[derive(Debug)]
 pub enum Scale {
     One,
     Simple(f2dot14),
@@ -169,6 +170,7 @@ impl ComponentFlags {
     }
 }
 
+#[derive(Debug)]
 pub struct Component {
     pub flags: ComponentFlags,
     pub glyph_index: u16,
@@ -195,6 +197,7 @@ impl Component {
     }
 }
 
+#[derive(Debug)]
 pub struct CompoundGlyph {
     // n_countours = -1
     pub common: GlyphCommon,
