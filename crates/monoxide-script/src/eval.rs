@@ -103,11 +103,14 @@ fn create_tables(
     // hmtx for monospaced font
     let width_in_font_units = aux.point_per_em as f64 * cx.settings.width;
     let hmtx = hmtx::Table {
-        metrics: vec![hmtx::LongHorizontalMetric {
-            advance_width: width_in_font_units as ufword,
-            left_side_bearing: 0,
-        }],
-        left_side_bearings: vec![0; scx.glyph_list.len() - 1],
+        metrics: vec![
+            hmtx::LongHorizontalMetric {
+                advance_width: width_in_font_units as ufword,
+                left_side_bearing: 0,
+            };
+            scx.glyph_list.len()
+        ],
+        left_side_bearings: vec![],
     };
 
     // Calculate other tables
