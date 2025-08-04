@@ -22,8 +22,12 @@ pub fn glyf_to_maxp(glyf: &glyf::Table) -> maxp::TableV1 {
                     .max(glyph.instructions.len() as u16);
             }
             glyf::Glyph::Compound(glyph) => {
-                maxp.max_points = maxp.max_points.max(glyph.n_points(&glyf.glyphs) as u16);
-                maxp.max_contours = maxp.max_contours.max(glyph.n_contours(&glyf.glyphs) as u16);
+                maxp.max_composite_points = maxp
+                    .max_composite_points
+                    .max(glyph.n_points(&glyf.glyphs) as u16);
+                maxp.max_composite_contours = maxp
+                    .max_composite_contours
+                    .max(glyph.n_contours(&glyf.glyphs) as u16);
                 // TODO: instruction stuff, see above
                 maxp.max_size_of_instructions = maxp
                     .max_size_of_instructions
