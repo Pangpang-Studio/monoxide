@@ -141,7 +141,7 @@ fn create_tables(
         caret_slope_run: 0,
         caret_offset: 0,
         metric_data_format: 0,
-        number_of_hmetrics: 2,
+        number_of_hmetrics: hmtx.metrics.len() as u16,
     };
 
     let name = name::Table {
