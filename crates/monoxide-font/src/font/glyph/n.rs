@@ -9,8 +9,8 @@ use monoxide_script::{
 use super::InputContext;
 use crate::font::{dir::Dir, glyph::o::OShape, shape::Rect};
 
-pub fn n(fcx: &InputContext) -> Glyph {
-    let_settings! { { mid, mih, ovs, sbl, stw, xh } = fcx.settings(); }
+pub fn n(cx: &InputContext) -> Glyph {
+    let_settings! { { mid, mih, ovs, sbl, stw, xh } = cx.settings(); }
 
     let hstw = stw / 2.;
     let sbl1 = sbl + hstw;

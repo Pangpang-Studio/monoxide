@@ -10,8 +10,8 @@ use monoxide_script::{
 
 use super::InputContext;
 
-pub fn o(fcx: &InputContext) -> Glyph {
-    let_settings! { { mid, mih, ovs, sbl, stw } = fcx.settings(); }
+pub fn o(cx: &InputContext) -> Glyph {
+    let_settings! { { mid, mih, ovs, sbl, stw } = cx.settings(); }
 
     let hstw = stw / 2.;
     Glyph::builder()

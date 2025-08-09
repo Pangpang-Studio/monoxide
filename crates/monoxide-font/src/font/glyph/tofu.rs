@@ -7,8 +7,8 @@ use monoxide_script::{
 
 use super::InputContext;
 
-pub fn tofu(fcx: &InputContext) -> Glyph {
-    let_settings! { { cap: h, wth: w, stw } = fcx.settings(); }
+pub fn tofu(cx: &InputContext) -> Glyph {
+    let_settings! { { cap: h, wth: w, stw } = cx.settings(); }
 
     Glyph::builder()
         .outline(
