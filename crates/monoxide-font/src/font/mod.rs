@@ -38,9 +38,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         dot_size: 0.25 * width,
     };
 
-    let cx = InputContext {
-        settings: settings.clone(),
-    };
+    let cx = InputContext { settings };
 
     let glyphs = [
         ('c', glyph::c(&cx)),
@@ -52,9 +50,8 @@ pub fn make_font() -> Result<FontContext, ()> {
     let tofu = glyph::tofu(&cx);
 
     // This is the state
-    let mut fcx = FontContext::new(settings);
+    let mut fcx = FontContext::new(cx.settings);
     fcx.set_tofu(tofu);
-
     for (ch, gl) in glyphs {
         fcx.set_mapping(ch, gl);
     }
