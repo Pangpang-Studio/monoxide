@@ -9,6 +9,7 @@ macro_rules! glyph_mods {
 
 glyph_mods! {
     c;
+    d;
     i;
     l;
     n;

@@ -42,6 +42,7 @@ pub fn make_font() -> Result<FontContext, ()> {
 
     let glyphs = [
         ('c', glyph::c(&cx)),
+        ('d', glyph::d(&cx)),
         ('i', glyph::i(&cx)),
         ('l', glyph::l(&cx)),
         ('n', glyph::n(&cx)),
