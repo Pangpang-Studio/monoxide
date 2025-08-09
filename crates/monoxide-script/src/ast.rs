@@ -1,6 +1,9 @@
 use std::{collections::BTreeMap, ops::Deref, sync::Arc};
 
-use crate::{EvalSettings, dsl::IntoOutline};
+use crate::{
+    EvalSettings,
+    dsl::{IntoOutline, IntoOutlines},
+};
 
 mod compound;
 mod simple;
@@ -110,8 +113,8 @@ impl GlyphBuilder {
         self
     }
 
-    pub fn outlines<I: IntoOutline>(mut self, outlines: impl IntoIterator<Item = I>) -> Self {
-        for outline in outlines {
+    pub fn outlines(mut self, outlines: impl IntoOutlines) -> Self {
+        for outline in outlines.into_outlines() {
             self = self.outline(outline);
         }
         self

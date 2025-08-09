@@ -45,6 +45,28 @@ impl IntoStrokeAlignment for f64 {
     }
 }
 
+pub trait IntoOutlines {
+    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>>;
+}
+
+impl<I: IntoIterator<Item = Arc<OutlineExpr>>> IntoOutlines for I {
+    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
+        self.into_iter()
+    }
+}
+
+pub trait IntoOutlinesExt: IntoOutlines {
+    fn stroked(self, width: f64) -> impl Iterator<Item = Arc<OutlineExpr>>
+    where
+        Self: Sized,
+    {
+        self.into_outlines()
+            .map(move |outline| outline.stroked(width))
+    }
+}
+
+impl<T: IntoOutlines> IntoOutlinesExt for T {}
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! ctrl_pt {
