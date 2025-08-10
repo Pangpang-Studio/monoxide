@@ -4,6 +4,7 @@ pub mod cube;
 pub mod debug;
 pub mod point;
 pub mod quad;
+pub mod spiro;
 pub mod stroke;
 pub mod xform;
 pub use cube::{CubicBezier, CubicSegment};
@@ -11,7 +12,7 @@ use num_traits::{Num, real::Real};
 pub use quad::{QuadBezier, QuadSegment};
 
 /// Represents a spiro curve.
-pub type SpiroCurve = Vec<monoxide_spiro::SpiroCp>;
+pub type SpiroCurve = spiro::SpiroCurve;
 
 /// Represents a point in space. Also represents a vector from origin to this
 /// point for the convenience of calculation.
