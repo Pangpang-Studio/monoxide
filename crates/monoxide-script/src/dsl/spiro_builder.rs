@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use monoxide_curves::{
-    point::Point2D,
-    stroke::{Tangent, TangentOverride},
-};
+use monoxide_curves::{SpiroCurve, point::Point2D, spiro::StrokeAlignment, stroke::Tangent};
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use super::IntoOutline;
@@ -11,9 +8,7 @@ use crate::ast::OutlineExpr;
 
 #[derive(Debug, Clone)]
 pub struct SpiroBuilder {
-    points: Vec<SpiroCp>,
-    tangent_override: TangentOverride,
-    is_closed: bool,
+    curve: SpiroCurve,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -34,6 +29,8 @@ impl From<SpiroCp> for SpiroInst {
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct SpiroInstOpts {
     heading: Option<Point2D>,
+    width_factor: Option<f64>,
+    alignment: Option<StrokeAlignment>,
 }
 
 /// Convenience macro to create a [`SpiroInst`] of type [`SpiroCpTy::Corner`].
@@ -120,6 +117,16 @@ impl SpiroInst {
         self.opts.heading = Some(pt.into());
         self
     }
+
+    pub fn align(mut self, align: impl Into<StrokeAlignment>) -> Self {
+        self.opts.alignment = Some(align.into());
+        self
+    }
+
+    pub fn width(mut self, width: f64) -> Self {
+        self.opts.width_factor = Some(width);
+        self
+    }
 }
 
 impl SpiroBuilder {
@@ -133,18 +140,27 @@ impl SpiroBuilder {
 
     fn new(is_closed: bool) -> Self {
         Self {
-            is_closed,
-            points: vec![],
-            tangent_override: TangentOverride::default(),
+            curve: SpiroCurve {
+                is_closed,
+                ..Default::default()
+            },
         }
     }
 
     pub fn inst(mut self, inst: SpiroInst) -> Self {
-        self.points.push(inst.pt);
+        let point_idx = self.curve.points.len();
+        self.curve.points.push(inst.pt);
         if let Some(tan) = inst.opts.heading {
             let tan = Some(tan.normalize());
-            self.tangent_override
-                .insert(self.points.len() - 1, Tangent { in_: tan, out: tan });
+            self.curve
+                .tangents
+                .insert(point_idx, Tangent { in_: tan, out: tan });
+        }
+        if let Some(attr) = inst.opts.width_factor {
+            self.curve.width_factors.insert(point_idx, attr);
+        }
+        if let Some(align) = inst.opts.alignment {
+            self.curve.alignment.insert(point_idx, align);
         }
         self
     }
@@ -157,11 +173,11 @@ impl SpiroBuilder {
     }
 
     pub fn build(mut self) -> OutlineExpr {
-        if !self.is_closed && !self.points.is_empty() {
-            self.points.last_mut().unwrap().ty = SpiroCpTy::EndOpen;
-            self.points.first_mut().unwrap().ty = SpiroCpTy::Open;
+        if !self.curve.is_closed && !self.curve.points.is_empty() {
+            self.curve.points.last_mut().unwrap().ty = SpiroCpTy::EndOpen;
+            self.curve.points.first_mut().unwrap().ty = SpiroCpTy::Open;
         }
-        OutlineExpr::Spiro(self.points, self.tangent_override)
+        OutlineExpr::Spiro(self.curve)
     }
 }
 
