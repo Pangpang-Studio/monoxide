@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use monoxide_spiro::SpiroCp;
 
-use crate::stroke::Tangent;
+use crate::point::Point2D;
 
 /// Represents a curve made of Spiro control points.
 ///
@@ -16,7 +16,11 @@ pub struct SpiroCurve {
     pub is_closed: bool,
     pub points: Vec<SpiroCp>,
 
-    pub tangents: HashMap<usize, Tangent>,
+    /// The overridden tangents at each point. This overrides both the in and
+    /// out tangents at the point. (It makes no sense overriding only one, since
+    /// that would make an angled corner with at least one edge with the wrong
+    /// stroke width, which is almost always undesirable.)
+    pub tangents: HashMap<usize, Point2D>,
 
     /// The factor by which the width of the stroke is multiplied.
     /// If not provided, interpolates between surrounding points.
@@ -38,6 +42,12 @@ pub struct SpiroCurve {
     pub alignment: HashMap<usize, StrokeAlignment>,
 }
 
+impl SpiroCurve {
+    pub fn len(&self) -> usize {
+        self.points.len()
+    }
+}
+
 impl From<Vec<SpiroCp>> for SpiroCurve {
     fn from(points: Vec<SpiroCp>) -> Self {
         Self {
@@ -51,8 +61,8 @@ pub fn default_width_factor() -> f64 {
     1.0
 }
 
-pub fn default_alignment() -> StrokeAlignment {
-    StrokeAlignment::Aligned(0.5)
+pub fn default_alignment() -> f64 {
+    0.5
 }
 
 #[derive(Debug, Clone, PartialEq)]
