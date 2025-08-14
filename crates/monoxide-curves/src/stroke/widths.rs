@@ -1,3 +1,7 @@
+use std::cell::LazyCell;
+
+use flo_curves::bezier::curve_length;
+
 use crate::{
     CubicBezier,
     point::Point2D,
@@ -27,6 +31,40 @@ pub fn solve_stroke_attrs(
     cubic: &CubicBezier<Point2D>,
     indices: &[usize],
 ) -> SolvedStrokeAttrs {
+    // Lazy-evaluated curve length information.
+    //
+    // Calculating the curve length can be quite expensive, so we should avoid
+    // doing it unless we actually need to interpolate the width factors or
+    // alignments.
+    //
+    // The calculated length is for each segment of the spiro curve.
+    let curve_lengths = LazyCell::new(|| {
+        let max_error = 0.001;
+        let mut lengths = Vec::with_capacity(curve.len());
+        for window in indices.windows(2) {
+            let &[from, to] = window else {
+                panic!("window size mismatch")
+            };
+            let mut acc = 0.0;
+            for seg in from..to {
+                let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
+                acc += seg_length;
+            }
+            lengths.push(acc);
+        }
+        // last segment
+        {
+            let mut acc = 0.0;
+            for seg in indices.last().copied().unwrap_or(0)..curve.len() {
+                let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
+                acc += seg_length;
+            }
+            lengths.push(acc);
+        }
+        assert_eq!(lengths.len(), curve.len(), "length calculation mismatch");
+        lengths
+    });
+
     // Fast path: if there's nothing to interpolate, we should not bother to
     // calculate the curve length.
     //
@@ -36,36 +74,33 @@ pub fn solve_stroke_attrs(
     // - completely unset (everything is 1.0),
     // - only one point set (everything is the same as that point), or
     // - all points set (just use their given values).
-    let width_fast_path_res = width_fast_path(curve);
+    let width_factors = width_fast_path(curve, &curve_lengths);
     // For alignments, it's either:
     // - completely unset (all are middle-aligned), or
     // - No `Interpolate` points in the map
-    let alignment_fast_path_res = alignment_fast_path(curve);
+    let alignments = alignment_fast_path(curve, &curve_lengths);
 
-    // Early return for fast paths
-    if let (Some(width_factors), Some(alignments)) = (width_fast_path_res, alignment_fast_path_res)
-    {
-        return SolvedStrokeAttrs {
-            width_factors,
-            alignments,
-        };
+    SolvedStrokeAttrs {
+        width_factors,
+        alignments,
     }
-
-    todo!()
 }
 
-fn width_fast_path(curve: &SpiroCurve) -> Option<Vec<f64>> {
+fn width_fast_path<F: FnOnce() -> Vec<f64>>(
+    curve: &SpiroCurve,
+    curve_lengths: &LazyCell<Vec<f64>, F>,
+) -> Vec<f64> {
     if curve.width_factors.is_empty() {
-        Some(vec![default_width_factor(); curve.len()])
+        vec![default_width_factor(); curve.len()]
     } else if curve.width_factors.len() == 1 {
         let (_, &w) = curve
             .width_factors
             .iter()
             .next()
             .expect("We checked the length");
-        Some(vec![w; curve.len()])
+        vec![w; curve.len()]
     } else if curve.width_factors.len() == curve.len() {
-        let v = (0..curve.len())
+        (0..curve.len())
             .map(|x| {
                 curve
                     .width_factors
@@ -73,37 +108,38 @@ fn width_fast_path(curve: &SpiroCurve) -> Option<Vec<f64>> {
                     .copied()
                     .expect("We checked the length")
             })
-            .collect();
-        Some(v)
+            .collect()
     } else {
-        None
+        todo!()
     }
 }
 
-fn alignment_fast_path(curve: &SpiroCurve) -> Option<Vec<f64>> {
+fn alignment_fast_path<F: FnOnce() -> Vec<f64>>(
+    curve: &SpiroCurve,
+    curve_lengths: &LazyCell<Vec<f64>, F>,
+) -> Vec<f64> {
     let no_alignment_interp = curve
         .alignment
         .values()
         .all(|x| !matches!(x, StrokeAlignment::Interpolate));
-    if !no_alignment_interp {
-        return None;
+    if no_alignment_interp {
+        let mut last = default_alignment();
+        let mut res = vec![];
+        res.reserve_exact(curve.len());
+        for i in 0..curve.len() {
+            let alignment = if let Some(alignment) = curve.alignment.get(&i) {
+                match alignment {
+                    &StrokeAlignment::Aligned(v) => v,
+                    StrokeAlignment::Interpolate => unreachable!("checked for no interpolation"),
+                }
+            } else {
+                last
+            };
+            res.push(alignment);
+            last = alignment;
+        }
+        res
+    } else {
+        todo!()
     }
-
-    let mut last = default_alignment();
-    let mut res = vec![];
-    res.reserve_exact(curve.len());
-    for i in 0..curve.len() {
-        let alignment = if let Some(alignment) = curve.alignment.get(&i) {
-            match alignment {
-                &StrokeAlignment::Aligned(v) => v,
-                StrokeAlignment::Interpolate => unreachable!("checked for no interpolation"),
-            }
-        } else {
-            last
-        };
-        res.push(alignment);
-        last = alignment;
-    }
-
-    Some(res)
 }
