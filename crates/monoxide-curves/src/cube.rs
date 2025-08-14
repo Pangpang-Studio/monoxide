@@ -46,6 +46,12 @@ impl<P: Copy> CubicSegment<P> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct CubicSegmentFull<P> {
+    pub start: P,
+    pub rest: CubicSegment<P>,
+}
+
 /// Represents a cubic bezier path. This type implements
 /// [`flo_curves::bezier::path::BezierPath`], so it can be used with the various
 /// functions provided by [flo_curves].
@@ -91,19 +97,21 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
         self.segments.len()
     }
 
-    pub fn segment(&self, idx: usize) -> Option<(P, CubicSegment<P>)> {
+    pub fn segment(&self, idx: usize) -> Option<CubicSegmentFull<P>> {
         if idx >= self.segments.len() {
             return None;
         }
-        if idx == 0 {
-            Some((self.start, self.segments[0].clone()))
-        } else {
-            let prev = self.segments[idx - 1].last_point();
-            Some((prev, self.segments[idx].clone()))
-        }
+        Some(CubicSegmentFull {
+            start: if idx == 0 {
+                self.start
+            } else {
+                self.segments[idx - 1].last_point()
+            },
+            rest: self.segments[idx].clone(),
+        })
     }
 
-    pub fn segment_iter(&self) -> impl Iterator<Item = (P, CubicSegment<P>)> + '_ {
+    pub fn segment_iter(&self) -> impl Iterator<Item = CubicSegmentFull<P>> + '_ {
         (0..self.segments.len()).filter_map(move |i| self.segment(i))
     }
 

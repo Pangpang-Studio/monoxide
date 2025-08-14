@@ -151,10 +151,7 @@ impl SpiroBuilder {
         let point_idx = self.curve.points.len();
         self.curve.points.push(inst.pt);
         if let Some(tan) = inst.opts.heading {
-            let tan = Some(tan.normalize());
-            self.curve
-                .tangents
-                .insert(point_idx, Tangent { in_: tan, out: tan });
+            self.curve.tangents.insert(point_idx, tan.normalize());
         }
         if let Some(attr) = inst.opts.width_factor {
             self.curve.width_factors.insert(point_idx, attr);
