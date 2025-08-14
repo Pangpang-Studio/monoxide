@@ -1,10 +1,10 @@
 use flo_curves::{
-    Geo,
+    BezierCurve, Coordinate, Geo,
     bezier::path::{BezierPath, BezierPathFactory},
 };
 
 use super::{CubicBezier, CubicSegment};
-use crate::point::Point2D;
+use crate::{cube::CubicSegmentFull, point::Point2D};
 
 impl Geo for CubicBezier<Point2D> {
     type Point = Point2D;
@@ -59,6 +59,27 @@ impl BezierPathFactory for CubicBezier<Point2D> {
             start: start_point,
             segments: points,
             closed,
+        }
+    }
+}
+
+impl<P: Coordinate> Geo for CubicSegmentFull<P> {
+    type Point = P;
+}
+
+impl<P: Coordinate> BezierCurve for CubicSegmentFull<P> {
+    fn start_point(&self) -> Self::Point {
+        self.start
+    }
+
+    fn end_point(&self) -> Self::Point {
+        self.rest.last_point()
+    }
+
+    fn control_points(&self) -> (Self::Point, Self::Point) {
+        match self.rest {
+            CubicSegment::Line(end) => (self.start, end),
+            CubicSegment::Curve(c1, c2, _) => (c1, c2),
         }
     }
 }

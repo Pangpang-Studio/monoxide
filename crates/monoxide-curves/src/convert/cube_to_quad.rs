@@ -27,13 +27,13 @@ where
 {
     let mut quad = QuadBezier::builder(cube.start);
 
-    for (seg_start, segment) in cube.segment_iter() {
-        match segment {
+    for seg in cube.segment_iter() {
+        match seg.rest {
             CubicSegment::Line(end) => {
                 quad.line_to(end);
             }
             CubicSegment::Curve(c1, c2, p2) => {
-                cube_to_quad_segment(&mut quad, seg_start, c1, c2, p2, prec)
+                cube_to_quad_segment(&mut quad, seg.start, c1, c2, p2, prec)
             }
         }
     }

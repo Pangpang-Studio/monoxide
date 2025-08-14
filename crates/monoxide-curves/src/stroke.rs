@@ -6,6 +6,7 @@ use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use crate::{
     CubicBezier, CubicSegment, SpiroCurve,
+    cube::CubicSegmentFull,
     debug::CurveDebugger,
     point::Point2D,
     stroke::{
@@ -107,7 +108,7 @@ fn debug_spiro_points<C: CurveDebugger>(
 ) {
     let mut spiro_index = 0;
     // indices are segment indices
-    for (idx, (start, seg)) in cube_curve.segment_iter().enumerate() {
+    for (idx, CubicSegmentFull { start, rest: seg }) in cube_curve.segment_iter().enumerate() {
         if idx == 0 {
             if spiro_indices[spiro_index] == 0 {
                 dbg.point(

@@ -20,6 +20,9 @@ pub fn calc_tangents(
     );
     let mut tangents = Vec::new();
 
+    use crate::cube::CubicSegment::*;
+    use crate::cube::CubicSegmentFull as CSF;
+
     for &index in indices {
         let out_seg = if index < cube_curve.segments.len() {
             Some(cube_curve.segment(index).expect("segment exists"))
@@ -33,8 +36,14 @@ pub fn calc_tangents(
             None
         };
         let out_tangent = match out_seg {
-            Some((p1, CubicSegment::Curve(c1, _, _))) => Some(c1 - p1),
-            Some((p1, CubicSegment::Line(p2))) => Some(p2 - p1),
+            Some(CSF {
+                start: p1,
+                rest: Curve(c1, _, _),
+            }) => Some(c1 - p1),
+            Some(CSF {
+                start: p1,
+                rest: Line(p2),
+            }) => Some(p2 - p1),
             None => None,
         }
         .map(Point2D::normalize);
@@ -51,8 +60,14 @@ pub fn calc_tangents(
             None
         };
         let in_tangent = match in_seg {
-            Some((_, CubicSegment::Curve(_, c2, p2))) => Some(p2 - c2),
-            Some((p1, CubicSegment::Line(p2))) => Some(p2 - p1),
+            Some(CSF {
+                rest: Curve(_, c2, p2),
+                ..
+            }) => Some(p2 - c2),
+            Some(CSF {
+                start: p1,
+                rest: Line(p2),
+            }) => Some(p2 - p1),
             None => None,
         }
         .map(Point2D::normalize);
