@@ -4,40 +4,27 @@ use std::collections::HashMap;
 
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
-use crate::{CubicBezier, CubicSegment, debug::CurveDebugger, point::Point2D};
+use crate::{
+    CubicBezier, CubicSegment, SpiroCurve,
+    debug::CurveDebugger,
+    point::Point2D,
+    stroke::{
+        tangents::{make_line_join, move_point_normal_both},
+        widths::solve_stroke_attrs,
+    },
+};
 
 /// Represent the in and out tangent at a control point. Both tangents are
 /// represented in the out direction.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Tangent {
-    pub in_: Option<Point2D>,
-    pub out: Option<Point2D>,
-}
-
-impl Tangent {
-    /// Apply a tangent override to this tangent.
-    ///
-    /// If the override is `None`, the original value is used.
-    /// If the original value is `Some(x1)` and the override is `Some(x2)`, the
-    /// override is used.
-    fn with_override(&self, override_: &Tangent) -> Tangent {
-        Tangent {
-            in_: self.in_.map(|x| override_.in_.unwrap_or(x)),
-            out: self.out.map(|x| override_.out.unwrap_or(x)),
-        }
-    }
+pub enum Tangent {
+    Continuous(Point2D),
+    Corner { in_: Point2D, out: Point2D },
 }
 
 /// Test if two normalized tangents are approximately the same direction.
 fn approx_eq(tan1: Point2D, tan2: Point2D) -> bool {
     tan1.dot(tan2) > 0.99
-}
-
-fn is_point_curved(ty: SpiroCpTy) -> bool {
-    matches!(
-        ty,
-        SpiroCpTy::G2 | SpiroCpTy::G4 | SpiroCpTy::Left | SpiroCpTy::Right
-    )
 }
 
 fn is_single_piece(curve: &[SpiroCp]) -> bool {
@@ -70,18 +57,13 @@ pub enum StrokeResult {
 /// or has multiple disconnected parts.
 ///
 /// The result should be fed into another pass removing self-loops.
-pub fn stroke_spiro(
-    curve: &[SpiroCp],
-    width: f64,
-    tangent_override: &TangentOverride,
-    dbg: &mut impl CurveDebugger,
-) -> StrokeResult {
-    if !is_single_piece(curve) {
+pub fn stroke_spiro(curve: &SpiroCurve, width: f64, dbg: &mut impl CurveDebugger) -> StrokeResult {
+    if !is_single_piece(&curve.points) {
         panic!("Spiro curve is not valid: not single piece");
     }
 
-    let is_closed = curve[0].ty != SpiroCpTy::Open;
-    let (left, mut right) = stroke_spiro_raw(curve, is_closed, width, tangent_override, dbg);
+    let is_closed = curve.points[0].ty != SpiroCpTy::Open;
+    let (left, mut right) = stroke_spiro_raw(curve, is_closed, width, dbg);
 
     // Anyway, we should reverse the right curve first.
     right.reverse();
@@ -169,25 +151,23 @@ fn debug_spiro_points<C: CurveDebugger>(
     }
 }
 
-// TODO: allow a variable width, and position within the stroke.
 /// Stroke a spiro curve. Returns two spiro curves of the inner and outer
 /// boundaries of the stroke. The spiro curve should be _one_ continuous curve,
 /// with no gaps.
 ///
 /// The result should be fed into another pass removing self-loops.
 pub fn stroke_spiro_raw(
-    curve: &[SpiroCp],
+    curve: &SpiroCurve,
     is_closed: bool,
     width: f64,
-    tangent_override: &TangentOverride,
     dbg: &mut impl CurveDebugger,
 ) -> (Vec<SpiroCp>, Vec<SpiroCp>) {
-    assert!(!curve.is_empty(), "curve should not be empty");
+    assert!(!curve.points.is_empty(), "curve should not be empty");
 
     // Before stroking the curve, we first need to determine the normal
     // direction at each control point. To make things simpler, we just convert
     // the curve into bezier segments and extract the normal from them.
-    let (curves, indices) = crate::convert::spiro_to_cube_with_indices(curve);
+    let (curves, indices) = crate::convert::spiro_to_cube_with_indices(&curve.points);
 
     // There will be only one curve, since we know the spiro curve is a single
     // piece.
@@ -196,6 +176,9 @@ pub fn stroke_spiro_raw(
         .next()
         .expect("spiro-to-cube conversion should return at least one curve");
     // And we can transform the indices into a vector of raw indices too
+    //
+    // Semantics: each index means the point corresponds to the **start** of the
+    // given segment, i.e. the i-th on-curve point of the cubic bezier.
     let mut indices = indices
         .into_iter()
         .map(|x| x.segment_index)
@@ -211,15 +194,8 @@ pub fn stroke_spiro_raw(
     // debug_spiro_points(&cubic, &indices, dbg);
 
     // Calculate tangent for each control point.
-    let mut tangents = calc_tangents(curve, &cubic, &indices);
-    for (&index, override_) in tangent_override {
-        tangents[index] = tangents[index].with_override(override_);
-    }
-    let tangents = tangents;
-
-    let half_width = width / 2.0;
-    let left_offset = half_width;
-    let right_offset = half_width;
+    let actual_tangents = tangents::calc_tangents(&curve.points, &cubic, &indices);
+    let stroke_attrs = solve_stroke_attrs(curve, &cubic, &indices);
 
     // the curve on the left side of the stroke
     let mut left_curve = Vec::new();
@@ -227,69 +203,61 @@ pub fn stroke_spiro_raw(
     let mut right_curve = Vec::new();
 
     assert_eq!(
-        curve.len(),
-        tangents.len(),
-        "`curve` and `tangents` do not have the same length"
+        curve.points.len(),
+        actual_tangents.len(),
+        "`curve` and `actual_tangents` do not have the same length"
     );
-    for (&cp, tangent) in curve.iter().zip(tangents) {
-        if is_point_curved(cp.ty) {
-            // This is a curved point, so it should be moved in its normal
-            // direction, and should not be split.
-            // We'll just use the in tangent for now.
-            let tangent = tangent.in_.expect("curved point should have in tangent");
-            let (left, right) =
-                tangents::move_point_normal_both(cp.into(), tangent, left_offset, right_offset);
-
-            dbg.line(cp.into(), right, format_args!(""));
-
-            push_point(left, right, cp, &mut left_curve, &mut right_curve);
-        } else {
-            // This is not a curved point. If the in and out tangents are
-            // approximately the same direction, we can just move the point in
-            // that direction. Otherwise, we need to split the point into two
-            // points, one for each tangent, and bridge them with a straight
-            // cap.
-            //
-            // It also might not have in and out tangents, in which case we just
-            // move it in whatever direction we can.
-            let (left, right) = match tangent {
-                Tangent {
-                    in_: None,
-                    out: None,
-                } => {
-                    panic!("point should have at least one tangent")
+    for (idx, (&cp, tangent)) in curve.points.iter().zip(actual_tangents).enumerate() {
+        let tangent_override = curve.tangents.get(&idx);
+        let (tangent, tan_width_factor) = match tangent {
+            Tangent::Continuous(tan) => {
+                if let Some(tangent_override) = tangent_override {
+                    let dir_orig = tan.x.atan2(tan.y);
+                    let dir_override = tangent_override.x.atan2(tangent_override.y);
+                    let angle_diff = (dir_override - dir_orig).abs();
+                    let angle_diff = if angle_diff > std::f64::consts::PI {
+                        2.0 * std::f64::consts::PI - angle_diff
+                    } else {
+                        angle_diff
+                    };
+                    let width_factor = 1.0 / angle_diff.cos();
+                    (Tangent::Continuous(*tangent_override), width_factor)
+                } else {
+                    (tangent, 1.0)
                 }
+            }
+            Tangent::Corner { .. } => (tangent, 1.0),
+            // TODO: warn about cannot override corner
+        };
+        let stroke_width_factor = stroke_attrs.width_factors[idx];
+        let width = width * stroke_width_factor * tan_width_factor;
 
-                Tangent {
-                    in_: Some(in_),
-                    out: Some(out),
-                } if approx_eq(in_, out) => {
-                    // two tangents are equal, just use the common tangent
-                    tangents::move_point_normal_both(cp.into(), in_, left_offset, right_offset)
-                }
-                Tangent {
-                    in_: Some(in_),
-                    out: Some(out),
-                } => tangents::make_line_join(cp, in_, out, left_offset, right_offset),
+        let left_offset_factor = stroke_attrs.alignments[idx];
+        let right_offset_factor = 1.0 - left_offset_factor;
 
-                // Single-sided tangents
-                Tangent {
-                    in_: Some(in_),
-                    out: None,
-                } => tangents::move_point_normal_both(cp.into(), in_, left_offset, right_offset),
-                Tangent {
-                    in_: None,
-                    out: Some(out),
-                } => tangents::move_point_normal_both(cp.into(), out, left_offset, right_offset),
-            };
+        let left_offset = width * left_offset_factor;
+        let right_offset = width * right_offset_factor;
 
-            dbg.line(cp.into(), right, format_args!(""));
-
-            push_point(left, right, cp, &mut left_curve, &mut right_curve);
-        }
+        let (left, right) = determine_stroked_points(left_offset, right_offset, cp, tangent);
+        dbg.line(cp.into(), right, format_args!(""));
+        push_point(left, right, cp, &mut left_curve, &mut right_curve);
     }
 
     (left_curve, right_curve)
+}
+
+fn determine_stroked_points(
+    left_offset: f64,
+    right_offset: f64,
+    cp: SpiroCp,
+    tangent: Tangent,
+) -> (Point2D, Point2D) {
+    match tangent {
+        Tangent::Continuous(tangent) => {
+            move_point_normal_both(cp.into(), tangent, left_offset, right_offset)
+        }
+        Tangent::Corner { in_, out } => make_line_join(cp, in_, out, left_offset, right_offset),
+    }
 }
 
 fn push_point(
@@ -324,3 +292,4 @@ fn reverse_spiro_point(cp: SpiroCp) -> SpiroCp {
 }
 
 mod tangents;
+mod widths;

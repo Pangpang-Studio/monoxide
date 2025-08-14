@@ -1,6 +1,10 @@
 use monoxide_spiro::SpiroCp;
 
-use crate::{CubicBezier, CubicSegment, point::Point2D, stroke::Tangent};
+use crate::{
+    CubicBezier,
+    point::Point2D,
+    stroke::{Tangent, approx_eq},
+};
 
 /// Calculate the tangent at each spiro control point. Returns a vector of
 /// normalized tangent vectors, one for each control point.
@@ -53,10 +57,16 @@ pub fn calc_tangents(
         }
         .map(Point2D::normalize);
 
-        tangents.push(Tangent {
-            in_: in_tangent,
-            out: out_tangent,
-        });
+        let tan = match (in_tangent, out_tangent) {
+            (Some(in_), Some(out)) if approx_eq(in_, out) => Tangent::Continuous(in_),
+            (Some(in_), Some(out)) => Tangent::Corner { in_, out },
+            (Some(in_), None) => Tangent::Continuous(in_),
+            (None, Some(out_)) => Tangent::Continuous(out_),
+            (None, None) => {
+                panic!("Both tangents are None for index {index}, this should not happen")
+            }
+        };
+        tangents.push(tan);
     }
     tangents
 }
