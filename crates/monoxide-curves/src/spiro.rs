@@ -1,6 +1,6 @@
 //! Represents a spiro curve with additional attributes.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use monoxide_spiro::SpiroCp;
 
@@ -20,13 +20,13 @@ pub struct SpiroCurve {
     /// out tangents at the point. (It makes no sense overriding only one, since
     /// that would make an angled corner with at least one edge with the wrong
     /// stroke width, which is almost always undesirable.)
-    pub tangents: HashMap<usize, Point2D>,
+    pub tangents: BTreeMap<usize, Point2D>,
 
     /// The factor by which the width of the stroke is multiplied.
     /// If not provided, interpolates between surrounding points.
     ///
     /// If no points to interpolate, the value is the same as 1.0.
-    pub width_factors: HashMap<usize, f64>,
+    pub width_factors: BTreeMap<usize, f64>,
 
     /// The alignment of the stroke at this point.
     ///
@@ -39,7 +39,7 @@ pub struct SpiroCurve {
     /// interpolate, 0]`, which may later resolved to something like `[1, 0.7,
     /// 0.3, 0]`, instead of first interpolating and then inherit like `[1, 0.7,
     /// 0.7, 0]`.
-    pub alignment: HashMap<usize, StrokeAlignment>,
+    pub alignment: BTreeMap<usize, StrokeAlignment>,
 }
 
 impl SpiroCurve {
