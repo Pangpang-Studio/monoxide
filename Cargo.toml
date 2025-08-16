@@ -72,3 +72,4 @@ tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 thiserror = "2.0"
 petgraph = "0.8.2"
 by_address = "1.2.1"
+itertools = "0.14.0"
