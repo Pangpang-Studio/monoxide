@@ -7,6 +7,7 @@ use crate::{
     point::Point2D,
     spiro::{SpiroCurve, StrokeAlignment, default_alignment, default_width_factor},
 };
+use itertools::Itertools;
 
 pub struct SolvedStrokeAttrs {
     /// Width factor relative to the default width of the stroke.
@@ -92,25 +93,79 @@ fn width_fast_path<F: FnOnce() -> Vec<f64>>(
 ) -> Vec<f64> {
     if curve.width_factors.is_empty() {
         vec![default_width_factor(); curve.len()]
-    } else if curve.width_factors.len() == 1 {
-        let (_, &w) = curve
-            .width_factors
-            .iter()
-            .next()
-            .expect("We checked the length");
-        vec![w; curve.len()]
-    } else if curve.width_factors.len() == curve.len() {
-        (0..curve.len())
-            .map(|x| {
-                curve
-                    .width_factors
-                    .get(&x)
-                    .copied()
-                    .expect("We checked the length")
-            })
-            .collect()
     } else {
-        todo!()
+        let mut res = vec![];
+        res.reserve_exact(curve.len());
+
+        // 0..first_index
+            let (&first_key, &first_val) = curve
+                .width_factors
+                .first_key_value()
+                .expect("checked for empty map");
+        if curve.is_closed {
+            // Fill with placeholders; see actual filling in last_index
+            res.extend(std::iter::repeat_n(default_width_factor(), first_key));
+        } else {
+            for _ in 0..(first_key) {
+                res.push(first_val)
+            }
+        }
+
+        // first_index..last_index
+        // Only handles the start of each segment in the loop
+        for ((&idx1, &width1), (&idx2, &width2)) in curve.width_factors.iter().tuple_windows() {
+            assert!(idx2 > idx1);
+            if idx2 - idx1 == 1 {
+                res.push(width1);
+            } else if width1 == width2 {
+                res.extend(std::iter::repeat_n(width1, idx2 - idx1))
+            } else {
+                LazyCell::force(curve_lengths);
+                let lengths = &curve_lengths[idx1..idx2];
+                let total_len: f64 = lengths.iter().copied().sum();
+                let mut sum = 0.0;
+                for l in lengths {
+                    sum += l;
+                    res.push(width1 + (width2 - width1) * (sum / total_len));
+                }
+            }
+        }
+
+        // last_index..
+            let (&last_key, &last_val) = curve
+                .width_factors
+                .last_key_value()
+                .expect("checked for empty map");
+        if curve.is_closed {
+            if last_val == first_val {
+                // If the last value is the same as the first value, we can just
+                // fill the rest with that value.
+                res.extend(std::iter::repeat_n(last_val, curve.len() - res.len()));
+                for x in &mut res[..first_key] {
+                    *x = last_val;
+                }
+                return res;
+            }
+            // This fills both last_index.. and 0..first_index
+            let lengths_tail = &curve_lengths[last_key..];
+            let lengths_head = &curve_lengths[..first_key];
+            let total_len: f64 = lengths_tail.iter().chain(lengths_head).copied().sum();
+            let mut sum = 0.0;
+            for l in lengths_tail {
+                sum += l;
+                res.push(last_val + (first_val - last_val) * (sum / total_len));
+            }
+            for (idx, &l) in lengths_head.iter().enumerate() {
+                sum += l;
+                res[idx] = last_val + (first_val - last_val) * (sum / total_len);
+            }
+        } else {
+            for _ in last_key..curve.len() {
+                res.push(last_val);
+            }
+        }
+
+        res
     }
 }
 
