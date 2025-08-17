@@ -1,4 +1,5 @@
 use monoxide_curves::point::Point2D;
+use monoxide_script::dsl::IntoStrokeAlignment;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dir {
@@ -17,5 +18,22 @@ impl From<Dir> for Point2D {
             Dir::D => (0., -1.),
         }
         .into()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Alignment {
+    Left,
+    Middle,
+    Right,
+}
+
+impl IntoStrokeAlignment for Alignment {
+    fn into_alignment(self) -> f64 {
+        match self {
+            Alignment::Left => 0.0,
+            Alignment::Middle => 0.5,
+            Alignment::Right => 1.0,
+        }
     }
 }
