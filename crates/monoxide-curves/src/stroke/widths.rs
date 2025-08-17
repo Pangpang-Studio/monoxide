@@ -5,7 +5,7 @@ use flo_curves::bezier::curve_length;
 use crate::{
     CubicBezier,
     point::Point2D,
-    spiro::{SpiroCurve, StrokeAlignment, default_alignment, default_width_factor},
+    spiro::{SpiroCurve, default_alignment, default_width_factor},
 };
 use itertools::Itertools;
 
@@ -98,10 +98,10 @@ fn width_fast_path<F: FnOnce() -> Vec<f64>>(
         res.reserve_exact(curve.len());
 
         // 0..first_index
-            let (&first_key, &first_val) = curve
-                .width_factors
-                .first_key_value()
-                .expect("checked for empty map");
+        let (&first_key, &first_val) = curve
+            .width_factors
+            .first_key_value()
+            .expect("checked for empty map");
         if curve.is_closed {
             // Fill with placeholders; see actual filling in last_index
             res.extend(std::iter::repeat_n(default_width_factor(), first_key));
@@ -132,10 +132,10 @@ fn width_fast_path<F: FnOnce() -> Vec<f64>>(
         }
 
         // last_index..
-            let (&last_key, &last_val) = curve
-                .width_factors
-                .last_key_value()
-                .expect("checked for empty map");
+        let (&last_key, &last_val) = curve
+            .width_factors
+            .last_key_value()
+            .expect("checked for empty map");
         if curve.is_closed {
             if last_val == first_val {
                 // If the last value is the same as the first value, we can just
@@ -173,28 +173,14 @@ fn alignment_fast_path<F: FnOnce() -> Vec<f64>>(
     curve: &SpiroCurve,
     curve_lengths: &LazyCell<Vec<f64>, F>,
 ) -> Vec<f64> {
-    let no_alignment_interp = curve
-        .alignment
-        .values()
-        .all(|x| !matches!(x, StrokeAlignment::Interpolate));
-    if no_alignment_interp {
-        let mut last = default_alignment();
-        let mut res = vec![];
-        res.reserve_exact(curve.len());
-        for i in 0..curve.len() {
-            let alignment = if let Some(alignment) = curve.alignment.get(&i) {
-                match alignment {
-                    &StrokeAlignment::Aligned(v) => v,
-                    StrokeAlignment::Interpolate => unreachable!("checked for no interpolation"),
-                }
-            } else {
-                last
-            };
-            res.push(alignment);
-            last = alignment;
-        }
-        res
-    } else {
-        todo!()
+    let mut last = default_alignment();
+    let mut res = vec![];
+    res.reserve_exact(curve.len());
+
+    for i in 0..curve.len() {
+        let alignment = todo!();
+        res.push(alignment);
+        last = alignment;
     }
+    res
 }

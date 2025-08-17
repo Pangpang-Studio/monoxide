@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use monoxide_curves::{SpiroCurve, point::Point2D, spiro::StrokeAlignment, stroke::Tangent};
+use monoxide_curves::{SpiroCurve, point::Point2D};
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use super::IntoOutline;
@@ -30,7 +30,7 @@ impl From<SpiroCp> for SpiroInst {
 pub struct SpiroInstOpts {
     heading: Option<Point2D>,
     width_factor: Option<f64>,
-    alignment: Option<StrokeAlignment>,
+    alignment: Option<f64>,
 }
 
 /// Convenience macro to create a [`SpiroInst`] of type [`SpiroCpTy::Corner`].
@@ -118,8 +118,8 @@ impl SpiroInst {
         self
     }
 
-    pub fn align(mut self, align: impl Into<StrokeAlignment>) -> Self {
-        self.opts.alignment = Some(align.into());
+    pub fn align(mut self, align: impl IntoStrokeAlignment) -> Self {
+        self.opts.alignment = Some(align.into_alignment());
         self
     }
 
@@ -181,5 +181,15 @@ impl SpiroBuilder {
 impl IntoOutline for SpiroBuilder {
     fn into_outline(self) -> Arc<OutlineExpr> {
         Arc::new(self.build())
+    }
+}
+
+trait IntoStrokeAlignment {
+    fn into_alignment(self) -> f64;
+}
+
+impl IntoStrokeAlignment for f64 {
+    fn into_alignment(self) -> f64 {
+        self
     }
 }
