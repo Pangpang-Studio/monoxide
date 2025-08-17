@@ -4,7 +4,7 @@ use monoxide_curves::{SpiroCurve, point::Point2D};
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use super::IntoOutline;
-use crate::ast::OutlineExpr;
+use crate::{ast::OutlineExpr, dsl::IntoStrokeAlignment};
 
 #[derive(Debug, Clone)]
 pub struct SpiroBuilder {
@@ -181,15 +181,5 @@ impl SpiroBuilder {
 impl IntoOutline for SpiroBuilder {
     fn into_outline(self) -> Arc<OutlineExpr> {
         Arc::new(self.build())
-    }
-}
-
-trait IntoStrokeAlignment {
-    fn into_alignment(self) -> f64;
-}
-
-impl IntoStrokeAlignment for f64 {
-    fn into_alignment(self) -> f64 {
-        self
     }
 }

@@ -35,6 +35,16 @@ pub trait IntoOutlineExt: IntoOutline {
 
 impl<T: IntoOutline> IntoOutlineExt for T {}
 
+pub trait IntoStrokeAlignment {
+    fn into_alignment(self) -> f64;
+}
+
+impl IntoStrokeAlignment for f64 {
+    fn into_alignment(self) -> f64 {
+        self
+    }
+}
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! ctrl_pt {
