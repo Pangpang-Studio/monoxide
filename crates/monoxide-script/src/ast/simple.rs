@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D, stroke::TangentOverride};
+use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D};
 
 #[derive(Debug, Clone)]
 pub enum OutlineExpr {
     Bezier(CubicBezier<Point2D>),
-    Spiro(SpiroCurve, TangentOverride),
+    Spiro(SpiroCurve),
     Stroked(Arc<OutlineExpr>, f64),
     // TODO: transformed, etc.
 }

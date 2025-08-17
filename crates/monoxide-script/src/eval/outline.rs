@@ -1,5 +1,5 @@
 use monoxide_curves::{
-    CubicBezier,
+    CubicBezier, SpiroCurve,
     point::Point2D,
     stroke::{StrokeResult, TangentOverride},
 };
@@ -20,7 +20,7 @@ pub fn eval_outline<E: EvaluationTracer>(
         EvalValueKind::Spiros(spiros) => {
             let output_size_before = out.len();
             for spiro in spiros {
-                let bez = monoxide_curves::convert::spiro_to_cube(&spiro.spiro);
+                let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
 
                 out.extend(bez);
             }
@@ -33,20 +33,11 @@ pub fn eval_outline<E: EvaluationTracer>(
     Ok(id)
 }
 
-/// A spiro curve used in evaluation context.
-///
-/// TODO: This should be the default type for spiro curves. Migrate later.
-#[derive(Debug, Clone)]
-pub struct EvalSpiro {
-    pub spiro: Vec<monoxide_spiro::SpiroCp>,
-    pub tangent_override: TangentOverride,
-}
-
 /// Represents an intermediate value during the evaluation of a glyph.
 #[derive(Debug, Clone)]
 pub enum EvalValueKind {
     Beziers(Vec<CubicBezier<Point2D>>),
-    Spiros(Vec<EvalSpiro>),
+    Spiros(Vec<SpiroCurve>),
 }
 
 #[derive(Debug, Clone)]
@@ -63,7 +54,7 @@ impl<Id> EvalValue<Id> {
         }
     }
 
-    pub fn spiro(spiro: EvalSpiro, id: Id) -> Self {
+    pub fn spiro(spiro: SpiroCurve, id: Id) -> Self {
         Self {
             kind: EvalValueKind::Spiros(vec![spiro]),
             id,
@@ -86,20 +77,16 @@ fn eval_outline_internal<E: EvaluationTracer>(
             let id = dbg.constructed_bezier(cubic_bezier);
             Ok(EvalValue::bezier(cubic_bezier.clone(), id))
         }
-        OutlineExpr::Spiro(spiro_cps, tangent_overrides) => {
-            let id = dbg.constructed_spiro(spiro_cps);
+        OutlineExpr::Spiro(spiro) => {
+            let id = dbg.constructed_spiro(&spiro.points);
 
             if E::needs_evaluate_intermediate() {
                 // convert to beziers if needed
-                let bez = monoxide_curves::convert::spiro_to_cube(spiro_cps);
+                let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
                 dbg.intermediate_output(id, &bez);
             }
 
-            let spiro = EvalSpiro {
-                spiro: spiro_cps.clone(),
-                tangent_override: tangent_overrides.clone(),
-            };
-            Ok(EvalValue::spiro(spiro, id))
+            Ok(EvalValue::spiro(spiro.clone(), id))
         }
         OutlineExpr::Stroked(outline_expr, width) => {
             let evaled = eval_outline_internal(outline_expr, dbg)?;
@@ -115,7 +102,7 @@ fn eval_outline_internal<E: EvaluationTracer>(
 
 fn eval_stroked<E: EvaluationTracer>(
     evaled_id: E::Id,
-    eval_spiros: &[EvalSpiro],
+    eval_spiros: &[SpiroCurve],
     width: f64,
     dbg: &mut E,
 ) -> Result<EvalValue<E::Id>, EvalError<E::Id>> {
@@ -123,30 +110,16 @@ fn eval_stroked<E: EvaluationTracer>(
     // more than one spiro per original spiro.
     let id = dbg.preallocate_next();
 
-    let mut out_spiros = vec![];
+    let mut out_spiros: Vec<SpiroCurve> = vec![];
     for spiro in eval_spiros {
-        let oc = monoxide_curves::stroke::stroke_spiro(
-            &spiro.spiro,
-            width,
-            &spiro.tangent_override,
-            &mut dbg.curve_debugger(id),
-        );
+        let oc = monoxide_curves::stroke::stroke_spiro(spiro, width, &mut dbg.curve_debugger(id));
         match oc {
             StrokeResult::One(spiro_cps) => {
-                out_spiros.push(EvalSpiro {
-                    spiro: spiro_cps,
-                    tangent_override: Default::default(),
-                });
+                out_spiros.push(spiro_cps.into());
             }
-            StrokeResult::Two(spiro_cps, spiro_cps1) => {
-                out_spiros.push(EvalSpiro {
-                    spiro: spiro_cps,
-                    tangent_override: Default::default(),
-                });
-                out_spiros.push(EvalSpiro {
-                    spiro: spiro_cps1,
-                    tangent_override: Default::default(),
-                });
+            StrokeResult::Two(first_curve, second_curve) => {
+                out_spiros.push(first_curve.into());
+                out_spiros.push(second_curve.into());
             }
         }
     }
@@ -154,18 +127,18 @@ fn eval_stroked<E: EvaluationTracer>(
     let id = dbg.stroked(
         evaled_id,
         width,
-        out_spiros.iter().map(|s| s.spiro.as_slice()),
+        out_spiros.iter().map(|s| s.points.as_slice()),
     );
 
     if E::needs_evaluate_intermediate() {
         // Convert both original spiro and the stroked spiro to beziers
         let mut bezs = vec![];
         for spiro in eval_spiros {
-            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.spiro);
+            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
             bezs.extend(bez);
         }
         for spiro in &out_spiros {
-            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.spiro);
+            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
             bezs.extend(bez);
         }
         dbg.intermediate_output(id, &bezs);
