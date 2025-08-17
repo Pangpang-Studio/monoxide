@@ -1,4 +1,4 @@
-use std::cell::LazyCell;
+use std::{cell::LazyCell, collections::BTreeMap};
 
 use flo_curves::bezier::curve_length;
 
@@ -39,47 +39,22 @@ pub fn solve_stroke_attrs(
     // alignments.
     //
     // The calculated length is for each segment of the spiro curve.
-    let curve_lengths = LazyCell::new(|| {
-        let max_error = 0.001;
-        let mut lengths = Vec::with_capacity(curve.len());
-        for window in indices.windows(2) {
-            let &[from, to] = window else {
-                panic!("window size mismatch")
-            };
-            let mut acc = 0.0;
-            for seg in from..to {
-                let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
-                acc += seg_length;
-            }
-            lengths.push(acc);
-        }
-        // last segment
-        {
-            let mut acc = 0.0;
-            for seg in indices.last().copied().unwrap_or(0)..curve.len() {
-                let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
-                acc += seg_length;
-            }
-            lengths.push(acc);
-        }
-        assert_eq!(lengths.len(), curve.len(), "length calculation mismatch");
-        lengths
-    });
+    let curve_lengths = LazyCell::new(|| calc_curve_lengths(curve, cubic, indices));
 
-    // Fast path: if there's nothing to interpolate, we should not bother to
-    // calculate the curve length.
-    //
-    // We have a couple things to check to ensure we don't need to interpolate.
-    //
-    // For width factors, it should be either:
-    // - completely unset (everything is 1.0),
-    // - only one point set (everything is the same as that point), or
-    // - all points set (just use their given values).
-    let width_factors = width_fast_path(curve, &curve_lengths);
-    // For alignments, it's either:
-    // - completely unset (all are middle-aligned), or
-    // - No `Interpolate` points in the map
-    let alignments = alignment_fast_path(curve, &curve_lengths);
+    let width_factors = populate_with_interpolation(
+        &curve.width_factors,
+        curve.len(),
+        default_width_factor(),
+        curve.is_closed,
+        &curve_lengths,
+    );
+    let alignments = populate_with_interpolation(
+        &curve.alignment,
+        curve.len(),
+        default_alignment(),
+        curve.is_closed,
+        &curve_lengths,
+    );
 
     SolvedStrokeAttrs {
         width_factors,
@@ -87,24 +62,61 @@ pub fn solve_stroke_attrs(
     }
 }
 
-fn width_fast_path<F: FnOnce() -> Vec<f64>>(
+fn calc_curve_lengths(
     curve: &SpiroCurve,
-    curve_lengths: &LazyCell<Vec<f64>, F>,
+    cubic: &CubicBezier<Point2D>,
+    indices: &[usize],
 ) -> Vec<f64> {
-    if curve.width_factors.is_empty() {
-        vec![default_width_factor(); curve.len()]
+    let max_error = 0.001;
+    let mut lengths = Vec::with_capacity(curve.len());
+    for window in indices.windows(2) {
+        let &[from, to] = window else {
+            panic!("window size mismatch")
+        };
+        let mut acc = 0.0;
+        for seg in from..to {
+            let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
+            acc += seg_length;
+        }
+        lengths.push(acc);
+    }
+    // last segment
+    {
+        let mut acc = 0.0;
+        for seg in indices.last().copied().unwrap_or(0)..curve.len() {
+            let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
+            acc += seg_length;
+        }
+        lengths.push(acc);
+    }
+    assert_eq!(lengths.len(), curve.len(), "length calculation mismatch");
+    lengths
+}
+
+/// Given a map with indices and their corresponding values, this function
+/// interpolates the values for every point in a curve of given length,
+/// linearly, by the actual curve length of each segment.
+//
+// This function can be futher generalized to support any type representing a
+// real vector space, i.e. implementing `Add`, `Sub`, `Mul<f64>`.
+fn populate_with_interpolation(
+    map: &BTreeMap<usize, f64>,
+    len: usize,
+    default: f64,
+    is_closed: bool,
+    curve_lengths: &LazyCell<Vec<f64>, impl FnOnce() -> Vec<f64>>,
+) -> Vec<f64> {
+    if map.is_empty() {
+        vec![default; len]
     } else {
         let mut res = vec![];
-        res.reserve_exact(curve.len());
+        res.reserve_exact(len);
 
         // 0..first_index
-        let (&first_key, &first_val) = curve
-            .width_factors
-            .first_key_value()
-            .expect("checked for empty map");
-        if curve.is_closed {
+        let (&first_key, &first_val) = map.first_key_value().expect("checked for empty map");
+        if is_closed {
             // Fill with placeholders; see actual filling in last_index
-            res.extend(std::iter::repeat_n(default_width_factor(), first_key));
+            res.extend(std::iter::repeat_n(0.0, first_key));
         } else {
             for _ in 0..(first_key) {
                 res.push(first_val)
@@ -113,7 +125,7 @@ fn width_fast_path<F: FnOnce() -> Vec<f64>>(
 
         // first_index..last_index
         // Only handles the start of each segment in the loop
-        for ((&idx1, &width1), (&idx2, &width2)) in curve.width_factors.iter().tuple_windows() {
+        for ((&idx1, &width1), (&idx2, &width2)) in map.iter().tuple_windows() {
             assert!(idx2 > idx1);
             if idx2 - idx1 == 1 {
                 res.push(width1);
@@ -132,55 +144,38 @@ fn width_fast_path<F: FnOnce() -> Vec<f64>>(
         }
 
         // last_index..
-        let (&last_key, &last_val) = curve
-            .width_factors
-            .last_key_value()
-            .expect("checked for empty map");
-        if curve.is_closed {
-            if last_val == first_val {
+        let (&last_key, &last_val) = map.last_key_value().expect("checked for empty map");
+        if is_closed {
+            if first_key == 0 && last_key == len - 1 {
+                res.push(last_val);
+            } else if last_val == first_val {
                 // If the last value is the same as the first value, we can just
                 // fill the rest with that value.
-                res.extend(std::iter::repeat_n(last_val, curve.len() - res.len()));
+                res.extend(std::iter::repeat_n(last_val, len - res.len()));
                 for x in &mut res[..first_key] {
                     *x = last_val;
                 }
-                return res;
-            }
-            // This fills both last_index.. and 0..first_index
-            let lengths_tail = &curve_lengths[last_key..];
-            let lengths_head = &curve_lengths[..first_key];
-            let total_len: f64 = lengths_tail.iter().chain(lengths_head).copied().sum();
-            let mut sum = 0.0;
-            for l in lengths_tail {
-                sum += l;
-                res.push(last_val + (first_val - last_val) * (sum / total_len));
-            }
-            for (idx, &l) in lengths_head.iter().enumerate() {
-                sum += l;
-                res[idx] = last_val + (first_val - last_val) * (sum / total_len);
+            } else {
+                // This fills both last_index.. and 0..first_index
+                let lengths_tail = &curve_lengths[last_key..];
+                let lengths_head = &curve_lengths[..first_key];
+                let total_len: f64 = lengths_tail.iter().chain(lengths_head).copied().sum();
+                let mut sum = 0.0;
+                for l in lengths_tail {
+                    sum += l;
+                    res.push(last_val + (first_val - last_val) * (sum / total_len));
+                }
+                for (idx, &l) in lengths_head.iter().enumerate() {
+                    sum += l;
+                    res[idx] = last_val + (first_val - last_val) * (sum / total_len);
+                }
             }
         } else {
-            for _ in last_key..curve.len() {
+            for _ in last_key..len {
                 res.push(last_val);
             }
         }
 
         res
     }
-}
-
-fn alignment_fast_path<F: FnOnce() -> Vec<f64>>(
-    curve: &SpiroCurve,
-    curve_lengths: &LazyCell<Vec<f64>, F>,
-) -> Vec<f64> {
-    let mut last = default_alignment();
-    let mut res = vec![];
-    res.reserve_exact(curve.len());
-
-    for i in 0..curve.len() {
-        let alignment = todo!();
-        res.push(alignment);
-        last = alignment;
-    }
-    res
 }
