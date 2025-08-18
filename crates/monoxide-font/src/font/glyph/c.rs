@@ -9,7 +9,7 @@ use crate::font::shape::{Rect, Ring};
 
 pub fn c(fcx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outline(BezierBuilder::open((0.6, 0.)).insts([
+        .outline(BezierBuilder::closed((0.6, 0.)).insts([
             line!(0.8, 0.),
             line!(1., fcx.settings().width),
             line!(0.6, 0.),
