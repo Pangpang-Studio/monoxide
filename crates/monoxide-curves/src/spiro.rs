@@ -60,6 +60,13 @@ pub struct SpiroCurve {
 }
 
 impl SpiroCurve {
+    pub fn from_points(points: Vec<SpiroCp>, is_closed: bool) -> Self {
+        Self {
+            points,
+            ..Default::default()
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.points.len()
     }

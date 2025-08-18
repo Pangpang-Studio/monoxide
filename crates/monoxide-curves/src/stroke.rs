@@ -49,8 +49,8 @@ pub type TangentOverride = HashMap<usize, Tangent>;
 /// or two curves if the input curve is closed.
 #[derive(Debug, Clone)]
 pub enum StrokeResult {
-    One(Vec<SpiroCp>),
-    Two(Vec<SpiroCp>, Vec<SpiroCp>),
+    One(SpiroCurve),
+    Two(SpiroCurve, SpiroCurve),
 }
 
 /// Stroke a spiro curve. Returns a single spiro curve representing the stroke.
@@ -77,7 +77,10 @@ pub fn stroke_spiro(curve: &SpiroCurve, width: f64, dbg: &mut impl CurveDebugger
     // - A closed curve. In this case, the two curves are simply concatenated (the
     //   right one reversed because we need to decrease the winding number).
     if is_closed {
-        return StrokeResult::Two(left, right);
+        return StrokeResult::Two(
+            SpiroCurve::from_points(left, true),
+            SpiroCurve::from_points(right, true),
+        );
     }
 
     // - [Open, ..., EndOpen], i.e. an open curve. In this case, we need to replace
@@ -97,7 +100,7 @@ pub fn stroke_spiro(curve: &SpiroCurve, width: f64, dbg: &mut impl CurveDebugger
 
     result.extend(right);
 
-    StrokeResult::One(result)
+    StrokeResult::One(SpiroCurve::from_points(result, true))
 }
 
 #[allow(dead_code)]
