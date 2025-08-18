@@ -107,75 +107,74 @@ fn populate_with_interpolation(
     curve_lengths: &LazyCell<Vec<f64>, impl FnOnce() -> Vec<f64>>,
 ) -> Vec<f64> {
     if map.is_empty() {
-        vec![default; len]
-    } else {
-        let mut res = vec![];
-        res.reserve_exact(len);
-
-        // 0..first_index
-        let (&first_key, &first_val) = map.first_key_value().expect("checked for empty map");
-        if is_closed {
-            // Fill with placeholders; see actual filling in last_index
-            res.extend(std::iter::repeat_n(0.0, first_key));
-        } else {
-            for _ in 0..(first_key) {
-                res.push(first_val)
-            }
-        }
-
-        // first_index..last_index
-        // Only handles the start of each segment in the loop
-        for ((&idx1, &width1), (&idx2, &width2)) in map.iter().tuple_windows() {
-            assert!(idx2 > idx1);
-            if idx2 - idx1 == 1 {
-                res.push(width1);
-            } else if width1 == width2 {
-                res.extend(std::iter::repeat_n(width1, idx2 - idx1))
-            } else {
-                LazyCell::force(curve_lengths);
-                let lengths = &curve_lengths[idx1..idx2];
-                let total_len: f64 = lengths.iter().copied().sum();
-                let mut sum = 0.0;
-                for l in lengths {
-                    sum += l;
-                    res.push(width1 + (width2 - width1) * (sum / total_len));
-                }
-            }
-        }
-
-        // last_index..
-        let (&last_key, &last_val) = map.last_key_value().expect("checked for empty map");
-        if is_closed {
-            if first_key == 0 && last_key == len - 1 {
-                res.push(last_val);
-            } else if last_val == first_val {
-                // If the last value is the same as the first value, we can just
-                // fill the rest with that value.
-                res.extend(std::iter::repeat_n(last_val, len - res.len()));
-                for x in &mut res[..first_key] {
-                    *x = last_val;
-                }
-            } else {
-                // This fills both last_index.. and 0..first_index
-                let lengths_tail = &curve_lengths[last_key..];
-                let lengths_head = &curve_lengths[..first_key];
-                let total_len: f64 = lengths_tail.iter().chain(lengths_head).copied().sum();
-                let mut sum = 0.0;
-                for l in lengths_tail {
-                    sum += l;
-                    res.push(last_val + (first_val - last_val) * (sum / total_len));
-                }
-                for (idx, &l) in lengths_head.iter().enumerate() {
-                    sum += l;
-                    res[idx] = last_val + (first_val - last_val) * (sum / total_len);
-                }
-            }
-        } else {
-            for _ in last_key..len {
-                res.push(last_val);
-            }
-        }
-
-        res
+        return vec![default; len];
     }
+    let mut res = vec![];
+    res.reserve_exact(len);
+
+    // 0..first_index
+    let (&first_key, &first_val) = map.first_key_value().expect("checked for empty map");
+    if is_closed {
+        // Fill with placeholders; see actual filling in last_index
+        res.extend(std::iter::repeat_n(0.0, first_key));
+    } else {
+        for _ in 0..(first_key) {
+            res.push(first_val)
+        }
+    }
+
+    // first_index..last_index
+    // Only handles the start of each segment in the loop
+    for ((&idx1, &width1), (&idx2, &width2)) in map.iter().tuple_windows() {
+        assert!(idx2 > idx1);
+        if idx2 - idx1 == 1 {
+            res.push(width1);
+        } else if width1 == width2 {
+            res.extend(std::iter::repeat_n(width1, idx2 - idx1))
+        } else {
+            LazyCell::force(curve_lengths);
+            let lengths = &curve_lengths[idx1..idx2];
+            let total_len: f64 = lengths.iter().copied().sum();
+            let mut sum = 0.0;
+            for l in lengths {
+                sum += l;
+                res.push(width1 + (width2 - width1) * (sum / total_len));
+            }
+        }
+    }
+
+    // last_index..
+    let (&last_key, &last_val) = map.last_key_value().expect("checked for empty map");
+    if is_closed {
+        if first_key == 0 && last_key == len - 1 {
+            res.push(last_val);
+        } else if last_val == first_val {
+            // If the last value is the same as the first value, we can just
+            // fill the rest with that value.
+            res.extend(std::iter::repeat_n(last_val, len - res.len()));
+            for x in &mut res[..first_key] {
+                *x = last_val;
+            }
+        } else {
+            // This fills both last_index.. and 0..first_index
+            let lengths_tail = &curve_lengths[last_key..];
+            let lengths_head = &curve_lengths[..first_key];
+            let total_len: f64 = lengths_tail.iter().chain(lengths_head).copied().sum();
+            let mut sum = 0.0;
+            for l in lengths_tail {
+                sum += l;
+                res.push(last_val + (first_val - last_val) * (sum / total_len));
+            }
+            for (idx, &l) in lengths_head.iter().enumerate() {
+                sum += l;
+                res[idx] = last_val + (first_val - last_val) * (sum / total_len);
+            }
+        }
+    } else {
+        for _ in last_key..len {
+            res.push(last_val);
+        }
+    }
+
+    res
 }
