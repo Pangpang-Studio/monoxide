@@ -21,6 +21,8 @@ impl From<Dir> for Point2D {
     }
 }
 
+/// Alignment of stroke relative to the moving direction.
+/// See [`monoxide_curves::SpiroCurve::alignment`] for details.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Alignment {
     Left,
