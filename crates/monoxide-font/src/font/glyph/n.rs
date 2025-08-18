@@ -40,7 +40,9 @@ fn n_curl(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> im
         curl!(x + rx, y_hi - end_curve_h),
         // Top arc
         g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.),
-        g4!(x, y_hi + ovs),
-        g4!(x - mid_curve_w, y_hi - mid_curve_h).heading(Dir::L),
+        g4!(x, y_hi + ovs).width(1.),
+        g4!(x - mid_curve_w, y_hi - mid_curve_h)
+            .heading(Dir::L)
+            .width(0.5),
     ])
 }
