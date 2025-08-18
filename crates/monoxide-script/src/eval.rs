@@ -10,7 +10,10 @@ use monoxide_ttf::{
 };
 use petgraph::prelude::DiGraphMap;
 
-use crate::ast::{FontContext, OutlineExpr};
+use crate::{
+    ast::{FontContext, OutlineExpr},
+    eval::glyphs::FontEvalError,
+};
 
 mod glyphs;
 mod layout;
@@ -49,6 +52,9 @@ pub struct SerializedGlyph {
 pub enum HighEvalError {
     #[error("Tofu glyph is unset")]
     TofuUnset,
+
+    #[error("Failed to layout glyphs")]
+    EvalError(#[from] FontEvalError),
 }
 
 /// A [`FontContext`] with only reachable glyphs and the layout determined.
@@ -67,7 +73,7 @@ pub fn eval(cx: &FontContext, aux: &AuxiliarySettings) -> Result<FontFile, HighE
     if scx.glyph_list.len() == 1 {
         panic!("Windows font reader disallow single-glyph fonts")
     }
-    let glyphs = glyphs::eval_glyphs(aux, &scx);
+    let glyphs = glyphs::eval_glyphs(aux, &scx)?;
     let res = create_tables(cx, &scx, aux, glyphs);
     Ok(res)
 }
