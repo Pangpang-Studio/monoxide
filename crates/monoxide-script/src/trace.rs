@@ -69,7 +69,7 @@ pub struct NoId;
 
 impl std::fmt::Display for NoId {
     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Ok(())
+        write!(_f, "(NoId)")
     }
 }
 

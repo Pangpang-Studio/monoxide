@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use monoxide_curves::{point::Point2D, xform::Affine2D};
 use monoxide_ttf::{
-    hl,
+    hl::{self, glyf::ConvertError},
     model::{
         f2dot14, fword,
         glyf::{self, GlyphCommon, compound::Scale},
@@ -15,12 +15,25 @@ use petgraph::visit::DfsPostOrder;
 use crate::{
     ast::OutlineExpr,
     eval::{
-        AuxiliarySettings, SerializedComponent, SerializedFontContext, SerializedGlyphKind,
-        eval_outline,
+        AuxiliarySettings, EvalError, SerializedComponent, SerializedFontContext,
+        SerializedGlyphKind, eval_outline,
     },
+    trace::NoId,
 };
 
-pub fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<glyf::Glyph> {
+#[derive(Debug, thiserror::Error)]
+pub enum FontEvalError {
+    #[error("Failed to evaluate glyph, at glyph index {1}")]
+    EvalError(#[source] EvalError<NoId>, usize),
+
+    #[error("Failed to convert a glyph to glyf format, at glyph index {1}")]
+    GlyfEncodeError(#[source] ConvertError, usize),
+}
+
+pub fn eval_glyphs(
+    aux: &AuxiliarySettings,
+    scx: &SerializedFontContext,
+) -> Result<Vec<glyf::Glyph>, FontEvalError> {
     // Evaluate in post-order, so we calculate the dimensions of compound glyphs
     // after all of its components.
     let mut glyphs = Vec::new();
@@ -34,7 +47,7 @@ pub fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<
         let glyph = &scx.glyph_list[ix];
         match &glyph.kind {
             SerializedGlyphKind::Simple(outlines) => {
-                let simple_glyph = eval_simple_glyph(aux, outlines);
+                let simple_glyph = eval_simple_glyph(aux, outlines, ix)?;
                 glyphs[ix] = Some(glyf::Glyph::Simple(simple_glyph));
             }
             SerializedGlyphKind::Compound(comps) => {
@@ -44,21 +57,23 @@ pub fn eval_glyphs(aux: &AuxiliarySettings, scx: &SerializedFontContext) -> Vec<
         }
     }
 
-    glyphs
+    let res = glyphs
         .into_iter()
         .enumerate()
         .map(|(ix, val)| val.unwrap_or_else(|| panic!("Glyph at index {ix} is not set")))
-        .collect()
+        .collect();
+    Ok(res)
 }
 
 fn eval_simple_glyph(
     aux: &AuxiliarySettings,
     outlines: &[Arc<OutlineExpr>],
-) -> glyf::simple::SimpleGlyph {
+    glyph_index: usize,
+) -> Result<glyf::simple::SimpleGlyph, FontEvalError> {
     let mut res_outlines = vec![];
     for it in outlines {
-        eval_outline(it, &mut res_outlines, &mut ()).expect("Eval error!");
-        // FIXME: handle errors
+        eval_outline(it, &mut res_outlines, &mut ())
+            .map_err(|e| FontEvalError::EvalError(e, glyph_index))?;
     }
 
     let quads = res_outlines
@@ -74,7 +89,7 @@ fn eval_simple_glyph(
         })
         .collect::<Vec<_>>();
 
-    hl::glyf::encode(&quads).unwrap()
+    hl::glyf::encode(&quads).map_err(|e| FontEvalError::GlyfEncodeError(e, glyph_index))
 }
 
 fn eval_compound_glyph(
