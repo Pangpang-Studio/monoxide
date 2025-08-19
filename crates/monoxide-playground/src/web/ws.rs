@@ -95,7 +95,7 @@ async fn send_ws_task(
                         name: None,
                         outline,
                         error,
-                        advance: font_context.settings().width,
+                        advance: font_context.settings().mono_width(),
                     };
                     ws.feed(Message::Text(
                         serde_json::to_string(&WsServerMsg::Glyph(glyph))?.into(),

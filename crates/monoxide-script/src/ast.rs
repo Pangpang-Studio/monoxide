@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, ops::Deref, sync::Arc};
 
-use crate::{FontParamSettings, dsl::IntoOutline};
+use crate::{EvalSettings, dsl::IntoOutline};
 
 mod compound;
 mod simple;
@@ -8,7 +8,7 @@ mod simple;
 pub use compound::GlyphComponent;
 pub use simple::OutlineExpr;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct FontContext {
     /// The default glyph, used for characters that do not have a glyph
     /// assigned.
@@ -21,15 +21,15 @@ pub struct FontContext {
     /// The regular character mapping. This mapping is used when no other
     /// replacements override the characters.
     pub(crate) cmap: BTreeMap<char, Glyph>,
-    pub(crate) settings: FontParamSettings,
+    pub(crate) settings: Box<dyn EvalSettings>,
 }
 
 impl FontContext {
-    pub fn new(settings: FontParamSettings) -> Self {
+    pub fn new(settings: impl EvalSettings + 'static) -> Self {
         Self {
             tofu: None,
             cmap: BTreeMap::new(),
-            settings,
+            settings: Box::new(settings),
         }
     }
 
@@ -45,8 +45,8 @@ impl FontContext {
         self.cmap.insert(ch, glyph)
     }
 
-    pub fn settings(&self) -> &FontParamSettings {
-        &self.settings
+    pub fn settings(&self) -> &dyn EvalSettings {
+        &*self.settings
     }
 }
 
