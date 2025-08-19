@@ -107,7 +107,7 @@ fn create_tables(
     let outline = Outline::TrueType(TrueTypeTables { glyf, loca, maxp });
 
     // hmtx for monospaced font
-    let width_in_font_units = aux.point_per_em as f64 * cx.settings.width;
+    let width_in_font_units = aux.point_per_em as f64 * cx.settings.mono_width();
     let hmtx = hmtx::Table {
         metrics: vec![
             hmtx::LongHorizontalMetric {
@@ -136,8 +136,8 @@ fn create_tables(
     };
 
     let hhea = hhea::Table {
-        ascender: (aux.point_per_em as f64 * cx.settings.cap_height) as fword,
-        descender: (aux.point_per_em as f64 * cx.settings.descender) as fword,
+        ascender: (aux.point_per_em as f64 * cx.settings.cap_height()) as fword,
+        descender: (aux.point_per_em as f64 * cx.settings.descender()) as fword,
         line_gap: 0,
         advance_width_max: width_in_font_units as ufword,
         min_left_side_bearing: 0,
@@ -162,13 +162,13 @@ fn create_tables(
         .collect(),
     };
 
-    let subscript_sz = (aux.point_per_em as f64 * cx.settings.x_height) as fword;
-    let subscript_offset = (aux.point_per_em as f64 * cx.settings.x_height / 4.) as fword;
+    let subscript_sz = (aux.point_per_em as f64 * cx.settings.x_height()) as fword;
+    let subscript_offset = (aux.point_per_em as f64 * cx.settings.x_height() / 4.) as fword;
     let strikeout_sz = (0.05 * aux.point_per_em as f64) as fword;
-    let strikeout_pos = (aux.point_per_em as f64 * cx.settings.x_height / 2.) as fword;
-    let ascender = (aux.point_per_em as f64 * cx.settings.cap_height) as fword;
-    let descender = (aux.point_per_em as f64 * cx.settings.descender) as fword;
-    let x_height = (aux.point_per_em as f64 * cx.settings.x_height) as fword;
+    let strikeout_pos = (aux.point_per_em as f64 * cx.settings.x_height() / 2.) as fword;
+    let ascender = (aux.point_per_em as f64 * cx.settings.cap_height()) as fword;
+    let descender = (aux.point_per_em as f64 * cx.settings.descender()) as fword;
+    let x_height = (aux.point_per_em as f64 * cx.settings.x_height()) as fword;
     let os2 = os2::Table {
         x_avg_char_width: width_in_font_units as fword,
         us_weight_class: 400, // TODO: set weight

@@ -6,9 +6,11 @@
 mod dir;
 mod glyph;
 mod math;
+mod settings;
 mod shape;
 
-use monoxide_script::{FontParamSettings, ast::FontContext};
+use monoxide_script::ast::FontContext;
+use settings::FontParamSettings;
 
 pub struct InputContext {
     pub settings: FontParamSettings,

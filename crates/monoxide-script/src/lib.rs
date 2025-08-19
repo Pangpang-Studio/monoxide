@@ -5,117 +5,6 @@ pub mod trace;
 
 use serde::{Deserialize, Serialize};
 
-/// Defines the basic em parameters for the font.
-///
-/// The em square in this project is defined as follows:
-///
-/// ```txt
-///              y
-///    ascender _|________|
-///  cap_height _|        |
-///    x_height _| ||  || |
-///             _| ||==|| |
-///           0 _|_||__||_|____ x
-///   descender _|________| width
-/// ```
-///
-/// In other words, a regular glyph must be designed to follow the below
-/// coordinate restrictions:
-///
-/// * 0 <= x <= width
-/// * descender <= y <= ascender := 1 + descender
-///
-/// See: <http://designwithfontforge.com/en-US/The_EM_Square.html>
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct FontParamSettings {
-    pub width: f64,
-    pub x_height: f64,
-    pub descender: f64,
-    pub cap_height: f64,
-
-    /// Primary stroke width.
-    pub stroke_width: f64,
-
-    /// Vertical overshoot for arcs.
-    /// See: <http://designwithfontforge.com/en-US/Creating_o_and_n.html>
-    pub overshoot: f64,
-
-    /// Primary side bearing, a.k.a. the horizontal margin of glyphs.
-    pub side_bearing: f64,
-
-    /// Size of the dot in glyphs like 'i' and 'j'.
-    pub dot_size: f64,
-}
-
-impl FontParamSettings {
-    /// The full width of a half-width character.
-    pub const fn wth(&self) -> f64 {
-        self.width
-    }
-
-    /// The x-height.
-    pub const fn xh(&self) -> f64 {
-        self.x_height
-    }
-
-    /// The cap height.
-    pub const fn cap(&self) -> f64 {
-        self.cap_height
-    }
-
-    /// The descender.
-    ///
-    /// NOTE: This is usually a negative value.
-    pub const fn dsc(&self) -> f64 {
-        self.descender
-    }
-
-    /// The primary stroke width.
-    pub const fn stw(&self) -> f64 {
-        self.stroke_width
-    }
-
-    /// The overshoot.
-    pub const fn ovs(&self) -> f64 {
-        self.overshoot
-    }
-
-    /// The left side bearing.
-    pub const fn sbl(&self) -> f64 {
-        self.side_bearing
-    }
-
-    /// The dot size in glyphs like 'i' and 'j'.
-    pub const fn dot(&self) -> f64 {
-        self.dot_size
-    }
-
-    /// The horizontal midline of a half-width character.
-    pub const fn mid(&self) -> f64 {
-        self.wth() / 2.
-    }
-
-    /// The vertical midline of the letter `x`.
-    pub const fn mih(&self) -> f64 {
-        self.xh() / 2.
-    }
-
-    /// The ascender.
-    pub const fn asc(&self) -> f64 {
-        1. + self.dsc()
-    }
-
-    /// The right side bearing.
-    pub const fn sbr(&self) -> f64 {
-        self.wth() - self.sbl()
-    }
-
-    /// The dot radius in glyphs like 'i' and 'j'.
-    pub const fn dtr(&self) -> f64 {
-        self.dot() / 2.
-    }
-}
-
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __let_settings_single {
@@ -128,20 +17,32 @@ macro_rules! __let_settings_single {
 }
 
 /// Convenience macro to extract original or derived values from
-/// [`FontParamSettings`].
+/// a settings struct.
 ///
 /// # Examples
 ///
 /// ```no_run
 /// # use monoxide_script::let_settings;
-/// # let s: monoxide_script::FontParamSettings = todo!();
+/// # struct Foo;
+/// # impl Foo {
+/// #   fn mid(&self){}
+/// #   fn mih(&self){}
+/// #   fn ovs(&self){}
+/// # }
+/// # let s: Foo = todo!();
 /// let_settings! { { mid, mih, ovs: o } = s; }
 /// ```
 ///
 /// ... will expand to:
 ///
 /// ```no_run
-/// # let s: monoxide_script::FontParamSettings = todo!();
+/// # struct Foo;
+/// # impl Foo {
+/// #   fn mid(&self){}
+/// #   fn mih(&self){}
+/// #   fn ovs(&self){}
+/// # }
+/// # let s: Foo = todo!();
 /// let mid = s.mid();
 /// let mih = s.mih();
 /// let o = s.ovs();
@@ -155,4 +56,23 @@ macro_rules! let_settings {
             $crate::__let_settings_single!($meth $(, $var)? , $target);
         )+
     };
+}
+
+/// Settings required for font evaluation.
+///
+/// This trait defines the essential parameters needed to populate TrueType
+/// font metrics metadata. Note that other params like font name are defined in
+/// [`eval::AuxiliarySettings`].
+pub trait EvalSettings: std::fmt::Debug + Send + Sync {
+    /// The full width of a half-width monospace character.
+    fn mono_width(&self) -> f64;
+
+    /// The cap height (height of capital letters).
+    fn cap_height(&self) -> f64;
+
+    /// The descender (usually a negative value).
+    fn descender(&self) -> f64;
+
+    /// The x-height (height of lowercase letters like 'x').
+    fn x_height(&self) -> f64;
 }

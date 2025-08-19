@@ -42,7 +42,7 @@ pub async fn glyph_detail(
             .unwrap()
     })?;
 
-    let advance = glyph.advance.unwrap_or(cx.settings().width);
+    let advance = glyph.advance.unwrap_or(cx.settings().mono_width());
     match &glyph.kind {
         SerializedGlyphKind::Simple(simple_glyph) => {
             let detail = simple_glyph_to_detail(id, cx, simple_glyph, advance);
@@ -85,7 +85,7 @@ fn simple_glyph_to_detail(
         name: None,
         outline: output_outline,
         error: None,
-        advance: cx.settings().width,
+        advance: cx.settings().mono_width(),
     };
     let guidelines = make_guidelines(cx, advance);
 
@@ -107,15 +107,15 @@ fn make_guidelines(cx: &FontContext, advance: f64) -> Guidelines {
                 label: Some("baseline".to_string()),
             },
             Guideline {
-                pos: settings.x_height,
+                pos: settings.x_height(),
                 label: Some("x-height".to_string()),
             },
             Guideline {
-                pos: settings.cap_height,
+                pos: settings.cap_height(),
                 label: Some("cap-height".to_string()),
             },
             Guideline {
-                pos: settings.descender,
+                pos: settings.descender(),
                 label: Some("descender".to_string()),
             },
         ],
