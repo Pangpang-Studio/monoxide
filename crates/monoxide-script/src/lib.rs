@@ -3,8 +3,6 @@ pub mod dsl;
 pub mod eval;
 pub mod trace;
 
-use serde::{Deserialize, Serialize};
-
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __let_settings_single {

@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap, HashSet},
-    sync::Arc,
-};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use by_address::ByAddress;
 use monoxide_curves::xform::Affine2D;
