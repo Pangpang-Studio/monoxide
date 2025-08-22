@@ -1,8 +1,4 @@
-use monoxide_curves::{
-    CubicBezier, SpiroCurve,
-    point::Point2D,
-    stroke::{StrokeResult, TangentOverride},
-};
+use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D, stroke::StrokeResult};
 
 use crate::{ast::OutlineExpr, trace::EvaluationTracer};
 
@@ -115,11 +111,11 @@ fn eval_stroked<E: EvaluationTracer>(
         let oc = monoxide_curves::stroke::stroke_spiro(spiro, width, &mut dbg.curve_debugger(id));
         match oc {
             StrokeResult::One(spiro_cps) => {
-                out_spiros.push(spiro_cps.into());
+                out_spiros.push(spiro_cps);
             }
             StrokeResult::Two(first_curve, second_curve) => {
-                out_spiros.push(first_curve.into());
-                out_spiros.push(second_curve.into());
+                out_spiros.push(first_curve);
+                out_spiros.push(second_curve);
             }
         }
     }

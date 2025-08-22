@@ -60,7 +60,7 @@ pub struct SpiroCurve {
 }
 
 impl SpiroCurve {
-    pub fn from_points(points: Vec<SpiroCp>, is_closed: bool) -> Self {
+    pub fn from_points(points: Vec<SpiroCp>, _is_closed: bool) -> Self {
         Self {
             points,
             ..Default::default()

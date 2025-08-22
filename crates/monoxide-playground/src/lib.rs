@@ -73,7 +73,10 @@ impl Playground {
             };
             debug!("Successfully evaluated playground");
             render_tx
-                .send(Arc::new(web::RenderedFontState::Font(fcx, ser_fcx)))
+                .send(Arc::new(web::RenderedFontState::Font(
+                    Box::new(fcx),
+                    Box::new(ser_fcx),
+                )))
                 .unwrap();
         }
 

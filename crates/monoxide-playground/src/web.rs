@@ -85,7 +85,7 @@ pub struct AppState {
 pub enum RenderedFontState {
     #[default]
     Nothing,
-    Font(FontContext, SerializedFontContext),
+    Font(Box<FontContext>, Box<SerializedFontContext>),
     Error(anyhow::Error),
 }
 
