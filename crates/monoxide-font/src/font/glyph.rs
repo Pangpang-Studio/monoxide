@@ -11,6 +11,7 @@ glyph_mods! {
     c;
     d;
     i;
+    k;
     l;
     n;
     o;
