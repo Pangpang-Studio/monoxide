@@ -112,9 +112,41 @@ pub fn make_line_join(
     // Move separately with in and out tangent
     let (in_left, in_right) =
         move_point_normal_both(cp.into(), in_tangent, left_offset, right_offset);
-    let (out_left, _out_right) =
+    let (out_left, out_right) =
         move_point_normal_both(cp.into(), out_tangent, left_offset, right_offset);
 
+    // {left,right}_offset might be close to zero due to stroke alignments,
+    // making the thing numerically unstable/might get NaN/Infinity. Choose a
+    // better side to calculate from.
+    //
+    // We should not rely on the absolute values of the offsets (stroke width).
+    // Calculate a ratio instead:
+    let lr_ratio = left_offset / right_offset;
+    // - Left close to zero: |lr_ratio| < 1e-9 -> use right side
+    // - Right close to zero: |lr_ratio| > 1e9 -> use left side
+    // - Regular case -> use left side
+    // - Both close to zero: dude why?!
+    if lr_ratio < 1e-9 {
+        let (k1_right, join_right) = calc_join(in_tangent, out_tangent, in_right, out_right);
+
+        let k1_left = -(left_offset / right_offset) * k1_right;
+        let join_left = in_left + k1_left * in_tangent;
+        (join_left, join_right)
+    } else {
+        let (k1_left, join_left) = calc_join(in_tangent, out_tangent, in_left, out_left);
+
+        let k1_right = -(right_offset / left_offset) * k1_left;
+        let join_right = in_right + k1_right * in_tangent;
+        (join_left, join_right)
+    }
+}
+
+fn calc_join(
+    in_tangent: Point2D,
+    out_tangent: Point2D,
+    in_tip: Point2D,
+    out_tip: Point2D,
+) -> (f64, Point2D) {
     /*
     Now we're getting these 4 points:
 
@@ -157,19 +189,13 @@ pub fn make_line_join(
     let b1 = -out_tangent.x;
     let a2 = in_tangent.y;
     let b2 = -out_tangent.y;
-    let c1 = out_left.x - in_left.x;
-    let c2 = out_left.y - in_left.y;
+    let c1 = out_tip.x - in_tip.x;
+    let c2 = out_tip.y - in_tip.y;
 
     // ... the solution for x is:
-    let k1_left = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
+    let k1 = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
 
     // And our join point on the left side is just:
-    let join_left = in_left + k1_left * in_tangent;
-
-    // Additionally, for the right side, k1 can be directly derived from that
-    // of the left side:
-    let k1_right = -(right_offset / left_offset) * k1_left;
-    let join_right = in_right + k1_right * in_tangent;
-
-    (join_left, join_right)
+    let res = in_tip + k1 * in_tangent;
+    (k1, res)
 }
