@@ -1,3 +1,4 @@
+use monoxide_curves::point::Point2D;
 use monoxide_script::EvalSettings;
 
 /// Defines the basic em parameters for the font.
@@ -108,6 +109,36 @@ impl FontParamSettings {
     /// The dot radius in glyphs like 'i' and 'j'.
     pub const fn dtr(&self) -> f64 {
         self.dot() / 2.
+    }
+
+    /// The lower left corner of the em square.
+    pub fn lower_left(&self) -> Point2D {
+        Point2D::new(self.sbl(), 0.0)
+    }
+
+    /// The lower right corner of the em square.
+    pub fn lower_right(&self) -> Point2D {
+        Point2D::new(self.sbr(), 0.0)
+    }
+
+    /// The lower mid point of the em square.
+    pub fn lower_mid(&self) -> Point2D {
+        Point2D::new(self.mid(), 0.0)
+    }
+
+    /// The upper left corner of the em square.
+    pub fn upper_left(&self) -> Point2D {
+        Point2D::new(self.sbl(), self.cap())
+    }
+
+    /// The upper right corner of the em square.
+    pub fn upper_right(&self) -> Point2D {
+        Point2D::new(self.sbr(), self.cap())
+    }
+
+    /// The upper mid point of the em square.
+    pub fn upper_mid(&self) -> Point2D {
+        Point2D::new(self.mid(), self.cap())
     }
 }
 
