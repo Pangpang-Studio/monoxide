@@ -42,7 +42,7 @@ pub struct EvalValue<Id> {
     pub id: Id,
 }
 
-impl<Id> EvalValue<Id> {
+impl<Id: Copy> EvalValue<Id> {
     pub fn bezier(bezier: CubicBezier<Point2D>, id: Id) -> Self {
         Self {
             kind: EvalValueKind::Beziers(vec![bezier]),
@@ -54,6 +54,25 @@ impl<Id> EvalValue<Id> {
         Self {
             kind: EvalValueKind::Spiros(vec![spiro]),
             id,
+        }
+    }
+
+    pub fn force_bezier(
+        self,
+        dbg: &mut impl EvaluationTracer<Id = Id>,
+    ) -> Vec<CubicBezier<Point2D>> {
+        match self.kind {
+            EvalValueKind::Beziers(beziers) => beziers,
+            EvalValueKind::Spiros(spiros) => {
+                let mut beziers = vec![];
+                for spiro in &spiros {
+                    let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
+                    beziers.extend(bez);
+                }
+                let id = dbg.spiro_to_bezier(self.id);
+                dbg.intermediate_output(id, &beziers);
+                beziers
+            }
         }
     }
 }
@@ -92,6 +111,24 @@ fn eval_outline_internal<E: EvaluationTracer>(
                     eval_stroked(evaled.id, &eval_spiros, *width, dbg)
                 }
             }
+        }
+        OutlineExpr::Transformed(expr, xform) => {
+            let evaled = eval_outline_internal(expr, dbg)?;
+            let bezier = evaled.force_bezier(dbg);
+            let flips = xform.flips_direction();
+            let xformed = bezier
+                .iter()
+                .map(|x| {
+                    let xformed = x.xform(*xform);
+                    if flips { xformed.reversed() } else { xformed }
+                })
+                .collect();
+
+            let id = dbg.constructed_beziers(bezier.iter());
+            Ok(EvalValue {
+                kind: EvalValueKind::Beziers(xformed),
+                id,
+            })
         }
     }
 }

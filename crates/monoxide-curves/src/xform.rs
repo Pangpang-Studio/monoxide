@@ -67,6 +67,56 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         }
     }
 
+    /// Mirror (reflect) points across the line defined by `point` and
+    /// `direction`. The reflection is applied to the input of this
+    /// transformation (i.e. the matrix is right-multiplied by the
+    /// reflection matrix) and the translation is adjusted so the overall
+    /// affine transformation equals: T ∘ Reflect_line(point, direction).
+    pub fn mirror_along(self, point: P, direction: P) -> Self {
+        // compute squared length of direction
+        let len_sq = direction.x() * direction.x() + direction.y() * direction.y();
+        if len_sq.is_zero() {
+            // degenerate direction: no-op
+            return self;
+        }
+
+        // unit direction u
+        let inv_len = len_sq.sqrt().recip();
+        let u = direction.mul_scalar(inv_len);
+        let ux = u.x();
+        let uy = u.y();
+
+        // reflection matrix R = 2*u*u^T - I
+        let two = P::Scalar::from(2).unwrap();
+        let one = P::Scalar::from(1).unwrap();
+        let r00 = two * ux * ux - one;
+        let r01 = two * ux * uy;
+        let r10 = r01;
+        let r11 = two * uy * uy - one;
+
+        // columns of R (needed to multiply rows of self.mat by R)
+        let rcol0 = P::make(r00, r10);
+        let rcol1 = P::make(r01, r11);
+
+        // new matrix = self.mat * R
+        let new_mat = [
+            P::make(self.mat[0].dot(&rcol0), self.mat[0].dot(&rcol1)),
+            P::make(self.mat[1].dot(&rcol0), self.mat[1].dot(&rcol1)),
+        ];
+
+        // translation: A*(p0 - R*p0) + t
+        let p0 = point;
+        let rp0 = P::make(r00 * p0.x() + r01 * p0.y(), r10 * p0.x() + r11 * p0.y());
+        let diff = p0.point_sub(&rp0);
+        let add = P::make(self.mat[0].dot(&diff), self.mat[1].dot(&diff));
+        let new_trans = self.trans.point_add(&add);
+
+        Affine2D {
+            mat: new_mat,
+            trans: new_trans,
+        }
+    }
+
     pub fn apply(&self, point: &P) -> P {
         let x = self.mat[0].dot(point);
         let y = self.mat[1].dot(point);
@@ -87,6 +137,12 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
     /// Create a transformation that scales the point by `scale`.
     pub fn scaled(scale: P::Scalar) -> Self {
         Self::id().scale(scale)
+    }
+
+    /// Create a transformation that reflects the point along the line that
+    /// crosses `base` and goes in `direction`.
+    pub fn mirrored_along(base: P, direction: P) -> Self {
+        Self::id().mirror_along(base, direction)
     }
 
     // Info to simplify the transformation in pipeline stages
@@ -119,6 +175,18 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         } else {
             None
         }
+    }
+
+    /// Returns true if the linear part of the transform flips orientation
+    /// (i.e. has a negative determinant). This indicates the transform
+    /// mirrors/reflections compared to orientation-preserving transforms.
+    pub fn flips_direction(&self) -> bool {
+        let m00 = self.mat[0].x();
+        let m01 = self.mat[0].y();
+        let m10 = self.mat[1].x();
+        let m11 = self.mat[1].y();
+        let det = m00 * m11 - m01 * m10;
+        det < P::Scalar::zero()
     }
 }
 

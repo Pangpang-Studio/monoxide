@@ -111,7 +111,7 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
         })
     }
 
-    pub fn segment_iter(&self) -> impl Iterator<Item = CubicSegmentFull<P>> + '_ {
+    pub fn segment_iter(&self) -> impl DoubleEndedIterator<Item = CubicSegmentFull<P>> + '_ {
         (0..self.segments.len()).filter_map(move |i| self.segment(i))
     }
 
@@ -129,6 +129,27 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
                 (start_point.mul_scalar(one_minus_t)).point_add(&end.mul_scalar(t))
             }
             CubicSegment::Curve(p1, p2, p3) => sample(start_point, *p1, *p2, *p3, t),
+        }
+    }
+
+    pub fn reversed(&self) -> Self {
+        let end_point = if let Some(last_seg) = self.segments.last() {
+            last_seg.last_point()
+        } else {
+            self.start
+        };
+        let reversed_segments = self
+            .segment_iter()
+            .rev()
+            .map(|x| match x.rest {
+                CubicSegment::Line(_) => CubicSegment::Line(x.start),
+                CubicSegment::Curve(c1, c2, _) => CubicSegment::Curve(c2, c1, x.start),
+            })
+            .collect();
+        CubicBezier {
+            start: end_point,
+            segments: reversed_segments,
+            closed: self.closed,
         }
     }
 }
