@@ -9,7 +9,7 @@ use dioxus_devtools::subsecond;
 use futures_util::StreamExt;
 use monoxide_script::{ast::FontContext, eval::layout_glyphs};
 use tokio::sync::watch;
-use tracing::debug;
+use tracing::{debug, info};
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -56,7 +56,7 @@ impl Playground {
         send();
 
         while rx.next().await.is_some() {
-            debug!("Evaluating playground...");
+            info!("Re-evaluating playground");
             let fcx = match make_font() {
                 Ok(fcx) => fcx,
                 Err(e) => {
