@@ -31,6 +31,11 @@
       :cvt="cvt"
       class="stroke-2 stroke-blue-600 fill-none"
     ></SvgPath>
+    <SvgDirection
+      :path="props.debugPaths"
+      :cvt="cvt"
+      class="stroke-2 stroke-purple-600 fill-none"
+    ></SvgDirection>
     <SvgPath
       :path="props.debugFill"
       :cvt="cvt"
@@ -59,6 +64,7 @@ import {
 import SvgGuidelines from './SvgGuidelines.vue'
 import SvgPath from './SvgPath.vue'
 import SvgDebugPoint from './SvgDebugPoint.vue'
+import SvgDirection from './SvgDirection.vue'
 
 const svgRef = useTemplateRef('svg')
 
