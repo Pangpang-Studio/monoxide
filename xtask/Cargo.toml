@@ -10,8 +10,8 @@ clap.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-ctrlc = "3.4.5"
+ctrlc = "3.5.0"
 scopeguard = "1.2.0"
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2.172"
+libc = "0.2.175"
