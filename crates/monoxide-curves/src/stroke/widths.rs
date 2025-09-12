@@ -1,13 +1,13 @@
 use std::{cell::LazyCell, collections::BTreeMap};
 
 use flo_curves::bezier::curve_length;
+use itertools::Itertools;
 
 use crate::{
     CubicBezier,
     point::Point2D,
     spiro::{SpiroCurve, default_alignment, default_width_factor},
 };
-use itertools::Itertools;
 
 pub struct SolvedStrokeAttrs {
     /// Width factor relative to the default width of the stroke.

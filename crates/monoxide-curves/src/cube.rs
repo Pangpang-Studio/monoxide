@@ -4,9 +4,8 @@ mod exchange;
 use num_traits::{Num, real::Real};
 use serde::{Deserialize, Serialize};
 
-use crate::{IPoint2D, xform::Affine2D};
-
 use super::Point;
+use crate::{IPoint2D, xform::Affine2D};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(

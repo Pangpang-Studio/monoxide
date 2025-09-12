@@ -20,8 +20,7 @@ pub fn calc_tangents(
     );
     let mut tangents = Vec::new();
 
-    use crate::cube::CubicSegment::*;
-    use crate::cube::CubicSegmentFull as CSF;
+    use crate::cube::{CubicSegment::*, CubicSegmentFull as CSF};
 
     for &index in indices {
         let out_seg = if index < cube_curve.segments.len() {
