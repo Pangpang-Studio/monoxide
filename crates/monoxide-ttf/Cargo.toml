@@ -10,7 +10,7 @@ monoxide-curves.workspace = true
 bitflags = "2.9.4"
 bytes = "1.9.0"
 fixed = "=1.29.0"
-indexmap = "2.11.1"
+indexmap = "2.11.4"
 num-traits.workspace = true
 rust_decimal = { version = "1.38.0", default-features = false }
 thiserror.workspace = true
