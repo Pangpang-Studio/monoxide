@@ -14,4 +14,4 @@ ctrlc = "3.5.0"
 scopeguard = "1.2.0"
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2.175"
+libc = "0.2.176"
