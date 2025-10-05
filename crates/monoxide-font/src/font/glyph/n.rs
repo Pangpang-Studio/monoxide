@@ -1,17 +1,18 @@
 use monoxide_script::prelude::*;
 
 use super::InputContext;
-use crate::font::{dir::Dir, glyph::o::OShape, shape::Rect};
+use crate::font::{
+    dir::{Alignment, Dir},
+    glyph::o::OShape,
+    shape::Rect,
+};
 
 pub fn n(cx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw, xh } = cx.settings(); }
 
-    let hstw = stw / 2.;
-    let sbl1 = sbl + hstw;
-
     Glyph::builder()
-        .outline(Rect::new((sbl1, 0.), (sbl1, xh), stw))
-        .outline(n_curl((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
+        .outline(Rect::new((sbl, 0.), (sbl, xh), stw).aligned(Alignment::Left))
+        .outline(n_curl((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
         .build()
 }
 
@@ -29,12 +30,12 @@ fn n_curl(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> im
 
     SpiroBuilder::open().insts([
         // Right side
-        flat!(x + rx, 0.),
+        flat!(x + rx, 0.).aligned(Alignment::Right),
         curl!(x + rx, y + ry / 3.),
         // Top arc
         g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.),
         g4!(x, y_hi + ovs).width(1.),
-        g4!(x - mid_curve_w, y_hi - mid_curve_h)
+        g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.1)
             .heading(Dir::L)
             .width(0.5),
     ])
