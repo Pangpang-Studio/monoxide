@@ -8,7 +8,7 @@ use crate::font::{
 pub fn k(cx: &InputContext) -> Glyph {
     let_settings! {
         {
-            sbl, sbr, xh, stw,
+            sbl, sbr, xh, mih, stw,
             lower_left,
             lower_right,
             upper_left,
@@ -25,7 +25,7 @@ pub fn k(cx: &InputContext) -> Glyph {
         .stroked(stw);
 
     let xh_right = Point2D::new(sbr, xh);
-    let mid = Point2D::new(sbl + stw, xh / 2.0) + k_mid_offset;
+    let mid = Point2D::new(sbl + stw, mih) + k_mid_offset;
 
     let chevron = SpiroBuilder::open()
         .insts([
