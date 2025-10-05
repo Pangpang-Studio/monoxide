@@ -3,6 +3,7 @@ use monoxide_script::prelude::*;
 use crate::font::{
     InputContext,
     dir::{Alignment, Dir},
+    shape::Rect,
 };
 
 pub fn k(cx: &InputContext) -> Glyph {
@@ -17,12 +18,9 @@ pub fn k(cx: &InputContext) -> Glyph {
 
     let k_mid_offset = Point2D::new(sbr - sbl, 0.) * 0.1;
 
-    let pipe = SpiroBuilder::open()
-        .insts([
-            corner!(lower_left).aligned(Alignment::Left).heading(Dir::U),
-            corner!(upper_left).aligned(Alignment::Left).heading(Dir::U),
-        ])
-        .stroked(stw);
+    let pipe = Rect::new(lower_left, upper_left, stw)
+        .aligned(Alignment::Left)
+        .into_outline();
 
     let xh_right = Point2D::new(sbr, xh);
     let mid = Point2D::new(sbl + stw, mih) + k_mid_offset;
@@ -36,12 +34,8 @@ pub fn k(cx: &InputContext) -> Glyph {
             corner!(xh_right).aligned(Alignment::Right).heading(Dir::U),
         ])
         .stroked(stw * 0.8);
-    let bar = SpiroBuilder::open()
-        .insts([
-            corner!(mid.with_x(sbl)),
-            corner!(mid + Point2D::unit_x() * stw),
-        ])
-        .stroked(stw);
+
+    let bar = Rect::new(mid.with_x(sbl), mid + Point2D::unit_x() * stw, stw).into_outline();
 
     Glyph::builder().outlines([pipe, chevron, bar]).build()
 }

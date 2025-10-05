@@ -4,6 +4,7 @@ use crate::font::{
     InputContext,
     dir::{Alignment, Dir},
     math::mix,
+    shape::Rect,
 };
 
 pub fn a_cap(cx: &InputContext) -> Glyph {
@@ -30,12 +31,12 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
         .clone()
         .transformed(Affine2D::mirrored_along(lower_mid, Point2D::unit_y()));
 
-    let bar = SpiroBuilder::open()
-        .insts([
-            corner!(mix(lower_left, upper_mid, bar_height)),
-            corner!(mix(lower_right, upper_mid, bar_height)),
-        ])
-        .stroked(stw);
+    let bar = Rect::new(
+        mix(lower_left, upper_mid, bar_height),
+        mix(lower_right, upper_mid, bar_height),
+        stw,
+    )
+    .into_outline();
 
     Glyph::builder().outlines([left, bar, right]).build()
 }

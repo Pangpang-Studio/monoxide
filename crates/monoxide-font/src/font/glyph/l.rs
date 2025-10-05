@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use monoxide_script::prelude::*;
 
 use super::InputContext;
-use crate::font::dir::Alignment;
+use crate::font::{dir::Alignment, shape::Rect};
 
 pub fn l(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, sbr, stw, cap } = cx.settings(); }
@@ -56,7 +56,7 @@ impl IntoOutlines for LShape {
         let mid = (x_min + x_max) / 2.;
         let hw = (x_max - x_min) / 2.;
 
-        let l_bar = SpiroBuilder::open()
+        let pipe = SpiroBuilder::open()
             .insts([g4!(mid, y_min), g4!(mid, y_max)])
             .into_outline();
 
@@ -74,6 +74,6 @@ impl IntoOutlines for LShape {
             ])
             .into_outline();
 
-        vec![top_serif, l_bar, bottom_serif].into_iter()
+        vec![top_serif, pipe, bottom_serif].into_iter()
     }
 }
