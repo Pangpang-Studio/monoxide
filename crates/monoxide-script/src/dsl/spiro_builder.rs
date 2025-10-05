@@ -118,7 +118,7 @@ impl SpiroInst {
         self
     }
 
-    pub fn align(mut self, align: impl IntoStrokeAlignment) -> Self {
+    pub fn aligned(mut self, align: impl IntoStrokeAlignment) -> Self {
         self.opts.alignment = Some(align.into_alignment());
         self
     }

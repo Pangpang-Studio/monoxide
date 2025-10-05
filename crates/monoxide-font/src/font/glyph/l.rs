@@ -62,15 +62,15 @@ impl IntoOutlines for LShape {
 
         let top_serif = SpiroBuilder::open()
             .insts([
-                g4!(mid, y_max).align(Alignment::Right),
-                g4!(mid - top_bar_scale * hw, y_max).align(Alignment::Right),
+                g4!(mid, y_max).aligned(Alignment::Right),
+                g4!(mid - top_bar_scale * hw, y_max),
             ])
             .into_outline();
 
         let bottom_serif = SpiroBuilder::open()
             .insts([
-                g4!(mid - hw, y_min).align(Alignment::Right),
-                g4!(mid + hw, y_min).align(Alignment::Right),
+                g4!(mid - hw, y_min).aligned(Alignment::Right),
+                g4!(mid + hw, y_min),
             ])
             .into_outline();
 
