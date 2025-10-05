@@ -4,6 +4,7 @@ mod spiro_builder;
 use std::sync::Arc;
 
 pub use bezier_builder::{BezierBuilder, BezierInst};
+use monoxide_curves::{point::Point2D, xform::Affine2D};
 pub use spiro_builder::{SpiroBuilder, SpiroInst, SpiroInstOpts};
 
 use crate::ast::OutlineExpr;
@@ -30,6 +31,13 @@ pub trait IntoOutlineExt: IntoOutline {
         Self: Sized,
     {
         self.into_outline().stroked(width)
+    }
+
+    fn transformed(self, xform: Affine2D<Point2D>) -> Arc<OutlineExpr>
+    where
+        Self: Sized,
+    {
+        self.into_outline().transformed(xform)
     }
 }
 
@@ -62,6 +70,14 @@ pub trait IntoOutlinesExt: IntoOutlines {
     {
         self.into_outlines()
             .map(move |outline| outline.stroked(width))
+    }
+
+    fn transformed(self, xform: Affine2D<Point2D>) -> impl Iterator<Item = Arc<OutlineExpr>>
+    where
+        Self: Sized,
+    {
+        self.into_outlines()
+            .map(move |outline| outline.transformed(xform))
     }
 }
 

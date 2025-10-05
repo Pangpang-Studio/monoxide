@@ -8,7 +8,6 @@ pub enum OutlineExpr {
     Spiro(SpiroCurve),
     Stroked(Arc<OutlineExpr>, f64),
     Transformed(Arc<OutlineExpr>, Affine2D<Point2D>),
-    // TODO: transformed, etc.
 }
 
 impl Default for OutlineExpr {
