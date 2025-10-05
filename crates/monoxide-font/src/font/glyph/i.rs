@@ -1,8 +1,4 @@
-use monoxide_script::{
-    ast::Glyph,
-    dsl::{IntoOutline, IntoOutlinesExt},
-    let_settings,
-};
+use monoxide_script::prelude::*;
 
 use super::InputContext;
 use crate::font::{glyph::l::LShape, math::mix, shape::Ring};

@@ -1,12 +1,6 @@
 use std::sync::Arc;
 
-use monoxide_curves::point::Point2D;
-use monoxide_script::{
-    ast::{Glyph, OutlineExpr},
-    curl,
-    dsl::{IntoOutline, IntoOutlineExt, SpiroBuilder},
-    flat, g4, let_settings,
-};
+use monoxide_script::prelude::*;
 
 use super::InputContext;
 

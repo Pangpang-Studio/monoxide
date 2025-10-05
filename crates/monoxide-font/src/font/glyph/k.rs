@@ -1,10 +1,4 @@
-use monoxide_curves::point::Point2D;
-use monoxide_script::{
-    ast::Glyph,
-    corner,
-    dsl::{IntoOutlineExt, SpiroBuilder},
-    let_settings,
-};
+use monoxide_script::prelude::*;
 
 use crate::font::{
     InputContext,
