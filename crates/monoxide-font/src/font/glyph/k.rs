@@ -6,7 +6,6 @@ use crate::font::{
 };
 
 pub fn k(cx: &InputContext) -> Glyph {
-    // let s = cx.settings();
     let_settings! {
         {
             sbl, sbr, xh, stw,
