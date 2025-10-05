@@ -6,10 +6,8 @@ use crate::font::{glyph::l::LShape, math::mix, shape::Ring};
 pub fn i(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, sbr, stw, xh } = cx.settings(); }
 
-    let hstw = stw / 2.;
-
     Glyph::builder()
-        .outlines(LShape::new(sbl..sbr, hstw..(xh - hstw)).stroked(stw))
+        .outlines(LShape::new(sbl..sbr, 0.0..xh).stroked(stw))
         .outline(i_dot(cx))
         .build()
 }
