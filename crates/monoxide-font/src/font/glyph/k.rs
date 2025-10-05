@@ -19,8 +19,8 @@ pub fn k(cx: &InputContext) -> Glyph {
 
     let pipe = SpiroBuilder::open()
         .insts([
-            corner!(lower_left).align(Alignment::Left).heading(Dir::U),
-            corner!(upper_left).align(Alignment::Left).heading(Dir::U),
+            corner!(lower_left).aligned(Alignment::Left).heading(Dir::U),
+            corner!(upper_left).aligned(Alignment::Left).heading(Dir::U),
         ])
         .stroked(stw);
 
@@ -29,9 +29,11 @@ pub fn k(cx: &InputContext) -> Glyph {
 
     let chevron = SpiroBuilder::open()
         .insts([
-            corner!(lower_right).align(Alignment::Right).heading(Dir::U),
-            corner!(mid).align(Alignment::Left),
-            corner!(xh_right).align(Alignment::Right).heading(Dir::U),
+            corner!(lower_right)
+                .aligned(Alignment::Right)
+                .heading(Dir::U),
+            corner!(mid).aligned(Alignment::Left),
+            corner!(xh_right).aligned(Alignment::Right).heading(Dir::U),
         ])
         .stroked(stw * 0.8);
     let bar = SpiroBuilder::open()

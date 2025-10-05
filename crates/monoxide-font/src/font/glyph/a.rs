@@ -22,7 +22,7 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
     let left = SpiroBuilder::open()
         .insts([
             g4!(lower_left).heading(Dir::D),
-            g4!(upper_mid).heading(Dir::U).align(Alignment::Middle),
+            g4!(upper_mid).heading(Dir::U).aligned(Alignment::Middle),
         ])
         .stroked(stw);
 

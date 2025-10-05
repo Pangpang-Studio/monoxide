@@ -59,7 +59,7 @@ impl IntoOutline for OShape {
         SpiroBuilder::closed()
             .insts([
                 // Bottom arc
-                g4!(x - mid_curve_w, y_lo + mid_curve_h).align(Alignment::Right),
+                g4!(x - mid_curve_w, y_lo + mid_curve_h).aligned(Alignment::Right),
                 g4!(x, y_lo - ovs),
                 g4!(x + mid_curve_w, y_lo + mid_curve_h),
                 // Right side
