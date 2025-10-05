@@ -8,6 +8,7 @@ macro_rules! glyph_mods {
 }
 
 glyph_mods! {
+    b;
     c;
     d;
     i;
@@ -15,6 +16,8 @@ glyph_mods! {
     l;
     n;
     o;
+    p;
+    q;
     tofu;
 }
 
