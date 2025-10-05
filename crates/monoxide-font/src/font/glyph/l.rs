@@ -3,14 +3,13 @@ use std::{ops::Range, sync::Arc};
 use monoxide_script::prelude::*;
 
 use super::InputContext;
+use crate::font::dir::Alignment;
 
 pub fn l(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, sbr, stw, cap } = cx.settings(); }
 
-    let hstw = stw / 2.;
-
     Glyph::builder()
-        .outlines(LShape::new(sbl..sbr, hstw..(cap - hstw)).stroked(stw))
+        .outlines(LShape::new(sbl..sbr, 0.0..cap).stroked(stw))
         .build()
 }
 
@@ -57,18 +56,24 @@ impl IntoOutlines for LShape {
         let mid = (x_min + x_max) / 2.;
         let hw = (x_max - x_min) / 2.;
 
-        vec![
-            SpiroBuilder::open()
-                .insts([
-                    g4!(mid, y_min),
-                    corner!(mid, y_max),
-                    g4!(mid - top_bar_scale * hw, y_max),
-                ])
-                .into_outline(),
-            SpiroBuilder::open()
-                .insts([g4!(mid - hw, y_min), g4!(mid + hw, y_min)])
-                .into_outline(),
-        ]
-        .into_iter()
+        let l_bar = SpiroBuilder::open()
+            .insts([g4!(mid, y_min), g4!(mid, y_max)])
+            .into_outline();
+
+        let top_serif = SpiroBuilder::open()
+            .insts([
+                g4!(mid, y_max).align(Alignment::Right),
+                g4!(mid - top_bar_scale * hw, y_max).align(Alignment::Right),
+            ])
+            .into_outline();
+
+        let bottom_serif = SpiroBuilder::open()
+            .insts([
+                g4!(mid - hw, y_min).align(Alignment::Right),
+                g4!(mid + hw, y_min).align(Alignment::Right),
+            ])
+            .into_outline();
+
+        vec![top_serif, l_bar, bottom_serif].into_iter()
     }
 }
