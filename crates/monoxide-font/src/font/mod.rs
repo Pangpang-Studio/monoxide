@@ -42,6 +42,7 @@ pub fn make_font() -> Result<FontContext, ()> {
 
     let glyphs = [
         ('A', glyph::a::a_cap(&cx)),
+        ('b', glyph::b(&cx)),
         ('c', glyph::c(&cx)),
         ('d', glyph::d(&cx)),
         ('i', glyph::i(&cx)),
@@ -49,6 +50,8 @@ pub fn make_font() -> Result<FontContext, ()> {
         ('l', glyph::l(&cx)),
         ('n', glyph::n(&cx)),
         ('o', glyph::o(&cx)),
+        ('p', glyph::p(&cx)),
+        ('q', glyph::q(&cx)),
     ];
     let tofu = glyph::tofu(&cx);
 
