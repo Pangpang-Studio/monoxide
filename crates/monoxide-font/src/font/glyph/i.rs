@@ -8,11 +8,11 @@ pub fn i(cx: &InputContext) -> Glyph {
 
     Glyph::builder()
         .outlines(LShape::new(sbl..sbr, 0.0..xh).stroked(stw))
-        .outline(i_dot(cx))
+        .outline(dot(cx))
         .build()
 }
 
-pub fn i_dot(cx: &InputContext) -> impl IntoOutline {
+pub fn dot(cx: &InputContext) -> impl IntoOutline {
     let_settings! { { cap, dtr, mid, sbl } = cx.settings(); }
-    Ring::at((mix(mid, sbl, 0.95), cap), (dtr, dtr))
+    Ring::at((mix(mid, sbl, 0.97), 0.97 * cap), (dtr, dtr))
 }
