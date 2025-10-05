@@ -3,13 +3,13 @@ use std::sync::Arc;
 use monoxide_script::prelude::*;
 
 use super::InputContext;
+use crate::font::dir::Alignment;
 
 pub fn o(cx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw } = cx.settings(); }
 
-    let hstw = stw / 2.;
     Glyph::builder()
-        .outline(OShape::new((mid, mih), (mid - sbl - hstw, mih - hstw), ovs).stroked(stw))
+        .outline(OShape::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
         .build()
 }
 
@@ -59,7 +59,7 @@ impl IntoOutline for OShape {
         SpiroBuilder::closed()
             .insts([
                 // Bottom arc
-                g4!(x - mid_curve_w, y_lo + mid_curve_h),
+                g4!(x - mid_curve_w, y_lo + mid_curve_h).align(Alignment::Right),
                 g4!(x, y_lo - ovs),
                 g4!(x + mid_curve_w, y_lo + mid_curve_h),
                 // Right side

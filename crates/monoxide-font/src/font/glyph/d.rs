@@ -8,10 +8,8 @@ pub fn d(cx: &InputContext) -> Glyph {
 
     let hstw = stw / 2.;
 
-    let o_mid = mid;
-    let o_radius_x = o_mid - (sbl + hstw);
     Glyph::builder()
-        .outline(OShape::new((o_mid, mih), (o_radius_x, mih - hstw), ovs).stroked(stw))
+        .outline(OShape::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
         .outline(Rect::new((sbr - hstw, 0.), (sbr - hstw, cap), stw))
         .build()
 }
