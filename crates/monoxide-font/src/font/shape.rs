@@ -8,7 +8,7 @@ use monoxide_script::{
     flat, g4,
 };
 
-use super::math::mix;
+use super::{dir::Alignment, math::mix};
 
 /// A rectangle formed by drawing a line between points `start` and
 /// `end` and span it in the normal direction according to the given width.
@@ -16,6 +16,7 @@ pub struct Rect {
     pub start: Point2D,
     pub end: Point2D,
     pub width: f64,
+    pub align: Alignment,
 }
 
 impl Rect {
@@ -24,14 +25,19 @@ impl Rect {
             start: start.into(),
             end: end.into(),
             width,
+            align: Alignment::Middle,
         }
+    }
+
+    pub fn aligned(self, align: Alignment) -> Self {
+        Self { align, ..self }
     }
 }
 
 impl IntoOutline for Rect {
     fn into_outline(self) -> Arc<OutlineExpr> {
         SpiroBuilder::open()
-            .insts([flat!(self.start), curl!(self.end)])
+            .insts([flat!(self.start).aligned(self.align), curl!(self.end)])
             .into_outline()
             .stroked(self.width)
     }
