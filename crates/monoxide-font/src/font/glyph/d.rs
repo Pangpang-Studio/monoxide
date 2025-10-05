@@ -1,4 +1,4 @@
-use monoxide_script::{ast::Glyph, dsl::IntoOutlineExt, let_settings};
+use monoxide_script::prelude::*;
 
 use super::InputContext;
 use crate::font::{glyph::o::OShape, shape::Rect};

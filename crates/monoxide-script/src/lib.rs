@@ -1,6 +1,7 @@
 pub mod ast;
 pub mod dsl;
 pub mod eval;
+pub mod prelude;
 pub mod trace;
 
 #[doc(hidden)]

@@ -1,11 +1,6 @@
 use std::{ops::Range, sync::Arc};
 
-use monoxide_script::{
-    ast::{Glyph, OutlineExpr},
-    corner,
-    dsl::{IntoOutline, IntoOutlines, IntoOutlinesExt, SpiroBuilder},
-    g4, let_settings,
-};
+use monoxide_script::prelude::*;
 
 use super::InputContext;
 
