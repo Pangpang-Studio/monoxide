@@ -3,7 +3,7 @@ use std::{ops::Range, sync::Arc};
 use monoxide_script::prelude::*;
 
 use super::InputContext;
-use crate::font::{dir::Alignment, shape::Rect};
+use crate::font::dir::Alignment;
 
 pub fn l(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, sbr, stw, cap } = cx.settings(); }
