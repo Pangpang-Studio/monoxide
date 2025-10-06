@@ -19,6 +19,7 @@ glyph_mods! {
     o;
     p;
     q;
+    u;
     space;
     tofu;
 }
