@@ -57,14 +57,12 @@ impl IntoOutline for CShape {
         let y_hi = y + ry;
         let y_lo = y - ry;
 
-        let rx1 = 0.9 * rx;
-
         SpiroBuilder::open()
             .insts([
                 // Right side (upper)
-                curl!(x + rx1, y_hi - self.aperture_curve_h_hi()),
+                curl!(x + rx, y_hi - self.aperture_curve_h_hi()),
                 // Top arc
-                corner!(x + rx1, y_hi - mid_curve_h),
+                corner!(x + rx, y_hi - mid_curve_h),
                 g4!(x, y_hi + ovs),
                 g4!(x - mid_curve_w, y_hi - mid_curve_h),
                 // Left side
@@ -75,7 +73,7 @@ impl IntoOutline for CShape {
                 g4!(x, y_lo - ovs),
                 // One control point omitted.
                 // Right side (lower)
-                flat!(x + rx1, y_lo + self.aperture_curve_h_lo()),
+                flat!(x + rx, y_lo + self.aperture_curve_h_lo()),
             ])
             .into_outline()
     }
