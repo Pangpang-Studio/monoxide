@@ -33,7 +33,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         x_height,
         descender: -0.2,
         stroke_width: 0.144 * width,
-        side_bearing: 0.15 * width,
+        side_bearing: 0.125 * width,
         overshoot: x_height / 40.,
         dot_size: 0.25 * width,
     };
