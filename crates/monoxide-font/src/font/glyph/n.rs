@@ -71,14 +71,12 @@ impl IntoOutline for Hook {
         SpiroBuilder::open()
             .insts([
                 // Right side
-                flat!(x + rx, 0.).aligned(Alignment::Right),
+                flat!(x + rx, 0.).aligned(Alignment::Right).width(1.1),
                 curl!(x + rx, y + ry / 3.),
                 // Top arc
-                g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.),
-                g4!(x, y_hi + ovs).width(1.),
-                g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.1)
-                    .heading(Dir::L)
-                    .width(0.5),
+                g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.).width(1.),
+                g4!(x, y_hi + ovs).width(0.8),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.25).heading(Dir::L),
             ])
             .into_outline()
     }
