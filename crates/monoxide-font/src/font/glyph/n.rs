@@ -12,31 +12,47 @@ pub fn n(cx: &InputContext) -> Glyph {
 
     Glyph::builder()
         .outline(Rect::new((sbl, 0.), (sbl, xh), stw).aligned(Alignment::Left))
-        .outline(n_curl((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
+        .outline(Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
         .build()
 }
 
-fn n_curl(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> impl IntoOutline {
-    let o_shape @ OShape {
-        center: Point2D { x, y },
-        radii: Point2D { x: rx, y: ry },
-        ovs,
-    } = OShape::new(center, radii, ovs);
+pub struct Hook {
+    pub o_shape: OShape,
+}
 
-    let mid_curve_w = o_shape.mid_curve_w();
-    let mid_curve_h = o_shape.mid_curve_h();
+impl Hook {
+    pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
+        Self {
+            o_shape: OShape::new(center, radii, ovs),
+        }
+    }
+}
 
-    let y_hi = y + ry;
+impl IntoOutline for Hook {
+    fn into_outline(self) -> std::sync::Arc<OutlineExpr> {
+        let o_shape @ OShape {
+            center: Point2D { x, y },
+            radii: Point2D { x: rx, y: ry },
+            ovs,
+        } = self.o_shape;
 
-    SpiroBuilder::open().insts([
-        // Right side
-        flat!(x + rx, 0.).aligned(Alignment::Right),
-        curl!(x + rx, y + ry / 3.),
-        // Top arc
-        g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.),
-        g4!(x, y_hi + ovs).width(1.),
-        g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.1)
-            .heading(Dir::L)
-            .width(0.5),
-    ])
+        let mid_curve_w = o_shape.mid_curve_w();
+        let mid_curve_h = o_shape.mid_curve_h();
+
+        let y_hi = y + ry;
+
+        SpiroBuilder::open()
+            .insts([
+                // Right side
+                flat!(x + rx, 0.).aligned(Alignment::Right),
+                curl!(x + rx, y + ry / 3.),
+                // Top arc
+                g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.),
+                g4!(x, y_hi + ovs).width(1.),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.1)
+                    .heading(Dir::L)
+                    .width(0.5),
+            ])
+            .into_outline()
+    }
 }
