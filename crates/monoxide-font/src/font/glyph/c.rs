@@ -1,16 +1,77 @@
 use monoxide_script::prelude::*;
 
-use super::InputContext;
-use crate::font::shape::{Rect, Ring};
+use super::{InputContext, o::OShape};
+use crate::font::{dir::Alignment, math::mix};
 
 pub fn c(cx: &InputContext) -> Glyph {
+    let_settings! { { mid, mih, ovs, sbl, stw } = cx.settings(); }
     Glyph::builder()
-        .outline(BezierBuilder::closed((0.6, 0.)).insts([
-            bline!(0.8, 0.),
-            bline!(1., cx.settings().width),
-            bline!(0.6, 0.),
-        ]))
-        .outline(Rect::new((0., 0.), (0.1, 0.4), 0.05))
-        .outline(Ring::at((0.4, 0.2), (0.15, 0.1)).stroked(0.1))
+        .outline(CShape::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
         .build()
+}
+
+struct CShape {
+    pub o_shape: OShape,
+}
+
+impl CShape {
+    pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
+        Self {
+            o_shape: OShape::new(center, radii, ovs),
+        }
+    }
+
+    pub fn mid_curve_h(&self) -> f64 {
+        self.o_shape.mid_curve_h()
+    }
+
+    pub fn mid_curve_w(&self) -> f64 {
+        self.o_shape.mid_curve_w()
+    }
+
+    pub fn end_curve_h(&self) -> f64 {
+        self.o_shape.end_curve_h()
+    }
+
+    pub fn aperture_curve_h(&self) -> f64 {
+        mix(self.mid_curve_h(), self.end_curve_h(), 0.5)
+    }
+}
+
+impl IntoOutline for CShape {
+    fn into_outline(self) -> std::sync::Arc<OutlineExpr> {
+        let OShape {
+            center: Point2D { x, y },
+            radii: Point2D { x: rx, y: ry },
+            ovs,
+        } = self.o_shape;
+
+        let mid_curve_w = self.mid_curve_w();
+        let mid_curve_h = self.mid_curve_h();
+        let end_curve_h = self.end_curve_h();
+        let aperture_curve_h = self.aperture_curve_h();
+
+        let y_hi = y + ry;
+        let y_lo = y - ry;
+
+        SpiroBuilder::open()
+            .insts([
+                // Right side (upper)
+                curl!(x + rx, y_hi - aperture_curve_h),
+                // Top arc
+                g4!(x + mid_curve_w, y_hi - mid_curve_h),
+                g4!(x, y_hi + ovs),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h),
+                // Left side
+                flat!(x - rx, y_hi - end_curve_h),
+                curl!(x - rx, y_lo + end_curve_h),
+                // Bottom arc
+                g4!(x - mid_curve_w, y_lo + mid_curve_h).aligned(Alignment::Right),
+                g4!(x, y_lo - ovs),
+                g4!(x + mid_curve_w, y_lo + mid_curve_h),
+                // Right side (lower)
+                flat!(x + rx, y_lo + aperture_curve_h),
+            ])
+            .into_outline()
+    }
 }

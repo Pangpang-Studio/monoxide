@@ -20,7 +20,7 @@ fn n_curl(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> im
     let o_shape @ OShape {
         center: Point2D { x, y },
         radii: Point2D { x: rx, y: ry },
-        ..
+        ovs,
     } = OShape::new(center, radii, ovs);
 
     let mid_curve_w = o_shape.mid_curve_w();
