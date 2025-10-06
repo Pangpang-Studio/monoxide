@@ -34,7 +34,7 @@ impl CShape {
     }
 
     pub fn aperture_curve_h(&self) -> f64 {
-        mix(self.mid_curve_h(), self.end_curve_h(), 0.5)
+        mix(self.mid_curve_h(), self.end_curve_h(), 0.2)
     }
 }
 
@@ -54,12 +54,14 @@ impl IntoOutline for CShape {
         let y_hi = y + ry;
         let y_lo = y - ry;
 
+        let rx1 = 0.9 * rx;
+
         SpiroBuilder::open()
             .insts([
                 // Right side (upper)
-                curl!(x + rx, y_hi - aperture_curve_h),
+                curl!(x + rx1, y_hi - aperture_curve_h),
                 // Top arc
-                g4!(x + mid_curve_w, y_hi - mid_curve_h),
+                corner!(x + rx1, y_hi - mid_curve_h),
                 g4!(x, y_hi + ovs),
                 g4!(x - mid_curve_w, y_hi - mid_curve_h),
                 // Left side
@@ -68,9 +70,9 @@ impl IntoOutline for CShape {
                 // Bottom arc
                 g4!(x - mid_curve_w, y_lo + mid_curve_h).aligned(Alignment::Right),
                 g4!(x, y_lo - ovs),
-                g4!(x + mid_curve_w, y_lo + mid_curve_h),
+                // One control point omitted.
                 // Right side (lower)
-                flat!(x + rx, y_lo + aperture_curve_h),
+                flat!(x + rx1, y_lo + aperture_curve_h / 5.),
             ])
             .into_outline()
     }
