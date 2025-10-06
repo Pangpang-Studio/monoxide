@@ -1,19 +1,46 @@
+use std::sync::Arc;
+
 use monoxide_script::prelude::*;
 
 use super::InputContext;
 use crate::font::{
     dir::{Alignment, Dir},
     glyph::o::OShape,
+    settings::FontParamSettings,
     shape::Rect,
 };
 
 pub fn n(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, mih, ovs, sbl, stw, xh } = cx.settings(); }
-
     Glyph::builder()
-        .outline(Rect::new((sbl, 0.), (sbl, xh), stw).aligned(Alignment::Left))
-        .outline(Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
+        .outlines(NShape::from_settings(&cx.settings))
         .build()
+}
+
+pub struct NShape {
+    pub hook: Arc<OutlineExpr>,
+    pub pipe: Rect,
+}
+
+impl NShape {
+    pub fn from_settings(settings: &FontParamSettings) -> Self {
+        let_settings! { { mid, mih, ovs, sbl, stw, xh } = settings; }
+
+        let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw);
+        let pipe = Rect::new((sbl, 0.), (sbl, xh), stw).aligned(Alignment::Left);
+
+        Self { hook, pipe }
+    }
+
+    pub fn with_height(mut self, height: f64) -> Self {
+        self.pipe.end.y = height;
+        self
+    }
+}
+
+impl IntoOutlines for NShape {
+    fn into_outlines(self) -> impl Iterator<Item = std::sync::Arc<OutlineExpr>> {
+        [self.hook.into_outline(), self.pipe.into_outline()].into_iter()
+    }
 }
 
 pub struct Hook {
