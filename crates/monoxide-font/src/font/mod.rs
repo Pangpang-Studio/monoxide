@@ -41,6 +41,7 @@ pub fn make_font() -> Result<FontContext, ()> {
     let cx = InputContext { settings };
 
     let glyphs = [
+        (' ', glyph::space(&cx)),
         ('A', glyph::a::a_cap(&cx)),
         ('b', glyph::b(&cx)),
         ('c', glyph::c(&cx)),
