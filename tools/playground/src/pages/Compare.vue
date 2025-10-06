@@ -16,7 +16,7 @@ const viewBox = ref<string>('0 0 100 100')
 const svgWidth = ref(100)
 const svgHeight = ref(100)
 /// These are the glyphs that are not found in the font
-const notFoundGlyphs = ref<string[]>([])
+const missingGlyphs = ref<string[]>([])
 /// The layout function. This will never be as good as those used in the layout
 /// engines, but for a simple print-and-advance test for mostly monospace glyphs
 /// this should be good enough.
@@ -36,7 +36,7 @@ watchEffect(() => {
     let glyphId = font.cmap.get(ch)
     if (glyphId === undefined) {
       notFound.push(ch)
-      continue
+      glyphId = 0 // Use tofu
     }
     let glyph = font.glyphs[glyphId]
     if (glyph === undefined) {
@@ -58,7 +58,7 @@ watchEffect(() => {
   }
   // layout end
   svgPaths.value = paths
-  notFoundGlyphs.value = notFound
+  missingGlyphs.value = notFound
 
   // Set the viewbox to the size of the text
   let width = hPos
@@ -112,9 +112,9 @@ watchEffect(() => {
     </div>
 
     <div class="mt-4">
-      <h2 class="text-lg font-bold">Not Found Glyphs</h2>
+      <h2 class="text-lg font-bold">Missing Glyphs</h2>
       <ul class="list-disc pl-6">
-        <li v-for="(glyph, index) in notFoundGlyphs" :key="index">
+        <li v-for="(glyph, index) in missingGlyphs" :key="index">
           {{ glyph }}
         </li>
       </ul>
