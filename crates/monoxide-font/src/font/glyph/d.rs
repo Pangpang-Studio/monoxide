@@ -1,41 +1,42 @@
+use std::sync::Arc;
+
 use monoxide_script::prelude::*;
 
 use super::InputContext;
 use crate::font::{dir::Alignment, glyph::o::OShape, settings::FontParamSettings, shape::Rect};
 
 pub fn d(cx: &InputContext) -> Glyph {
-    Glyph::builder().outlines(DShape::new(&cx.settings)).build()
+    Glyph::builder()
+        .outlines(DShape::from_settings(&cx.settings))
+        .build()
 }
 
-pub struct DShape<'a> {
-    pub settings: &'a FontParamSettings,
-    pub height: Option<f64>,
+pub struct DShape {
+    bowl: Arc<OutlineExpr>,
+    pipe: Rect,
 }
 
-impl<'a> DShape<'a> {
-    pub fn new(settings: &'a FontParamSettings) -> Self {
-        Self::with_height(settings, None)
-    }
+impl DShape {
+    pub fn from_settings(settings: &FontParamSettings) -> Self {
+        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw } = settings; }
 
-    pub fn with_height(settings: &'a FontParamSettings, height: impl Into<Option<f64>>) -> Self {
-        Self {
-            settings,
-            height: height.into(),
-        }
-    }
-}
-
-impl IntoOutlines for DShape<'_> {
-    fn into_outlines(self) -> impl Iterator<Item = std::sync::Arc<OutlineExpr>> {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw } = self.settings; }
-
-        let height = self.height.unwrap_or(cap);
+        // TODO: Stroke should narrow at lower join of the bowl.
         let bowl = OShape::new((mid, mih), (mid - sbl, mih), ovs)
             .stroked(stw)
             .into_outline();
-        let pipe = Rect::new((sbr, 0.), (sbr, height), stw)
-            .aligned(Alignment::Right)
-            .into_outline();
-        [bowl, pipe].into_iter()
+        let pipe = Rect::new((sbr, 0.), (sbr, cap), stw).aligned(Alignment::Right);
+
+        Self { bowl, pipe }
+    }
+
+    pub fn with_height(mut self, height: f64) -> Self {
+        self.pipe.end.y = height;
+        self
+    }
+}
+
+impl IntoOutlines for DShape {
+    fn into_outlines(self) -> impl Iterator<Item = std::sync::Arc<OutlineExpr>> {
+        [self.bowl, self.pipe.into_outline()].into_iter()
     }
 }
