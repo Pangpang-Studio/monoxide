@@ -60,7 +60,7 @@ monoxide = { path = "." }
 # Deps
 anyhow = "1.0.100"
 clap = { version = "4.5.48", features = ["derive"] }
-dioxus-devtools = "0.7.0-rc.0"
+dioxus-devtools = "0.7.0-rc.1"
 flo_curves = { git = "https://github.com/Pangpang-Studio/flo_curves.git", branch = "dev" }
 indexmap = "2.11.4"
 num-traits = "0.2.19"
