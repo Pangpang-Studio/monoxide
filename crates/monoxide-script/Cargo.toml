@@ -1,9 +1,11 @@
 [package]
 name = "monoxide-script"
-version.workspace = true
+authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
+license.workspace = true
 repository.workspace = true
+version.workspace = true
 
 [dependencies]
 monoxide-curves.workspace = true
