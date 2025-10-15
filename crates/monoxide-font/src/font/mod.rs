@@ -56,6 +56,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         ('p', glyph::p(&cx)),
         ('q', glyph::q(&cx)),
         ('u', glyph::u(&cx)),
+        ('x', glyph::x(&cx)),
     ];
     let tofu = glyph::tofu(&cx);
 

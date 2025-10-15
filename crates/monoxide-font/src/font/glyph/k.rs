@@ -33,6 +33,7 @@ pub fn k(cx: &InputContext) -> Glyph {
             corner!(mid).aligned(Alignment::Left),
             corner!(xh_right).aligned(Alignment::Right).heading(Dir::U),
         ])
+        // TODO: Find out how the scaling factor is determined.
         .stroked(stw * 0.8);
 
     let bar = Rect::new(mid.with_x(sbl), mid + Point2D::unit_x() * stw, stw).into_outline();
