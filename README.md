@@ -1,5 +1,12 @@
 # monoxide
 
+A love letter to _[Iosevka]_.
+
+[Iosevka]: https://github.com/be5invis/Iosevka
+
+> [!WARNING]  
+> This project is still a work in progress.
+
 ## Prerequisites
 
 Please make sure you have the following installed on your machine:
