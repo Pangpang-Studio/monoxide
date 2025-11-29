@@ -1,5 +1,7 @@
 # monoxide
 
+<p><img src="assets/banner.png" width="300" title="Monoxide Banner"></p>
+
 A love letter to _[Iosevka]_.
 
 [Iosevka]: https://github.com/be5invis/Iosevka
