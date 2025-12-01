@@ -74,8 +74,8 @@ num-traits = "0.2.19"
 serde = { version = "1", features = ["derive"] }
 spiro-sys = { package = "spiro-sys-rs", git = "https://github.com/Pangpang-Studio/spiro-sys-rs.git", version = "0.1.0" }
 tokio = { version = "1.48.0" }
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+tracing = "0.1.43"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 thiserror = "2.0"
 petgraph = "0.8.3"
 by_address = "1.2.1"
