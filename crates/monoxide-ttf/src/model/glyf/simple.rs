@@ -152,7 +152,7 @@ impl From<OutlineFlag> for FlagOrRepeat {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SimpleGlyph {
     // pub n_countours: u16, // encoded in the 1st field, as positive number
     pub common: GlyphCommon,

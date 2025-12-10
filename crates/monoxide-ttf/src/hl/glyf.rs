@@ -4,10 +4,7 @@ use monoxide_curves::QuadBezier;
 
 use crate::model::{
     fword,
-    glyf::{
-        GlyphCommon,
-        simple::{Coord, FlagOrRepeat, OutlineFlag, SimpleGlyph, SimpleGlyphVerifyError},
-    },
+    glyf::simple::{Coord, FlagOrRepeat, OutlineFlag, SimpleGlyph, SimpleGlyphVerifyError},
 };
 
 #[derive(Debug, Clone, thiserror::Error)]
@@ -18,19 +15,7 @@ pub enum ConvertError {
 
 /// Convert a list of quadratic bezier outlines to a simple glyph.
 pub fn encode(outlines: &[QuadBezier<(fword, fword)>]) -> Result<SimpleGlyph, ConvertError> {
-    let mut glyph_data = SimpleGlyph {
-        common: GlyphCommon {
-            x_max: 0,
-            x_min: 0,
-            y_max: 0,
-            y_min: 0,
-        },
-        end_points_of_countours: Vec::new(),
-        instructions: Vec::new(),
-        flags: Vec::new(),
-        x_coords: Vec::new(),
-        y_coords: Vec::new(),
-    };
+    let mut glyph_data = SimpleGlyph::default();
 
     let mut last_x: fword = 0;
     let mut last_y: fword = 0;
