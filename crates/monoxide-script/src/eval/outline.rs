@@ -1,12 +1,16 @@
-use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D, stroke::StrokeResult};
+use itertools::{Itertools, chain};
+use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D, stroke::StrokedSpiroCurve};
 
-use crate::{ast::OutlineExpr, trace::EvaluationTracer};
+use crate::{ast::OutlineExpr, trace::EvalTracer};
 
-pub fn eval_outline<E: EvaluationTracer>(
+pub type EvalResult<E, A = EvalValue<<E as EvalTracer>::Id>> =
+    Result<A, EvalError<<E as EvalTracer>::Id>>;
+
+pub fn eval_outline<E: EvalTracer>(
     expr: &OutlineExpr,
     out: &mut Vec<CubicBezier<Point2D>>,
     dbg: &mut E,
-) -> Result<E::Id, EvalError<E::Id>> {
+) -> EvalResult<E, E::Id> {
     let evaled = eval_outline_internal(expr, dbg)?;
     let id = match evaled.kind {
         EvalValueKind::Beziers(beziers) => {
@@ -15,12 +19,12 @@ pub fn eval_outline<E: EvaluationTracer>(
         }
         EvalValueKind::Spiros(spiros) => {
             let output_size_before = out.len();
+            let id = dbg.spiro_to_bezier(evaled.id);
             for spiro in spiros {
-                let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
-
+                let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points)
+                    .map_err(|e| EvalError::CurveError(id, e))?;
                 out.extend(bez);
             }
-            let id = dbg.spiro_to_bezier(evaled.id);
             dbg.intermediate_output(id, &out[output_size_before..]);
             id
         }
@@ -57,36 +61,37 @@ impl<Id: Copy> EvalValue<Id> {
         }
     }
 
-    pub fn force_bezier(
-        self,
-        dbg: &mut impl EvaluationTracer<Id = Id>,
-    ) -> Vec<CubicBezier<Point2D>> {
-        match self.kind {
+    pub fn force_bezier<E>(self, dbg: &mut E) -> EvalResult<E, Vec<CubicBezier<Point2D>>>
+    where
+        E: EvalTracer<Id = Id>,
+    {
+        Ok(match self.kind {
             EvalValueKind::Beziers(beziers) => beziers,
             EvalValueKind::Spiros(spiros) => {
                 let mut beziers = vec![];
+                let id = dbg.spiro_to_bezier(self.id);
                 for spiro in &spiros {
-                    let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
+                    let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points)
+                        .map_err(|e| EvalError::CurveError(id, e))?;
                     beziers.extend(bez);
                 }
-                let id = dbg.spiro_to_bezier(self.id);
                 dbg.intermediate_output(id, &beziers);
                 beziers
             }
-        }
+        })
     }
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum EvalError<Id> {
-    #[error("Stroking a bezier is not supported yet; at {0}")]
+    #[error("stroking a bezier is not supported yet; at {0}")]
     StrokingABezier(Id),
+
+    #[error("curve evaluation error at {0}: {1}")]
+    CurveError(Id, #[source] monoxide_curves::error::Error),
 }
 
-fn eval_outline_internal<E: EvaluationTracer>(
-    expr: &OutlineExpr,
-    dbg: &mut E,
-) -> Result<EvalValue<E::Id>, EvalError<E::Id>> {
+fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> EvalResult<E> {
     match expr {
         OutlineExpr::Bezier(cubic_bezier) => {
             let id = dbg.constructed_bezier(cubic_bezier);
@@ -97,7 +102,8 @@ fn eval_outline_internal<E: EvaluationTracer>(
 
             if E::needs_evaluate_intermediate() {
                 // convert to beziers if needed
-                let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
+                let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points)
+                    .map_err(|e| EvalError::CurveError(id, e))?;
                 dbg.intermediate_output(id, &bez);
             }
 
@@ -114,7 +120,7 @@ fn eval_outline_internal<E: EvaluationTracer>(
         }
         OutlineExpr::Transformed(expr, xform) => {
             let evaled = eval_outline_internal(expr, dbg)?;
-            let bezier = evaled.force_bezier(dbg);
+            let bezier = evaled.force_bezier(dbg)?;
             let flips = xform.flips_direction();
             let xformed = bezier
                 .iter()
@@ -133,24 +139,25 @@ fn eval_outline_internal<E: EvaluationTracer>(
     }
 }
 
-fn eval_stroked<E: EvaluationTracer>(
+fn eval_stroked<E: EvalTracer>(
     evaled_id: E::Id,
     eval_spiros: &[SpiroCurve],
     width: f64,
     dbg: &mut E,
-) -> Result<EvalValue<E::Id>, EvalError<E::Id>> {
+) -> EvalResult<E> {
     // For each of the spiro curves, stroke them. This may result in
     // more than one spiro per original spiro.
     let id = dbg.preallocate_next();
 
     let mut out_spiros: Vec<SpiroCurve> = vec![];
     for spiro in eval_spiros {
-        let oc = monoxide_curves::stroke::stroke_spiro(spiro, width, &mut dbg.curve_debugger(id));
+        let oc = monoxide_curves::stroke::stroke_spiro(spiro, width, &mut dbg.curve_debugger(id))
+            .map_err(|e| EvalError::CurveError(id, e))?;
         match oc {
-            StrokeResult::One(spiro_cps) => {
+            StrokedSpiroCurve::One(spiro_cps) => {
                 out_spiros.push(spiro_cps);
             }
-            StrokeResult::Two(first_curve, second_curve) => {
+            StrokedSpiroCurve::Two(first_curve, second_curve) => {
                 out_spiros.push(first_curve);
                 out_spiros.push(second_curve);
             }
@@ -165,15 +172,13 @@ fn eval_stroked<E: EvaluationTracer>(
 
     if E::needs_evaluate_intermediate() {
         // Convert both original spiro and the stroked spiro to beziers
-        let mut bezs = vec![];
-        for spiro in eval_spiros {
-            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
-            bezs.extend(bez);
-        }
-        for spiro in &out_spiros {
-            let bez = monoxide_curves::convert::spiro_to_cube(&spiro.points);
-            bezs.extend(bez);
-        }
+        let bezs: Vec<_> = chain!(eval_spiros, &out_spiros)
+            .map(|spiro| {
+                monoxide_curves::convert::spiro_to_cube(&spiro.points)
+                    .map_err(|e| EvalError::CurveError(id, e))
+            })
+            .flatten_ok()
+            .try_collect()?;
         dbg.intermediate_output(id, &bezs);
     }
 
