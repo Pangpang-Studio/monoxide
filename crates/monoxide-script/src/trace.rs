@@ -3,7 +3,7 @@
 use monoxide_curves::{CubicBezier, debug::CurveDebugger, point::Point2D};
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
-pub trait EvaluationTracer {
+pub trait EvalTracer {
     /// Represents the ID of a intermediate part of the glyph
     type Id: Copy + Eq;
     /// The [`CurveDebugger`] to use for debugging lower-level processes. If
@@ -75,7 +75,7 @@ impl std::fmt::Display for NoId {
 
 /// A no-op tracer that does nothing. This is useful for when you don't need
 /// to trace the evaluation of a glyph.
-impl EvaluationTracer for () {
+impl EvalTracer for () {
     type CurveDebugger<'a> = ();
     type Id = NoId;
 

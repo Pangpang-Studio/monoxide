@@ -10,7 +10,7 @@ use monoxide_curves::debug::CurveDebugger;
 use monoxide_script::{
     ast::{FontContext, OutlineExpr},
     eval::{SerializedGlyphKind, eval_outline},
-    trace::EvaluationTracer,
+    trace::EvalTracer,
 };
 
 use super::XAppState;
@@ -163,7 +163,7 @@ impl GlyphDetailTracer {
     }
 }
 
-impl EvaluationTracer for GlyphDetailTracer {
+impl EvalTracer for GlyphDetailTracer {
     type CurveDebugger<'a> = TracerCurveDebugger<'a>;
     type Id = usize;
 

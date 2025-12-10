@@ -9,7 +9,8 @@ version.workspace = true
 
 [dependencies]
 flo_curves.workspace = true
+itertools.workspace = true
 monoxide-spiro.workspace = true
 num-traits.workspace = true
 serde.workspace = true
-itertools.workspace = true
+thiserror.workspace = true
