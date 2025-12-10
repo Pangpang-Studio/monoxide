@@ -16,6 +16,9 @@ pub enum ConvertError {
 /// Convert a list of quadratic bezier outlines to a simple glyph.
 pub fn encode(outlines: &[QuadBezier<(fword, fword)>]) -> Result<SimpleGlyph, ConvertError> {
     let mut glyph_data = SimpleGlyph::default();
+    if outlines.is_empty() {
+        return Ok(glyph_data);
+    }
 
     let mut last_x: fword = 0;
     let mut last_y: fword = 0;
