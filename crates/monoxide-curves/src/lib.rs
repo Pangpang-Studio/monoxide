@@ -2,6 +2,7 @@
 pub mod convert;
 pub mod cube;
 pub mod debug;
+pub mod error;
 pub mod point;
 pub mod quad;
 pub mod spiro;

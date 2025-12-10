@@ -8,11 +8,12 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+by_address.workspace = true
+indexmap.workspace = true
+itertools.workspace = true
 monoxide-curves.workspace = true
 monoxide-spiro.workspace = true
 monoxide-ttf.workspace = true
+petgraph.workspace = true
 serde.workspace = true
 thiserror.workspace = true
-indexmap.workspace = true
-petgraph.workspace = true
-by_address.workspace = true

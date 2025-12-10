@@ -8,6 +8,7 @@ use crate::{
     CubicBezier, CubicSegment, SpiroCurve,
     cube::CubicSegmentFull,
     debug::CurveDebugger,
+    error::{Error, Result},
     point::Point2D,
     stroke::{
         tangents::{make_line_join, move_point_normal_both},
@@ -28,10 +29,10 @@ fn approx_eq(tan1: Point2D, tan2: Point2D) -> bool {
     tan1.dot(tan2) > 0.99
 }
 
-fn is_single_piece(curve: &[SpiroCp]) -> bool {
+fn ensure_single_piece(curve: &[SpiroCp]) -> Result<()> {
     use SpiroCpTy::*;
 
-    match curve {
+    let is_single_piece = match curve {
         [] => false, // No curve
         [
             SpiroCp { ty: Open, .. },
@@ -40,7 +41,11 @@ fn is_single_piece(curve: &[SpiroCp]) -> bool {
         ] => !open.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
         [SpiroCp { ty: Open, .. }, ..] | [SpiroCp { ty: EndOpen, .. }, ..] => false,
         closed => !closed.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
+    };
+    if !is_single_piece {
+        return Err(Error::SpiroBroken);
     }
+    Ok(())
 }
 
 pub type TangentOverride = HashMap<usize, Tangent>;
@@ -48,7 +53,7 @@ pub type TangentOverride = HashMap<usize, Tangent>;
 /// The result of the stroke operation. It can be either a single spiro curve,
 /// or two curves if the input curve is closed.
 #[derive(Debug, Clone)]
-pub enum StrokeResult {
+pub enum StrokedSpiroCurve {
     One(SpiroCurve),
     Two(SpiroCurve, SpiroCurve),
 }
@@ -58,13 +63,15 @@ pub enum StrokeResult {
 /// or has multiple disconnected parts.
 ///
 /// The result should be fed into another pass removing self-loops.
-pub fn stroke_spiro(curve: &SpiroCurve, width: f64, dbg: &mut impl CurveDebugger) -> StrokeResult {
-    if !is_single_piece(&curve.points) {
-        panic!("Spiro curve is not valid: not single piece");
-    }
+pub fn stroke_spiro(
+    curve: &SpiroCurve,
+    width: f64,
+    dbg: &mut impl CurveDebugger,
+) -> Result<StrokedSpiroCurve> {
+    ensure_single_piece(&curve.points)?;
 
     let is_closed = curve.points[0].ty != SpiroCpTy::Open;
-    let (left, mut right) = stroke_spiro_raw(curve, is_closed, width, dbg);
+    let (left, mut right) = stroke_spiro_raw(curve, is_closed, width, dbg)?;
 
     // Anyway, we should reverse the right curve first.
     right.reverse();
@@ -77,10 +84,10 @@ pub fn stroke_spiro(curve: &SpiroCurve, width: f64, dbg: &mut impl CurveDebugger
     // - A closed curve. In this case, the two curves are simply concatenated (the
     //   right one reversed because we need to decrease the winding number).
     if is_closed {
-        return StrokeResult::Two(
+        return Ok(StrokedSpiroCurve::Two(
             SpiroCurve::from_points(left, true),
             SpiroCurve::from_points(right, true),
-        );
+        ));
     }
 
     // - [Open, ..., EndOpen], i.e. an open curve. In this case, we need to replace
@@ -100,7 +107,9 @@ pub fn stroke_spiro(curve: &SpiroCurve, width: f64, dbg: &mut impl CurveDebugger
 
     result.extend(right);
 
-    StrokeResult::One(SpiroCurve::from_points(result, true))
+    Ok(StrokedSpiroCurve::One(SpiroCurve::from_points(
+        result, true,
+    )))
 }
 
 #[allow(dead_code)]
@@ -165,13 +174,13 @@ pub fn stroke_spiro_raw(
     is_closed: bool,
     width: f64,
     dbg: &mut impl CurveDebugger,
-) -> (Vec<SpiroCp>, Vec<SpiroCp>) {
+) -> Result<(Vec<SpiroCp>, Vec<SpiroCp>)> {
     assert!(!curve.points.is_empty(), "curve should not be empty");
 
     // Before stroking the curve, we first need to determine the normal
     // direction at each control point. To make things simpler, we just convert
     // the curve into bezier segments and extract the normal from them.
-    let (curves, indices) = crate::convert::spiro_to_cube_with_indices(&curve.points);
+    let (curves, indices) = crate::convert::spiro_to_cube_with_indices(&curve.points)?;
 
     // There will be only one curve, since we know the spiro curve is a single
     // piece.
@@ -247,7 +256,7 @@ pub fn stroke_spiro_raw(
         push_point(left, right, cp, &mut left_curve, &mut right_curve);
     }
 
-    (left_curve, right_curve)
+    Ok((left_curve, right_curve))
 }
 
 fn determine_stroked_points(
