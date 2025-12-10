@@ -1333,6 +1333,7 @@ dependencies = [
  "monoxide-spiro",
  "num-traits",
  "serde",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -1376,6 +1377,7 @@ version = "0.1.0"
 dependencies = [
  "by_address",
  "indexmap",
+ "itertools 0.14.0",
  "monoxide-curves",
  "monoxide-spiro",
  "monoxide-ttf",

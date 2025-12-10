@@ -3,15 +3,20 @@
 
 use monoxide_spiro::{BezCtx, SpiroCp};
 
-use crate::{CubicBezier, cube::CubicBezierBuilder, point::Point2D};
+use crate::{
+    CubicBezier,
+    cube::CubicBezierBuilder,
+    error::{Error, Result},
+    point::Point2D,
+};
 
-pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Vec<CubicBezier<Point2D>> {
+pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Result<Vec<CubicBezier<Point2D>>> {
     let mut ctx = BezierContext::new(false);
     if !ctx.run_spiro(spiro) {
-        return vec![];
+        return Err(Error::SpiroInconvertible);
     }
     assert!(ctx.active_builder.is_none());
-    ctx.curves
+    Ok(ctx.curves)
 }
 
 /// Convert a spiro curve into a cubic bezier curve, and also return the
@@ -25,13 +30,13 @@ pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Vec<CubicBezier<Point2D>> {
 /// starting from 1.
 pub fn spiro_to_cube_with_indices(
     spiro: &[SpiroCp],
-) -> (Vec<CubicBezier<Point2D>>, Vec<SpiroPointIndex>) {
+) -> Result<(Vec<CubicBezier<Point2D>>, Vec<SpiroPointIndex>)> {
     let mut ctx = BezierContext::new(true);
     if !ctx.run_spiro(spiro) {
-        return (vec![], vec![]);
+        return Err(Error::SpiroInconvertible);
     }
     assert!(ctx.active_builder.is_none());
-    (ctx.curves, ctx.cp_indices)
+    Ok((ctx.curves, ctx.cp_indices))
 }
 
 #[derive(Debug)]
