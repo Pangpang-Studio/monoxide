@@ -11,4 +11,4 @@ license.workspace = true
 spiro-sys.workspace = true
 
 [dev-dependencies]
-insta = "1.44.3"
+insta = "1.45.0"
