@@ -15,7 +15,11 @@ pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Result<Vec<CubicBezier<Point2D>>> {
     if !ctx.run_spiro(spiro) {
         return Err(Error::SpiroInconvertible);
     }
-    assert!(ctx.active_builder.is_none());
+    let None = ctx.active_builder else {
+        return Err(Error::internal(
+            "`active_builder` should be None after spiro conversion",
+        ));
+    };
     Ok(ctx.curves)
 }
 
@@ -35,7 +39,11 @@ pub fn spiro_to_cube_with_indices(
     if !ctx.run_spiro(spiro) {
         return Err(Error::SpiroInconvertible);
     }
-    assert!(ctx.active_builder.is_none());
+    let None = ctx.active_builder else {
+        return Err(Error::internal(
+            "`active_builder` should be None after spiro conversion",
+        ));
+    };
     Ok((ctx.curves, ctx.cp_indices))
 }
 

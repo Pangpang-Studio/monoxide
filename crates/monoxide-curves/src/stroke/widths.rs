@@ -5,6 +5,7 @@ use itertools::Itertools;
 
 use crate::{
     CubicBezier,
+    error::{Error, Result},
     point::Point2D,
     spiro::{SpiroCurve, default_alignment, default_width_factor},
 };
@@ -31,7 +32,7 @@ pub fn solve_stroke_attrs(
     curve: &SpiroCurve,
     cubic: &CubicBezier<Point2D>,
     indices: &[usize],
-) -> SolvedStrokeAttrs {
+) -> Result<SolvedStrokeAttrs> {
     // Lazy-evaluated curve length information.
     //
     // Calculating the curve length can be quite expensive, so we should avoid
@@ -39,7 +40,7 @@ pub fn solve_stroke_attrs(
     // alignments.
     //
     // The calculated length is for each segment of the spiro curve.
-    let curve_lengths = LazyCell::new(|| calc_curve_lengths(curve, cubic, indices));
+    let curve_lengths = LazyCell::new(|| calc_curve_lengths(curve, cubic, indices).unwrap());
 
     let width_factors = populate_with_interpolation(
         &curve.width_factors,
@@ -47,32 +48,30 @@ pub fn solve_stroke_attrs(
         default_width_factor(),
         curve.is_closed,
         &curve_lengths,
-    );
+    )?;
     let alignments = populate_with_interpolation(
         &curve.alignment,
         curve.len(),
         default_alignment(),
         curve.is_closed,
         &curve_lengths,
-    );
+    )?;
 
-    SolvedStrokeAttrs {
+    Ok(SolvedStrokeAttrs {
         width_factors,
         alignments,
-    }
+    })
 }
 
 fn calc_curve_lengths(
     curve: &SpiroCurve,
     cubic: &CubicBezier<Point2D>,
     indices: &[usize],
-) -> Vec<f64> {
+) -> Result<Vec<f64>> {
     let max_error = 0.001;
     let mut lengths = Vec::with_capacity(curve.len());
     for window in indices.windows(2) {
-        let &[from, to] = window else {
-            panic!("window size mismatch")
-        };
+        let &[from, to] = window else { unreachable!() };
         let mut acc = 0.0;
         for seg in from..to {
             let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
@@ -89,8 +88,10 @@ fn calc_curve_lengths(
         }
         lengths.push(acc);
     }
-    assert_eq!(lengths.len(), curve.len(), "length calculation mismatch");
-    lengths
+    if lengths.len() != curve.len() {
+        return Err(Error::internal("length calculation mismatch"));
+    }
+    Ok(lengths)
 }
 
 /// Given a map with indices and their corresponding values, this function
@@ -105,9 +106,9 @@ fn populate_with_interpolation(
     default: f64,
     is_closed: bool,
     curve_lengths: &LazyCell<Vec<f64>, impl FnOnce() -> Vec<f64>>,
-) -> Vec<f64> {
+) -> Result<Vec<f64>> {
     if map.is_empty() {
-        return vec![default; len];
+        return Ok(vec![default; len]);
     }
     let mut res = vec![];
     res.reserve_exact(len);
@@ -118,7 +119,7 @@ fn populate_with_interpolation(
         // Fill with placeholders; see actual filling in last_index
         res.extend(std::iter::repeat_n(0.0, first_key));
     } else {
-        for _ in 0..(first_key) {
+        for _ in 0..first_key {
             res.push(first_val)
         }
     }
@@ -126,7 +127,7 @@ fn populate_with_interpolation(
     // first_index..last_index
     // Only handles the start of each segment in the loop
     for ((&idx1, &width1), (&idx2, &width2)) in map.iter().tuple_windows() {
-        assert!(idx2 > idx1);
+        debug_assert!(idx1 < idx2);
         if idx2 - idx1 == 1 {
             res.push(width1);
         } else if width1 == width2 {
@@ -176,5 +177,5 @@ fn populate_with_interpolation(
         }
     }
 
-    res
+    Ok(res)
 }
