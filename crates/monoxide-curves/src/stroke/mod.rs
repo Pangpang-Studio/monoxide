@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use itertools::Itertools;
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use crate::{
@@ -33,7 +34,7 @@ fn ensure_single_piece(curve: &[SpiroCp]) -> Result<()> {
     use SpiroCpTy::*;
 
     let is_single_piece = match curve {
-        [] => false, // No curve
+        [] | [_] => false, // No curve
         [
             SpiroCp { ty: Open, .. },
             open @ ..,
@@ -68,6 +69,8 @@ pub fn stroke_spiro(
     width: f64,
     dbg: &mut impl CurveDebugger,
 ) -> Result<StrokedSpiroCurve> {
+    // This ensures that the `curve` has >= 2 points, so operations like `[0]` and
+    // `.last().unwrap()` should be safe.
     ensure_single_piece(&curve.points)?;
 
     let is_closed = curve.points[0].ty != SpiroCpTy::Open;
@@ -169,13 +172,15 @@ fn debug_spiro_points<C: CurveDebugger>(
 /// with no gaps.
 ///
 /// The result should be fed into another pass removing self-loops.
-pub fn stroke_spiro_raw(
+fn stroke_spiro_raw(
     curve: &SpiroCurve,
     is_closed: bool,
     width: f64,
     dbg: &mut impl CurveDebugger,
 ) -> Result<(Vec<SpiroCp>, Vec<SpiroCp>)> {
-    assert!(!curve.points.is_empty(), "curve should not be empty");
+    if curve.points.is_empty() {
+        return Err(Error::SpiroBroken);
+    }
 
     // Before stroking the curve, we first need to determine the normal
     // direction at each control point. To make things simpler, we just convert
@@ -184,18 +189,14 @@ pub fn stroke_spiro_raw(
 
     // There will be only one curve, since we know the spiro curve is a single
     // piece.
-    let cubic = curves
-        .into_iter()
-        .next()
-        .expect("spiro-to-cube conversion should return at least one curve");
+    let cubic = curves.into_iter().next().ok_or_else(|| {
+        Error::internal("spiro-to-cube conversion should return at least one curve")
+    })?;
     // And we can transform the indices into a vector of raw indices too
     //
     // Semantics: each index means the point corresponds to the **start** of the
     // given segment, i.e. the i-th on-curve point of the cubic bezier.
-    let mut indices = indices
-        .into_iter()
-        .map(|x| x.segment_index)
-        .collect::<Vec<_>>();
+    let mut indices = indices.into_iter().map(|x| x.segment_index).collect_vec();
 
     if !is_closed {
         // open curves don't have the last point logged, so we add it
@@ -215,11 +216,11 @@ pub fn stroke_spiro_raw(
     // the curve on the right side of the stroke
     let mut right_curve = Vec::new();
 
-    assert_eq!(
-        curve.points.len(),
-        actual_tangents.len(),
-        "`curve` and `actual_tangents` do not have the same length"
-    );
+    if curve.points.len() != actual_tangents.len() {
+        return Err(Error::internal(
+            "`curve` and `actual_tangents` do not have the same length",
+        ));
+    }
     for (idx, (&cp, tangent)) in curve.points.iter().zip(actual_tangents).enumerate() {
         let tangent_override = curve.tangents.get(&idx);
         let (tangent, tan_width_factor) = match tangent {
