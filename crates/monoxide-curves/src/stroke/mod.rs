@@ -209,7 +209,7 @@ fn stroke_spiro_raw(
 
     // Determine the stroke attributes (width factors, alignments, etc.) at each
     // control point.
-    let stroke_attrs = solve_stroke_attrs(curve, &cubic, &indices)?;
+    let stroke_attrs = solve_stroke_attrs(curve, is_closed, &cubic, &indices)?;
 
     // Calculate tangent for each control point.
     let actual_tangents = tangents::calc_tangents(&curve.points, &cubic, &indices);

@@ -9,6 +9,12 @@ use crate::{ast::OutlineExpr, dsl::IntoStrokeAlignment};
 #[derive(Debug, Clone)]
 pub struct SpiroBuilder {
     curve: SpiroCurve,
+
+    /// The author's intention of whether the curve should be closed or not.
+    /// This does not have to match the actual curve data.
+    /// When building, if this is false, the first and the last control points
+    /// will be replaced with corresponding types.
+    should_close: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -138,12 +144,10 @@ impl SpiroBuilder {
         Self::new(true)
     }
 
-    fn new(is_closed: bool) -> Self {
+    fn new(should_close: bool) -> Self {
         Self {
-            curve: SpiroCurve {
-                is_closed,
-                ..Default::default()
-            },
+            should_close,
+            curve: SpiroCurve::default(),
         }
     }
 
@@ -170,7 +174,7 @@ impl SpiroBuilder {
     }
 
     pub fn build(mut self) -> OutlineExpr {
-        if !self.curve.is_closed && !self.curve.points.is_empty() {
+        if !self.should_close && !self.curve.points.is_empty() {
             self.curve.points.last_mut().unwrap().ty = SpiroCpTy::EndOpen;
             self.curve.points.first_mut().unwrap().ty = SpiroCpTy::Open;
         }

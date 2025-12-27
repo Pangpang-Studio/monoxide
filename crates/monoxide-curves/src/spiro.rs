@@ -13,7 +13,6 @@ use crate::point::Point2D;
 /// (tangent and stroke) are not used.
 #[derive(Debug, Clone, Default)]
 pub struct SpiroCurve {
-    pub is_closed: bool,
     pub points: Vec<SpiroCp>,
 
     /// The overridden tangents at each point. This overrides both the in and
