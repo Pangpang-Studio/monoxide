@@ -30,6 +30,7 @@ pub struct SolvedStrokeAttrs {
 /// entirely.
 pub fn solve_stroke_attrs(
     curve: &SpiroCurve,
+    is_closed: bool,
     cubic: &CubicBezier<Point2D>,
     indices: &[usize],
 ) -> Result<SolvedStrokeAttrs> {
@@ -46,14 +47,14 @@ pub fn solve_stroke_attrs(
         &curve.width_factors,
         curve.len(),
         default_width_factor(),
-        curve.is_closed,
+        is_closed,
         &curve_lengths,
     )?;
     let alignments = populate_with_interpolation(
         &curve.alignment,
         curve.len(),
         default_alignment(),
-        curve.is_closed,
+        is_closed,
         &curve_lengths,
     )?;
 
