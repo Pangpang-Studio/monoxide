@@ -80,7 +80,7 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
         }
     }
 
-    pub fn iter(&self) -> CubicBezierPointIter<P> {
+    pub fn iter(&self) -> CubicBezierPointIter<'_, P> {
         CubicBezierPointIter {
             curve: self,
             current_segment: 0,
