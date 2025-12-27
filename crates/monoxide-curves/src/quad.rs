@@ -70,7 +70,7 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> QuadBezier<P> {
         }
     }
 
-    pub fn iter(&self) -> QuadBezierPointIter<P> {
+    pub fn iter(&self) -> QuadBezierPointIter<'_, P> {
         QuadBezierPointIter {
             curve: self,
             current_segment: 0,

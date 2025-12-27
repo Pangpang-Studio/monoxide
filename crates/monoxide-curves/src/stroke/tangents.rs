@@ -13,10 +13,10 @@ pub fn calc_tangents(
     cube_curve: &CubicBezier<Point2D>,
     indices: &[usize],
 ) -> Vec<Tangent> {
-    assert_eq!(
+    debug_assert_eq!(
         curve.len(),
         indices.len(),
-        "`curve` and `indices` do not have the same length"
+        "`curve` and `indices` should have the same length"
     );
     let mut tangents = Vec::new();
 
@@ -108,6 +108,65 @@ pub fn make_line_join(
     left_offset: f64,
     right_offset: f64,
 ) -> (Point2D, Point2D) {
+    fn calc_join(
+        in_tangent: Point2D,
+        out_tangent: Point2D,
+        in_tip: Point2D,
+        out_tip: Point2D,
+    ) -> (f64, Point2D) {
+        /*
+        Now we're getting these 4 points:
+
+                    /    /    /
+                  /    /    /
+        out_left *   /    /
+        in_left *   *   * in_right
+                | cp|  *|out_right
+                |   |   |
+                |   |   |
+
+        To make the correct cap (without trying to solve the intersection of two
+        bezier curves; that's for another day), we need to move the left and
+        right points along their tangents to meet at a point. That is, to
+        solve:
+
+            k1 * in_tangent + in_left == -k2 * out_tangent + out_left
+            (same for right side)
+
+        Splitting the x and y components, we get the following linear equations:
+
+            [ (A)
+                in_tangent.x,  -out_tangent.x;
+                in_tangent.y,  -out_tangent.y;
+            ] * [k1; -k2] == [ (B)
+                out_left.x - in_left.x;
+                out_left.y - in_left.y;
+            ]
+
+        Since in_tangent.x != out_tangent.x and in_tangent.y != out_tangent.y, the
+        matrix is invertible, and we can solve for k1 and k2. Actually, we can just
+        solve for k1, since our result can only depend on one of them.
+
+        According to Cramer's rule, for the following equation:
+
+            [a1, b1; a2, b2] * [x; y] = [c1; c2]
+        */
+
+        let a1 = in_tangent.x;
+        let b1 = -out_tangent.x;
+        let a2 = in_tangent.y;
+        let b2 = -out_tangent.y;
+        let c1 = out_tip.x - in_tip.x;
+        let c2 = out_tip.y - in_tip.y;
+
+        // ... the solution for x is:
+        let k1 = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
+
+        // And our join point on the left side is just:
+        let res = in_tip + k1 * in_tangent;
+        (k1, res)
+    }
+
     // Move separately with in and out tangent
     let (in_left, in_right) =
         move_point_normal_both(cp.into(), in_tangent, left_offset, right_offset);
@@ -138,63 +197,4 @@ pub fn make_line_join(
         let join_right = in_right + k1_right * in_tangent;
         (join_left, join_right)
     }
-}
-
-fn calc_join(
-    in_tangent: Point2D,
-    out_tangent: Point2D,
-    in_tip: Point2D,
-    out_tip: Point2D,
-) -> (f64, Point2D) {
-    /*
-    Now we're getting these 4 points:
-
-                /    /    /
-              /    /    /
-    out_left *   /    /
-    in_left *   *   * in_right
-            | cp|  *|out_right
-            |   |   |
-            |   |   |
-
-    To make the correct cap (without trying to solve the intersection of two
-    bezier curves; that's for another day), we need to move the left and
-    right points along their tangents to meet at a point. That is, to
-    solve:
-
-        k1 * in_tangent + in_left == -k2 * out_tangent + out_left
-        (same for right side)
-
-    Splitting the x and y components, we get the following linear equations:
-
-        [ (A)
-            in_tangent.x,  -out_tangent.x;
-            in_tangent.y,  -out_tangent.y;
-        ] * [k1; -k2] == [ (B)
-            out_left.x - in_left.x;
-            out_left.y - in_left.y;
-        ]
-
-    Since in_tangent.x != out_tangent.x and in_tangent.y != out_tangent.y, the
-    matrix is invertible, and we can solve for k1 and k2. Actually, we can just
-    solve for k1, since our result can only depend on one of them.
-
-    According to Cramer's rule, for the following equation:
-
-        [a1, b1; a2, b2] * [x; y] = [c1; c2]
-    */
-
-    let a1 = in_tangent.x;
-    let b1 = -out_tangent.x;
-    let a2 = in_tangent.y;
-    let b2 = -out_tangent.y;
-    let c1 = out_tip.x - in_tip.x;
-    let c2 = out_tip.y - in_tip.y;
-
-    // ... the solution for x is:
-    let k1 = (c1 * b2 - b1 * c2) / (a1 * b2 - b1 * a2);
-
-    // And our join point on the left side is just:
-    let res = in_tip + k1 * in_tangent;
-    (k1, res)
 }
