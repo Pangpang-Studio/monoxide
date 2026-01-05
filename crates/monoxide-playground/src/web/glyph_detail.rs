@@ -177,7 +177,7 @@ impl EvalTracer for GlyphDetailTracer {
 
     fn constructed_beziers<'b>(
         &mut self,
-        bezier: impl IntoIterator<
+        beziers: impl IntoIterator<
             Item = &'b monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>,
         >,
     ) -> Self::Id
@@ -185,7 +185,7 @@ impl EvalTracer for GlyphDetailTracer {
         Self: 'b,
     {
         let (ser, id) = self.allocate_next();
-        let curve = bezier.into_iter().cloned().collect();
+        let curve = beziers.into_iter().cloned().collect();
         ser.kind = ConstructionKind::CubicBezier { curve };
         id
     }

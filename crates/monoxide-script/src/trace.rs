@@ -22,7 +22,7 @@ pub trait EvalTracer {
 
     fn constructed_beziers<'b>(
         &mut self,
-        bezier: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
     ) -> Self::Id
     where
         Self: 'b;
@@ -89,7 +89,7 @@ impl EvalTracer for () {
 
     fn constructed_beziers<'b>(
         &mut self,
-        _bezier: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        _beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
     ) -> Self::Id {
         NoId
     }
