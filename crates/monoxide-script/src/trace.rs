@@ -1,6 +1,6 @@
 //! Provides trait for tracing the evaluation of a glyph
 
-use monoxide_curves::{CubicBezier, debug::CurveDebugger, point::Point2D};
+use monoxide_curves::{CubicBezier, debug::CurveDebugger, point::Point2D, xform::Affine2D};
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
 pub trait EvalTracer {
@@ -40,6 +40,12 @@ pub trait EvalTracer {
     ) -> Self::Id
     where
         Self: 'b;
+    fn transformed<'b>(
+        &mut self,
+        parent: Self::Id,
+        xform: &Affine2D<Point2D>,
+        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+    ) -> Self::Id;
     fn spiro_to_bezier(&mut self, parent: Self::Id) -> Self::Id;
     fn boolean_added<'b>(&mut self, parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id
     where
@@ -106,6 +112,15 @@ impl EvalTracer for () {
         _parent: Self::Id,
         _width: f64,
         _spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+    ) -> Self::Id {
+        NoId
+    }
+
+    fn transformed<'b>(
+        &mut self,
+        _parent: Self::Id,
+        _xform: &Affine2D<Point2D>,
+        _beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
     ) -> Self::Id {
         NoId
     }

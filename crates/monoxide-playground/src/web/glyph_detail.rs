@@ -6,12 +6,14 @@ use axum::{
     http::StatusCode,
     response::Response,
 };
-use monoxide_curves::debug::CurveDebugger;
+use monoxide_curves::{CubicBezier, debug::CurveDebugger};
 use monoxide_script::{
     ast::{FontContext, OutlineExpr},
     eval::{SerializedGlyphKind, eval_outline},
+    prelude::*,
     trace::EvalTracer,
 };
+use monoxide_spiro::SpiroCp;
 
 use super::XAppState;
 use crate::model::{
@@ -177,9 +179,7 @@ impl EvalTracer for GlyphDetailTracer {
 
     fn constructed_beziers<'b>(
         &mut self,
-        beziers: impl IntoIterator<
-            Item = &'b monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>,
-        >,
+        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
     ) -> Self::Id
     where
         Self: 'b,
@@ -192,7 +192,7 @@ impl EvalTracer for GlyphDetailTracer {
 
     fn constructed_spiros<'b>(
         &mut self,
-        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+        spiros: impl IntoIterator<Item = &'b [SpiroCp]>,
     ) -> Self::Id
     where
         Self: 'b,
@@ -210,7 +210,7 @@ impl EvalTracer for GlyphDetailTracer {
         &mut self,
         parent: Self::Id,
         width: f64,
-        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+        spiros: impl IntoIterator<Item = &'b [SpiroCp]>,
     ) -> Self::Id
     where
         Self: 'b,
@@ -223,6 +223,22 @@ impl EvalTracer for GlyphDetailTracer {
                 .into_iter()
                 .map(|s| s.iter().cloned().map(|x| x.into()).collect())
                 .collect(),
+        };
+        id
+    }
+
+    fn transformed<'b>(
+        &mut self,
+        parent: Self::Id,
+        xform: &Affine2D<Point2D>,
+        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+    ) -> Self::Id {
+        let (ser, id) = self.allocate_next();
+        ser.kind = ConstructionKind::Transform {
+            parent,
+            mov: xform.translation(),
+            mat: xform.matrix(),
+            curve: beziers.into_iter().cloned().collect(),
         };
         id
     }
@@ -250,11 +266,7 @@ impl EvalTracer for GlyphDetailTracer {
         }
     }
 
-    fn intermediate_output(
-        &mut self,
-        id: Self::Id,
-        curve: &[monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>],
-    ) {
+    fn intermediate_output(&mut self, id: Self::Id, curve: &[CubicBezier<Point2D>]) {
         let it = self.buf.get_mut(id).unwrap();
         it.result_curve = Some(curve.to_vec());
     }

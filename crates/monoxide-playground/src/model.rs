@@ -112,6 +112,12 @@ pub enum ConstructionKind {
         width: f64,
         curve: Vec<Vec<SerializeSpiroPoint>>,
     },
+    Transform {
+        parent: usize,
+        mov: Point2D,
+        mat: [Point2D; 2],
+        curve: Vec<CubicBezier<Point2D>>,
+    },
     SpiroToBezier {
         parent: usize,
     },
