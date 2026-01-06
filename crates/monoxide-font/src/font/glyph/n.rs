@@ -31,7 +31,7 @@ impl NShape {
         Self { hook, pipe }
     }
 
-    pub fn with_height(mut self, height: f64) -> Self {
+    pub fn with_pipe_height(mut self, height: f64) -> Self {
         self.pipe.end.y = height;
         self
     }
