@@ -75,8 +75,10 @@ impl IntoOutline for Hook {
                 curl!(x + rx, y + ry / 3.),
                 // Top arc
                 g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.).width(1.),
-                g4!(x, y_hi + ovs).width(0.8),
-                g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.25).heading(Dir::L),
+                g4!(x, y_hi + ovs).width(0.9),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.25)
+                    .heading(Dir::L)
+                    .width(0.7),
             ])
             .into_outline()
     }
