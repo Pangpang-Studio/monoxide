@@ -157,6 +157,15 @@ export interface StrokeConstruction {
   curve: SerializeSpiroPoint[][]
 }
 
+/** Maps to `ConstructionKind::Transform` variant in `model.rs` */
+export interface TransformConstruction {
+  t: 'transform'
+  parent: number
+  mov: Point2D
+  mat: [Point2D, Point2D]
+  curve: CubicBezier[]
+}
+
 /** Maps to `ConstructionKind::SpiroToBezier` variant in `model.rs` */
 export interface SpiroToBezierConstruction {
   t: 'spiro-to-bezier'
@@ -174,5 +183,6 @@ export type ConstructionKind =
   | SpiroConstruction
   | CubicBezierConstruction
   | StrokeConstruction
+  | TransformConstruction
   | SpiroToBezierConstruction
   | BooleanAddConstruction

@@ -6,6 +6,7 @@ import { computed, ref, watchEffect, type ComputedRef, type Ref } from 'vue'
 import type {
   CubicBezier,
   GlyphDetail,
+  Point2D,
   SerializedGlyphConstruction,
 } from '../lib/types'
 import { getGlyphDetail } from '../lib/api'
@@ -111,6 +112,9 @@ const constructionSteps: ComputedRef<ConstructionStep[]> = computed(() => {
       desc = `new cubic_bezier`
     } else if (v.kind.t === 'stroke') {
       desc = `stroke(%${v.kind.parent}, width=${v.kind.width})`
+    } else if (v.kind.t === 'transform') {
+      const strOfPoint = (p: Point2D) => `[${p.x}, ${p.y}]`
+      desc = `transform(%${v.kind.parent}, mov=${strOfPoint(v.kind.mov)}, mat=[${strOfPoint(v.kind.mat[0])}, ${strOfPoint(v.kind.mat[1])}])`
     } else if (v.kind.t === 'boolean-add') {
       desc = 'add(' + v.kind.parents.map((p) => `%${p}`).join(', ') + ')'
     } else if (v.kind.t === 'spiro-to-bezier') {

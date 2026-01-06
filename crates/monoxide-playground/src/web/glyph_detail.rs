@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{fmt, sync::Arc};
 
 use axum::{
     Json,
@@ -6,12 +6,17 @@ use axum::{
     http::StatusCode,
     response::Response,
 };
-use monoxide_curves::debug::CurveDebugger;
+use monoxide_curves::{
+    CubicBezier,
+    debug::{CurveDebugger, DebugPointKind},
+};
 use monoxide_script::{
     ast::{FontContext, OutlineExpr},
     eval::{SerializedGlyphKind, eval_outline},
+    prelude::*,
     trace::EvalTracer,
 };
+use monoxide_spiro::SpiroCp;
 
 use super::XAppState;
 use crate::model::{
@@ -177,22 +182,20 @@ impl EvalTracer for GlyphDetailTracer {
 
     fn constructed_beziers<'b>(
         &mut self,
-        bezier: impl IntoIterator<
-            Item = &'b monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>,
-        >,
+        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
     ) -> Self::Id
     where
         Self: 'b,
     {
         let (ser, id) = self.allocate_next();
-        let curve = bezier.into_iter().cloned().collect();
+        let curve = beziers.into_iter().cloned().collect();
         ser.kind = ConstructionKind::CubicBezier { curve };
         id
     }
 
     fn constructed_spiros<'b>(
         &mut self,
-        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+        spiros: impl IntoIterator<Item = &'b [SpiroCp]>,
     ) -> Self::Id
     where
         Self: 'b,
@@ -210,7 +213,7 @@ impl EvalTracer for GlyphDetailTracer {
         &mut self,
         parent: Self::Id,
         width: f64,
-        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+        spiros: impl IntoIterator<Item = &'b [SpiroCp]>,
     ) -> Self::Id
     where
         Self: 'b,
@@ -223,6 +226,22 @@ impl EvalTracer for GlyphDetailTracer {
                 .into_iter()
                 .map(|s| s.iter().cloned().map(|x| x.into()).collect())
                 .collect(),
+        };
+        id
+    }
+
+    fn transformed<'b>(
+        &mut self,
+        parent: Self::Id,
+        xform: &Affine2D<Point2D>,
+        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+    ) -> Self::Id {
+        let (ser, id) = self.allocate_next();
+        ser.kind = ConstructionKind::Transform {
+            parent,
+            mov: xform.translation(),
+            mat: xform.matrix(),
+            curve: beziers.into_iter().cloned().collect(),
         };
         id
     }
@@ -250,11 +269,7 @@ impl EvalTracer for GlyphDetailTracer {
         }
     }
 
-    fn intermediate_output(
-        &mut self,
-        id: Self::Id,
-        curve: &[monoxide_curves::CubicBezier<monoxide_curves::point::Point2D>],
-    ) {
+    fn intermediate_output(&mut self, id: Self::Id, curve: &[CubicBezier<Point2D>]) {
         let it = self.buf.get_mut(id).unwrap();
         it.result_curve = Some(curve.to_vec());
     }
@@ -265,12 +280,7 @@ struct TracerCurveDebugger<'a> {
 }
 
 impl CurveDebugger for TracerCurveDebugger<'_> {
-    fn point(
-        &mut self,
-        kind: monoxide_curves::debug::DebugPointKind,
-        at: monoxide_curves::point::Point2D,
-        tag: std::fmt::Arguments<'_>,
-    ) {
+    fn point(&mut self, kind: DebugPointKind, at: Point2D, tag: fmt::Arguments<'_>) {
         self.item.debug_points.push(DebugPoint {
             kind: kind_to_string(&kind),
             at,
@@ -278,12 +288,7 @@ impl CurveDebugger for TracerCurveDebugger<'_> {
         });
     }
 
-    fn line(
-        &mut self,
-        from: monoxide_curves::point::Point2D,
-        to: monoxide_curves::point::Point2D,
-        tag: std::fmt::Arguments<'_>,
-    ) {
+    fn line(&mut self, from: Point2D, to: Point2D, tag: fmt::Arguments<'_>) {
         self.item.debug_lines.push(DebugLine {
             from,
             to,
@@ -292,12 +297,12 @@ impl CurveDebugger for TracerCurveDebugger<'_> {
     }
 }
 
-fn kind_to_string(kind: &monoxide_curves::debug::DebugPointKind) -> &'static str {
+fn kind_to_string(kind: &DebugPointKind) -> &'static str {
     match kind {
-        monoxide_curves::debug::DebugPointKind::Corner => "corner",
-        monoxide_curves::debug::DebugPointKind::Curve => "curve",
-        monoxide_curves::debug::DebugPointKind::Control => "control",
-        monoxide_curves::debug::DebugPointKind::Misc => "misc",
-        monoxide_curves::debug::DebugPointKind::Hidden => "hidden",
+        DebugPointKind::Corner => "corner",
+        DebugPointKind::Curve => "curve",
+        DebugPointKind::Control => "control",
+        DebugPointKind::Misc => "misc",
+        DebugPointKind::Hidden => "hidden",
     }
 }

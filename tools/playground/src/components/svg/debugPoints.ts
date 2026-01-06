@@ -16,28 +16,27 @@ export function generateDebugPoints(
     for (let i = 0; i < curves.length; i++) {
       debugSpiro(curves[i], points)
     }
-  } else if (part.kind.t == 'cubic-bezier') {
-    for (let i = 0; i < part.kind.curve.length; i++) {
-      debugCubicBezier(part.kind.curve[i], points)
+  } else {
+    if (part.kind.t == 'cubic-bezier' || part.kind.t == 'transform') {
+      for (let i = 0; i < part.kind.curve.length; i++) {
+        debugCubicBezier(part.kind.curve[i], points)
+      }
     }
-  }
+    if (part.result_curve) {
+      for (let i = 0; i < part.result_curve.length; i++) {
+        debugCubicBezier(part.result_curve[i], points)
+      }
 
-  if (part.result_curve && part.kind.t != 'spiro' && part.kind.t != 'stroke') {
-    for (let i = 0; i < part.result_curve.length; i++) {
-      let curve = part.result_curve[i]
-
-      debugCubicBezier(curve, points)
-    }
-
-    if (part.debug_points) {
-      for (let i = 0; i < part.debug_points.length; i++) {
-        let point = part.debug_points[i]
-        points.push({
-          x: point.x,
-          y: point.y,
-          kind: point.kind,
-          tag: point.tag,
-        })
+      if (part.debug_points) {
+        for (let i = 0; i < part.debug_points.length; i++) {
+          let point = part.debug_points[i]
+          points.push({
+            x: point.x,
+            y: point.y,
+            kind: point.kind,
+            tag: point.tag,
+          })
+        }
       }
     }
   }
