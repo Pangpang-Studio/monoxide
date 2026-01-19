@@ -14,6 +14,6 @@ bytes = "1.11.0"
 fixed = "=1.29.0"
 indexmap = "2.13.0"
 num-traits.workspace = true
-rust_decimal = { version = "1.39.0", default-features = false }
+rust_decimal = { version = "1.40.0", default-features = false }
 thiserror.workspace = true
 widestring = "1.2.1"
