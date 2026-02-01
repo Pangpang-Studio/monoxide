@@ -38,7 +38,7 @@ impl NShape {
 }
 
 impl IntoOutlines for NShape {
-    fn into_outlines(self) -> impl Iterator<Item = std::sync::Arc<OutlineExpr>> {
+    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
         [self.hook.into_outline(), self.pipe.into_outline()].into_iter()
     }
 }
@@ -63,7 +63,7 @@ impl Hook {
 }
 
 impl IntoOutline for Hook {
-    fn into_outline(self) -> std::sync::Arc<OutlineExpr> {
+    fn into_outline(self) -> Arc<OutlineExpr> {
         let o_shape @ OShape {
             center: Point2D { x, y },
             radii: Point2D { x: rx, y: ry },

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use monoxide_script::prelude::*;
 
 use super::{InputContext, o::OShape};
@@ -43,7 +45,7 @@ impl CShape {
 }
 
 impl IntoOutline for CShape {
-    fn into_outline(self) -> std::sync::Arc<OutlineExpr> {
+    fn into_outline(self) -> Arc<OutlineExpr> {
         let OShape {
             center: Point2D { x, y },
             radii: Point2D { x: rx, y: ry },

@@ -65,7 +65,7 @@ impl Bowl {
 }
 
 impl IntoOutline for Bowl {
-    fn into_outline(self) -> std::sync::Arc<OutlineExpr> {
+    fn into_outline(self) -> Arc<OutlineExpr> {
         let OShape {
             center: Point2D { x, y },
             radii: Point2D { x: rx, y: ry },
