@@ -38,7 +38,7 @@ impl MShape {
 }
 
 impl IntoOutlines for MShape {
-    fn into_outlines(self) -> impl Iterator<Item = std::sync::Arc<OutlineExpr>> {
+    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
         self.hooks.into_outlines().chain([self.pipe.into_outline()])
     }
 }

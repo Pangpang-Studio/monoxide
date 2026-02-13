@@ -35,7 +35,7 @@ impl DShape {
 }
 
 impl IntoOutlines for DShape {
-    fn into_outlines(self) -> impl Iterator<Item = std::sync::Arc<OutlineExpr>> {
+    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
         [self.bowl, self.pipe.into_outline()].into_iter()
     }
 }
