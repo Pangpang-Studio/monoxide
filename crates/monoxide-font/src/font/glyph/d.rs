@@ -23,7 +23,9 @@ impl DShape {
         let bowl = Bowl::new((mid, mih), (mid - sbl, mih), ovs)
             .stroked(stw)
             .into_outline();
-        let pipe = Rect::new((sbr, 0.), (sbr, cap), stw).aligned(Alignment::Right);
+        let pipe = Rect::new((sbr, 0.), (sbr, cap))
+            .aligned(Alignment::Right)
+            .stroked(stw);
 
         Self { bowl, pipe }
     }

@@ -31,7 +31,9 @@ impl MShape {
             hook.clone(),
             hook.transformed(Affine2D::translated((sbl - mid + stw / 2., 0.).into())),
         ];
-        let pipe = Rect::new((sbl, 0.), (sbl, xh), stw).aligned(Alignment::Left);
+        let pipe = Rect::new((sbl, 0.), (sbl, xh))
+            .aligned(Alignment::Left)
+            .stroked(stw);
 
         Self { hooks, pipe }
     }

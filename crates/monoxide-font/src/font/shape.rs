@@ -15,31 +15,42 @@ use super::{dir::Alignment, math::mix};
 pub struct Rect {
     pub start: Point2D,
     pub end: Point2D,
-    pub width: f64,
+    pub width: Option<f64>,
     pub align: Alignment,
 }
 
 impl Rect {
-    pub fn new(start: impl Into<Point2D>, end: impl Into<Point2D>, width: f64) -> Self {
+    pub fn new(start: impl Into<Point2D>, end: impl Into<Point2D>) -> Self {
         Self {
             start: start.into(),
             end: end.into(),
-            width,
+            width: None,
             align: Alignment::Middle,
         }
     }
 
-    pub fn aligned(self, align: Alignment) -> Self {
-        Self { align, ..self }
+    pub fn stroked(mut self, width: f64) -> Self {
+        self.width = Some(width);
+        self
+    }
+
+    pub fn aligned(mut self, align: Alignment) -> Self {
+        self.align = align;
+        self
     }
 }
 
 impl IntoOutline for Rect {
     fn into_outline(self) -> Arc<OutlineExpr> {
-        SpiroBuilder::open()
+        let mut res = SpiroBuilder::open()
             .insts([flat!(self.start).aligned(self.align), curl!(self.end)])
-            .into_outline()
-            .stroked(self.width)
+            .into_outline();
+
+        if let Some(width) = self.width {
+            res = res.stroked(width);
+        }
+
+        res
     }
 }
 

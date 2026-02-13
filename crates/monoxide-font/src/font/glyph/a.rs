@@ -34,8 +34,8 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
     let bar = Rect::new(
         mix(lower_left, upper_mid, bar_height),
         mix(lower_right, upper_mid, bar_height),
-        stw,
     )
+    .stroked(stw)
     .into_outline();
 
     Glyph::builder().outlines([left, bar, right]).build()
