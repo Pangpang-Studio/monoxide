@@ -14,6 +14,7 @@ glyph_mods! {
     e;
     h;
     i;
+    pub j;
     k;
     l;
     m;
@@ -31,4 +32,3 @@ use super::InputContext;
 
 // TODO: Finish those modules and move them above.
 pub mod a;
-pub mod j;
