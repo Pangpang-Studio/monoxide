@@ -25,7 +25,7 @@ impl EShape {
         let_settings! { { mid, mih, ovs, sbl, sbr, stw } = settings; }
 
         let bowl = Bowl::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw);
-        let bar = Rect::new((sbl, mih), (sbr, mih), stw);
+        let bar = Rect::new((sbl, mih), (sbr, mih)).stroked(stw);
 
         Self { bowl, bar }
     }

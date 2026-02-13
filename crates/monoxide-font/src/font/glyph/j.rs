@@ -42,9 +42,9 @@ impl JShape {
         let top_serif = Rect::new(
             (mid, xh),
             (mid - LShape::DEFAULT_TOP_BAR_SCALE * (mih - sbl), xh),
-            stw,
         )
-        .aligned(Alignment::Right);
+        .aligned(Alignment::Right)
+        .stroked(stw);
 
         let dot = dot(settings);
 
@@ -93,7 +93,9 @@ impl JCapShape {
                 Point2D::unit_x(),
             ));
 
-        let pipe = Rect::new((mix(sbl, mid, 0.3), cap), (sbr, cap), stw).aligned(Alignment::Left);
+        let pipe = Rect::new((mix(sbl, mid, 0.3), cap), (sbr, cap))
+            .aligned(Alignment::Left)
+            .stroked(stw);
 
         Self {
             hook,

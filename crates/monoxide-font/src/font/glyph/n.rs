@@ -26,7 +26,9 @@ impl NShape {
         let_settings! { { mid, mih, ovs, sbl, stw, xh } = settings; }
 
         let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw);
-        let pipe = Rect::new((sbl, 0.), (sbl, xh), stw).aligned(Alignment::Left);
+        let pipe = Rect::new((sbl, 0.), (sbl, xh))
+            .aligned(Alignment::Left)
+            .stroked(stw);
 
         Self { hook, pipe }
     }
