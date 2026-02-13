@@ -1,18 +1,19 @@
 use monoxide_script::prelude::*;
 
 use super::InputContext;
-use crate::font::{glyph::l::LShape, math::mix, shape::Ring};
+use crate::font::{glyph::l::LShape, math::mix, settings::FontParamSettings, shape::Ring};
 
 pub fn i(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, xh } = cx.settings(); }
+    let settings = cx.settings();
+    let_settings! { { sbl, sbr, stw, xh } = settings; }
 
     Glyph::builder()
         .outlines(LShape::new(sbl..sbr, 0.0..xh).stroked(stw))
-        .outline(dot(cx))
+        .outline(dot(settings))
         .build()
 }
 
-pub fn dot(cx: &InputContext) -> impl IntoOutline {
-    let_settings! { { cap, dtr, mid, sbl } = cx.settings(); }
+pub fn dot(settings: &FontParamSettings) -> Ring {
+    let_settings! { { cap, dtr, mid, sbl } = settings; }
     Ring::at((mix(mid, sbl, 0.97), 0.97 * cap), (dtr, dtr))
 }
