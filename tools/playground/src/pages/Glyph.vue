@@ -120,7 +120,7 @@ const constructionSteps: ComputedRef<ConstructionStep[]> = computed(() => {
     } else if (v.kind.t === 'spiro-to-bezier') {
       desc = `spiro_to_bezier(%${v.kind.parent})`
     } else {
-      desc = `unknown(${v.kind})`
+      desc = `unknown(${JSON.stringify(v.kind)})`
     }
     return {
       id: i,
