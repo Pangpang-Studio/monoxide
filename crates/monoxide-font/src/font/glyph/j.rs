@@ -30,9 +30,8 @@ impl JShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { mid, mih, sbl, stw, xh } = settings; }
 
-        let hook = Self::hook_raw(settings).transformed(
-            Affine2D::mirrored_along((0., xh / 2.), (1., 0.)).translate((stw / 2., 0.)),
-        );
+        let hook = Self::hook_raw(settings, None)
+            .transformed(Affine2D::mirrored_along((0., xh / 2.), (1., 0.)));
 
         let top_serif = Rect::new(
             (mid, xh),
@@ -52,14 +51,20 @@ impl JShape {
     }
 
     /// Returns a stroked `j` hook without transformation.
-    pub fn hook_raw(settings: &FontParamSettings) -> Arc<OutlineExpr> {
+    pub fn hook_raw(
+        settings: &FontParamSettings,
+        y_lo: impl Into<Option<f64>>,
+    ) -> Arc<OutlineExpr> {
         let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, xh } = settings; }
 
         let rx = (mid - sbl) * 0.9;
+        // TODO: Consider using the boundary expression instead of the center-radii expression
+        // here?
         Hook::new((mid, mih + (cap - xh) / 2.), (rx, mih), ovs)
+            .with_y_lo(y_lo)
             .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
-            .stroked(1.05 * stw)
-            .transformed(Affine2D::translated((-rx, 0.)))
+            .stroked(1.1 * stw)
+            .transformed(Affine2D::translated((-rx + stw / 2., 0.)))
     }
 }
 

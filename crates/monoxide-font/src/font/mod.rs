@@ -47,6 +47,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         ('c', glyph::c(&cx)),
         ('d', glyph::d(&cx)),
         ('e', glyph::e(&cx)),
+        ('f', glyph::f(&cx)),
         ('h', glyph::h(&cx)),
         ('i', glyph::i(&cx)),
         ('J', glyph::j::j_cap(&cx)),
