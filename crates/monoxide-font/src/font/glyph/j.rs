@@ -28,16 +28,12 @@ impl JShape {
     const HOOK_TIP_HEADING: Point2D = Point2D::new(-1., -1.);
 
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, xh } = settings; }
+        let_settings! { { mid, mih, sbl, stw, xh } = settings; }
 
-        let rx = (mid - sbl) * 0.9;
-        let hook = Hook::new((mid, mih + (cap - xh) / 2.), (rx, mih), ovs)
-            .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
-            .stroked(1.05 * stw)
-            .transformed(
-                Affine2D::mirrored_along((0., xh / 2.).into(), Point2D::unit_x())
-                    .translate((stw / 2. - rx, 0.).into()),
-            );
+        let hook = Self::hook_raw(settings).transformed(
+            Affine2D::mirrored_along((0., xh / 2.).into(), Point2D::unit_x())
+                .translate((stw / 2., 0.).into()),
+        );
 
         let top_serif = Rect::new(
             (mid, xh),
@@ -54,6 +50,17 @@ impl JShape {
             dot,
             offset: (stw, 0.).into(),
         }
+    }
+
+    /// Returns a stroked `j` hook without transformation.
+    pub fn hook_raw(settings: &FontParamSettings) -> Arc<OutlineExpr> {
+        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, xh } = settings; }
+
+        let rx = (mid - sbl) * 0.9;
+        Hook::new((mid, mih + (cap - xh) / 2.), (rx, mih), ovs)
+            .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
+            .stroked(1.05 * stw)
+            .transformed(Affine2D::translated((-rx, 0.).into()))
     }
 }
 
