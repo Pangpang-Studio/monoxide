@@ -48,6 +48,7 @@ impl IntoOutlines for NShape {
 pub struct Hook {
     pub o_shape: OShape,
     pub hook_tip_heading: Point2D,
+    pub y_lo: Option<f64>,
 }
 
 impl Hook {
@@ -55,7 +56,13 @@ impl Hook {
         Self {
             o_shape: OShape::new(center, radii, ovs),
             hook_tip_heading: Dir::L.into(),
+            y_lo: None,
         }
+    }
+
+    pub fn with_y_lo(mut self, y_lo: impl Into<Option<f64>>) -> Self {
+        self.y_lo = y_lo.into();
+        self
     }
 
     pub fn with_hook_tip_heading(mut self, heading: impl Into<Point2D>) -> Self {
@@ -80,7 +87,9 @@ impl IntoOutline for Hook {
         SpiroBuilder::open()
             .insts([
                 // Right side
-                flat!(x + rx, 0.).aligned(Alignment::Right).width(1.1),
+                flat!(x + rx, self.y_lo.unwrap_or_default())
+                    .aligned(Alignment::Right)
+                    .width(1.1),
                 curl!(x + rx, y + ry / 3.),
                 // Top arc
                 g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.).width(1.),
