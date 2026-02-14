@@ -122,6 +122,16 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         }
     }
 
+    pub fn rotate_around(self, center: impl Into<P>, angle: impl Into<P::Scalar>) -> Self {
+        let center = center.into();
+        let angle = angle.into();
+
+        let arm = self.trans.point_sub(&center);
+        self.translate(arm.mul_scalar(-P::Scalar::one()))
+            .rotate(angle)
+            .translate(Self::rotated(angle).apply(&arm))
+    }
+
     pub fn apply(&self, point: &P) -> P {
         let x = self.mat[0].dot(point);
         let y = self.mat[1].dot(point);
@@ -137,6 +147,11 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
     /// Create a transformation that rotates the point by `angle`.
     pub fn rotated(angle: impl Into<P::Scalar>) -> Self {
         Self::id().rotate(angle)
+    }
+
+    /// Create a transformation that rotates the point by `angle` around `center`.
+    pub fn rotated_around(center: impl Into<P>, angle: impl Into<P::Scalar>) -> Self {
+        Self::id().rotate_around(center, angle)
     }
 
     /// Create a transformation that scales the point by `scale`.
