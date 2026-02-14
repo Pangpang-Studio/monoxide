@@ -9,8 +9,7 @@ pub fn p(cx: &InputContext) -> Glyph {
             DShape::from_settings(&cx.settings)
                 .with_height(xh - dsc)
                 .transformed(
-                    Affine2D::mirrored_along((mid, 0.).into(), Point2D::unit_y())
-                        .mirror_along((0., mih).into(), Point2D::unit_x()),
+                    Affine2D::mirrored_along((mid, 0.), (0., 1.)).mirror_along((0., mih), (1., 0.)),
                 ),
         )
         .build()

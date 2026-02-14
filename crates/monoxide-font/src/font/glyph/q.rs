@@ -8,10 +8,7 @@ pub fn q(cx: &InputContext) -> Glyph {
         .outlines(
             DShape::from_settings(&cx.settings)
                 .with_height(xh - dsc)
-                .transformed(Affine2D::mirrored_along(
-                    (0., mih).into(),
-                    Point2D::unit_x(),
-                )),
+                .transformed(Affine2D::mirrored_along((0., mih), (1., 0.))),
         )
         .build()
 }
