@@ -37,7 +37,7 @@ pub fn k(cx: &InputContext) -> Glyph {
         // TODO: Find out how the scaling factor is determined.
         .stroked(stw * 0.8);
 
-    let bar = Rect::new(mid.with_x(sbl), mid + Point2D::unit_x() * stw)
+    let bar = Rect::new(mid.with_x(sbl), mid + (stw, 0.).into())
         .stroked(stw)
         .into_outline();
 

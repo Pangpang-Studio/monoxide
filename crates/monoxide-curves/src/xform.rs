@@ -22,10 +22,10 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         }
     }
 
-    pub fn make(translation: P, matrix: [P; 2]) -> Self {
+    pub fn make(translation: impl Into<P>, matrix: [impl Into<P>; 2]) -> Self {
         Affine2D {
-            trans: translation,
-            mat: matrix,
+            trans: translation.into(),
+            mat: matrix.map(Into::into),
         }
     }
 
@@ -37,14 +37,15 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         self.mat.clone()
     }
 
-    pub fn translate(self, translation: P) -> Self {
+    pub fn translate(self, translation: impl Into<P>) -> Self {
         Affine2D {
-            trans: self.trans.point_add(&translation),
+            trans: self.trans.point_add(&translation.into()),
             ..self
         }
     }
 
-    pub fn rotate(self, angle: P::Scalar) -> Self {
+    pub fn rotate(self, angle: impl Into<P::Scalar>) -> Self {
+        let angle = angle.into();
         let cos = P::Scalar::cos(angle);
         let sin = P::Scalar::sin(angle);
         Affine2D {
@@ -60,7 +61,8 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         }
     }
 
-    pub fn scale(self, scale: P::Scalar) -> Self {
+    pub fn scale(self, scale: impl Into<P::Scalar>) -> Self {
+        let scale = scale.into();
         Affine2D {
             mat: [self.mat[0].mul_scalar(scale), self.mat[1].mul_scalar(scale)],
             ..self
@@ -72,7 +74,10 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
     /// transformation (i.e. the matrix is right-multiplied by the
     /// reflection matrix) and the translation is adjusted so the overall
     /// affine transformation equals: T ∘ Reflect_line(point, direction).
-    pub fn mirror_along(self, point: P, direction: P) -> Self {
+    pub fn mirror_along(self, point: impl Into<P>, direction: impl Into<P>) -> Self {
+        let point = point.into();
+        let direction = direction.into();
+
         // compute squared length of direction
         let len_sq = direction.x() * direction.x() + direction.y() * direction.y();
         if len_sq.is_zero() {
@@ -125,23 +130,23 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
 
     // Nice-to-have wrapper functions
     /// Create a transformation that translates the point by `translation`.
-    pub fn translated(translation: P) -> Self {
+    pub fn translated(translation: impl Into<P>) -> Self {
         Self::id().translate(translation)
     }
 
     /// Create a transformation that rotates the point by `angle`.
-    pub fn rotated(angle: P::Scalar) -> Self {
+    pub fn rotated(angle: impl Into<P::Scalar>) -> Self {
         Self::id().rotate(angle)
     }
 
     /// Create a transformation that scales the point by `scale`.
-    pub fn scaled(scale: P::Scalar) -> Self {
+    pub fn scaled(scale: impl Into<P::Scalar>) -> Self {
         Self::id().scale(scale)
     }
 
     /// Create a transformation that reflects the point along the line that
     /// crosses `base` and goes in `direction`.
-    pub fn mirrored_along(base: P, direction: P) -> Self {
+    pub fn mirrored_along(base: impl Into<P>, direction: impl Into<P>) -> Self {
         Self::id().mirror_along(base, direction)
     }
 

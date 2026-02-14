@@ -31,8 +31,7 @@ impl JShape {
         let_settings! { { mid, mih, sbl, stw, xh } = settings; }
 
         let hook = Self::hook_raw(settings).transformed(
-            Affine2D::mirrored_along((0., xh / 2.).into(), Point2D::unit_x())
-                .translate((stw / 2., 0.).into()),
+            Affine2D::mirrored_along((0., xh / 2.), (1., 0.)).translate((stw / 2., 0.)),
         );
 
         let top_serif = Rect::new(
@@ -60,7 +59,7 @@ impl JShape {
         Hook::new((mid, mih + (cap - xh) / 2.), (rx, mih), ovs)
             .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
             .stroked(1.05 * stw)
-            .transformed(Affine2D::translated((-rx, 0.).into()))
+            .transformed(Affine2D::translated((-rx, 0.)))
     }
 }
 
@@ -95,10 +94,7 @@ impl JCapShape {
         let hook = Hook::new((mid, mih + cap - xh), (1.05 * (mid - sbl), mih), ovs)
             .with_hook_tip_heading(JShape::HOOK_TIP_HEADING)
             .stroked(1.1 * stw)
-            .transformed(Affine2D::mirrored_along(
-                (0., cap / 2.).into(),
-                Point2D::unit_x(),
-            ));
+            .transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.)));
 
         let pipe = Rect::new((mix(sbl, mid, 0.3), cap), (sbr, cap))
             .aligned(Alignment::Left)
