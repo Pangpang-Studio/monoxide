@@ -23,13 +23,8 @@ impl FShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { mid, mih, sbl, sbr, stw, xh, cap } = settings; }
 
-        let hook = {
-            // TODO: The height of the `hook_raw` is (cap + xh) / 2. Combined with this gives the
-            // full height. Consider doing the actual calculation.
-            let base_y = (cap - xh) / 2.;
-            JShape::hook_raw(settings, -base_y)
-                .transformed(Affine2D::mirrored_along((mid, mih), (0., 1.)).translate((0., base_y)))
-        };
+        let hook = JShape::hook_raw(settings, cap)
+            .transformed(Affine2D::mirrored_along((mid, mih), (0., 1.)));
 
         let crossbar = Rect::new((mix(sbl, mid, 0.7), xh), (2. * mid, xh))
             .aligned(Alignment::Left)
