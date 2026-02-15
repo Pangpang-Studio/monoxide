@@ -23,6 +23,7 @@ glyph_mods! {
     o;
     p;
     q;
+    t;
     u;
     x;
     space;
