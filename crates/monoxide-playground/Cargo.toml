@@ -10,7 +10,7 @@ version.workspace = true
 [dependencies]
 anyhow.workspace = true
 axum = { version = "0.8.8", features = ["macros", "ws"] }
-axum-reverse-proxy = "1.1.1"
+axum-reverse-proxy = "1.1.2"
 clap.workspace = true
 dioxus-devtools.workspace = true
 futures-util = { version = "0.3", default-features = false, features = [
