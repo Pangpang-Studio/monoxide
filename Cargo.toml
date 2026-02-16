@@ -66,7 +66,7 @@ monoxide-ttf = { path = "crates/monoxide-ttf" }
 monoxide = { path = "." }
 # Deps
 anyhow = "1.0.101"
-clap = { version = "4.5.57", features = ["derive"] }
+clap = { version = "4.5.58", features = ["derive"] }
 dioxus-devtools = "0.7.3"
 flo_curves = { git = "https://github.com/Pangpang-Studio/flo_curves.git", branch = "dev" }
 indexmap = "2.13.0"
