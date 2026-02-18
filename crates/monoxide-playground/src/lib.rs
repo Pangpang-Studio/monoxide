@@ -4,12 +4,18 @@ mod web;
 use std::{fmt::Debug, sync::Arc};
 
 use anyhow::{Result, anyhow};
+use bytes::{BufMut, BytesMut};
 use clap::Parser;
 use dioxus_devtools::subsecond;
 use futures_util::StreamExt;
-use monoxide_script::{ast::FontContext, eval::layout_glyphs};
+use monoxide_script::{
+    ast::FontContext,
+    eval::{AuxiliarySettings, eval, layout_glyphs},
+};
 use tokio::sync::watch;
 use tracing::{debug, info};
+
+use crate::web::CompiledFont;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -71,12 +77,33 @@ impl Playground {
                     continue;
                 }
             };
+
+            let file = match eval(
+                &fcx,
+                &AuxiliarySettings {
+                    point_per_em: 2048,
+                    font_name: "Monoxide".into(),
+                },
+            ) {
+                Ok(font_file) => font_file,
+                Err(e) => {
+                    send_error(e, &render_tx);
+                    continue;
+                }
+            };
+            let mut out_ttf = BytesMut::new().writer();
+            file.write(&mut out_ttf)
+                .expect("Writing to memory can't fail");
+
             debug!("Successfully evaluated playground");
             render_tx
-                .send(Arc::new(web::RenderedFontState::Font(
-                    Box::new(fcx),
-                    Box::new(ser_fcx),
-                )))
+                .send(Arc::new(web::RenderedFontState::Font(Box::new(
+                    CompiledFont {
+                        defs: Box::new(fcx),
+                        ser_defs: Box::new(ser_fcx),
+                        ttf: out_ttf.into_inner().freeze(),
+                    },
+                ))))
                 .unwrap();
         }
 

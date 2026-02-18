@@ -37,7 +37,7 @@ pub async fn glyph_detail(
                 .body("No font loaded".into())
                 .unwrap());
         }
-        crate::web::RenderedFontState::Font(cx, ser_fcx) => (cx, ser_fcx),
+        crate::web::RenderedFontState::Font(b) => (&b.defs, &b.ser_defs),
     };
 
     let glyph = ser_fcx.glyph_list.get(id).ok_or_else(|| {
