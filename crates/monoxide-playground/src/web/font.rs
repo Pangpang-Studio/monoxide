@@ -1,8 +1,27 @@
-use axum::{body::Bytes, extract::State};
+use axum::{
+    body::Bytes,
+    extract::State,
+    http::{Response, StatusCode},
+};
 
 use crate::web::XAppState;
 
+use super::RenderedFontState;
+
 /// Get the full contents of the compiled font file
-pub fn font(State(state): XAppState) -> anyhow::Result<Bytes> {
-    todo!()
+pub async fn font(State(state): XAppState) -> Result<Bytes, Response<String>> {
+    let st = state.rx.borrow().clone();
+    match &*st {
+        RenderedFontState::Font(compiled_font) => Ok(compiled_font.ttf.clone()),
+
+        // Error cases
+        RenderedFontState::Nothing => Err(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body("Can't render because nothing has been compiled yet".into())
+            .unwrap()),
+        RenderedFontState::Error(error) => Err(Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body(format!("Can't render font because of {}", error))
+            .unwrap()),
+    }
 }

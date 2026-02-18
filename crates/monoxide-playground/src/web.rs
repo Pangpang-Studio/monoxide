@@ -44,7 +44,8 @@ pub async fn start_web_server(
     let mut app = Router::new()
         .route("/api/ping", any(reply_200))
         .route("/api/ws", any(ws::serve_ws))
-        .route("/api/glyph/{id}", get(glyph_detail::glyph_detail));
+        .route("/api/glyph/{id}", get(glyph_detail::glyph_detail))
+        .route("/api/font", get(font::font));
 
     if let Some(url) = &cmd.reverse_proxy {
         info!("Reverse proxying to {}", url);
