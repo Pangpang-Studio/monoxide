@@ -1348,6 +1348,7 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-reverse-proxy",
+ "bytes",
  "clap",
  "dioxus-devtools",
  "futures-util",
