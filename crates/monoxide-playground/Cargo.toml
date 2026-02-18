@@ -9,6 +9,7 @@ version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+bytes.workspace = true
 axum = { version = "0.8.8", features = ["macros", "ws"] }
 axum-reverse-proxy = "1.1.2"
 clap.workspace = true
