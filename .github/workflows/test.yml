@@ -42,3 +42,24 @@ jobs:
           # Convert the XML back to TTF for an additional round of error
           # checking.
           uvx --from fonttools ttx out.ttx
+
+  web-playground:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          cache-dependency-path: "**/pnpm-lock.yaml"
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build playground
+        working-directory: tools/playground
+        run: pnpm build
