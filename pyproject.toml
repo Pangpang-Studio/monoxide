@@ -1,9 +1,0 @@
-[project]
-name = "monoxide-tools"
-version = "0.1.0"
-description = "Virtual package for gathering utilities for developing Monoxide"
-readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "fonttools>=4.56.0",
-]
