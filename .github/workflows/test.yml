@@ -17,11 +17,6 @@ jobs:
 
       - uses: astral-sh/setup-uv@v7
 
-      - name: Set up Python
-        run: |
-          uv python install
-          uv sync --locked --all-extras --dev
-
       - uses: Swatinem/rust-cache@v2
 
       - uses: dtolnay/rust-toolchain@stable
@@ -37,5 +32,13 @@ jobs:
 
       - name: Check font generation
         run: |
+          # Generate the font file as `out.ttf`.
           cargo run
-          uv run python ./tools/ttf-verify.py out.ttf
+
+          # Dump info using xml. The process read all data in the file, so it
+          # will fail if the file is corrupted.
+          uvx --from fonttools ttx out.ttf
+
+          # Convert the XML back to TTF for an additional round of error
+          # checking.
+          uvx --from fonttools ttx out.ttx
