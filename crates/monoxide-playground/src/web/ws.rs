@@ -74,7 +74,7 @@ async fn send_ws_task(
                 // No-op for now
             }
 
-            super::RenderedFontState::Font(font_context, ser_font_context) => {
+            super::RenderedFontState::Font(b) => {
                 // Maybe we shouldn't perform the render _here_, but YOLO so :)
                 // TODO: Yeah we probably should move it out to web thread
                 debug!("info received");
@@ -84,7 +84,7 @@ async fn send_ws_task(
                 ))
                 .await?;
 
-                for (i, glyph) in ser_font_context.glyph_list.iter().enumerate() {
+                for (i, glyph) in b.ser_defs.glyph_list.iter().enumerate() {
                     let outline = render_glyph_to_beziers(glyph);
                     let (outline, error) = match outline {
                         Ok(outline) => (outline, None),
@@ -95,7 +95,7 @@ async fn send_ws_task(
                         name: None,
                         outline,
                         error,
-                        advance: font_context.settings().mono_width(),
+                        advance: b.defs.settings().mono_width(),
                     };
                     ws.feed(Message::Text(
                         serde_json::to_string(&WsServerMsg::Glyph(glyph))?.into(),
@@ -104,7 +104,7 @@ async fn send_ws_task(
                 }
 
                 let overview = FontOverview {
-                    cmap: ser_font_context.cmap.clone(),
+                    cmap: b.ser_defs.cmap.clone(),
                 };
 
                 ws.feed(Message::Text(

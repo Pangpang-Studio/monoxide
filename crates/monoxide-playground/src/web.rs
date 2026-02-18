@@ -1,3 +1,4 @@
+mod font;
 mod glyph_detail;
 mod ws;
 
@@ -13,6 +14,7 @@ use axum::{
     extract::State,
     routing::{any, method_routing::get},
 };
+use bytes::Bytes;
 use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
 use tokio::sync::watch;
 use tower_http::services::{ServeDir, ServeFile};
@@ -85,8 +87,14 @@ pub struct AppState {
 pub enum RenderedFontState {
     #[default]
     Nothing,
-    Font(Box<FontContext>, Box<SerializedFontContext>),
+    Font(Box<CompiledFont>),
     Error(anyhow::Error),
+}
+
+pub struct CompiledFont {
+    pub defs: Box<FontContext>,
+    pub ser_defs: Box<SerializedFontContext>,
+    pub ttf: Bytes,
 }
 
 /// Extracted app state from the request.
