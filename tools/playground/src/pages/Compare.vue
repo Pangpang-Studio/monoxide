@@ -2,70 +2,34 @@
 import { ref, watchEffect } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import { useAppState } from '../lib/state'
-import type { DraftToSvgXform } from '../components/svg/types'
-import { svgPenMulti } from '../components/svg/util'
 
 const textSize = ref(72)
 const text = ref('')
 const state = useAppState()
 
-/// This is the output SVG path for the text
-const svgPaths = ref<string[]>([])
-/// This is the viewbox for the SVG
-const viewBox = ref<string>('0 0 100 100')
-const svgWidth = ref(100)
-const svgHeight = ref(100)
-/// These are the glyphs that are not found in the font
+/** These are the glyphs that are not found in the font */
 const missingGlyphs = ref<string[]>([])
-/// The layout function. This will never be as good as those used in the layout
-/// engines, but for a simple print-and-advance test for mostly monospace glyphs
-/// this should be good enough.
+/** Each character in the type tester field to be displayed */
+const glyphRuns = ref<{ ch: string; missing: boolean }[]>([])
+
 watchEffect(() => {
-  let t = text.value
-  let sz = textSize.value
-  let font = state.renderedFont.value
-  if (!font) {
-    return
+  const t = text.value
+  const rendered = state.renderedFont.value
+
+  const missing: string[] = []
+  const runs: { ch: string; missing: boolean }[] = []
+
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i]
+    const missingGlyph = rendered ? !rendered.cmap.has(ch) : false
+    if (missingGlyph) {
+      missing.push(ch)
+    }
+    runs.push({ ch, missing: missingGlyph })
   }
 
-  // begin of the actual layout
-  let paths: string[] = []
-  let hPos = 0
-  let notFound: string[] = []
-  for (let ch of t) {
-    let glyphId = font.cmap.get(ch)
-    if (glyphId === undefined) {
-      notFound.push(ch)
-      glyphId = 0 // Use tofu
-    }
-    let glyph = font.glyphs[glyphId]
-    if (glyph === undefined) {
-      notFound.push(ch)
-      continue
-    }
-
-    let cvt: DraftToSvgXform = {
-      scaleX: sz,
-      scaleY: -sz,
-      translateX: hPos,
-      translateY: sz,
-    }
-    let path = svgPenMulti(cvt, glyph.outline)
-    paths.push(path)
-
-    // advance the cursor
-    hPos += glyph.advance * sz
-  }
-  // layout end
-  svgPaths.value = paths
-  missingGlyphs.value = notFound
-
-  // Set the viewbox to the size of the text
-  let width = hPos
-  let height = sz * 1.2
-  viewBox.value = `0 0 ${width} ${height}`
-  svgWidth.value = width
-  svgHeight.value = height
+  missingGlyphs.value = missing
+  glyphRuns.value = runs
 })
 </script>
 
@@ -94,21 +58,23 @@ watchEffect(() => {
     </div>
 
     <div class="max-w-full overflow-x-scroll">
-      <svg
-        class="mt-4"
-        :view-box="viewBox"
-        :width="svgWidth"
-        :height="svgHeight"
-        xmlns="http://www.w3.org/2000/svg"
+      <div
+        class="mt-4 inline-block whitespace-pre"
+        :style="{ fontSize: `${textSize}px`, lineHeight: '1.2' }"
       >
-        <path
-          v-for="(path, index) in svgPaths"
+        <span
+          v-for="(run, index) in glyphRuns"
           :key="index"
-          :d="path"
-          class="fill-black"
-          fill-rule="nonzero"
-        />
-      </svg>
+          :class="run.missing ? 'text-gray-400' : 'text-black'"
+          :style="{
+            fontFamily: run.missing
+              ? 'var(--font-mono)'
+              : `${state.fontFamily.value}, var(--font-mono)`,
+          }"
+        >
+          {{ run.ch }}
+        </span>
+      </div>
     </div>
 
     <div class="mt-4">

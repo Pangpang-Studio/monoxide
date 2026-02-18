@@ -62,6 +62,7 @@ async function startApp(app: AppState) {
               cmap,
             }
             app.receiving_new.value = false
+            void app.reloadFontFace()
             pending_glyphs = null
           } else {
             console.error(
@@ -102,8 +103,17 @@ export class AppState {
   renderedFont: Ref<FontOverview | null> = ref(null)
   /** The error received from server */
   error: Ref<string | null> = ref(null)
+  /** The current font family name loaded into document fonts */
+  fontFamily: Ref<string> = ref('monoxide-compare-0')
+  /** The font face from /api/font has been loaded */
+  fontLoaded: Ref<boolean> = ref(false)
+  /** A font load is currently in progress */
+  fontLoading: Ref<boolean> = ref(false)
   /** Reverse cmap */
   revCmap: ComputedRef<Map<number, string[]>>
+  private fontFace: FontFace | null = null
+  private fontVersion = 0
+  private fontLoadToken = 0
 
   constructor() {
     this.revCmap = computed(() => {
@@ -124,5 +134,42 @@ export class AppState {
 
   public started(): boolean {
     return this.running.value !== undefined
+  }
+
+  public async reloadFontFace(): Promise<void> {
+    const prevFace = this.fontFace
+    const hadActiveFace = prevFace ? document.fonts.has(prevFace) : false
+
+    const version = ++this.fontVersion
+    const token = ++this.fontLoadToken
+    const family = `monoxide-compare-${version}`
+    this.fontLoading.value = true
+    if (!hadActiveFace) {
+      this.fontLoaded.value = false
+    }
+
+    const url = new URL('/api/font', window.location.href)
+    url.searchParams.set('v', `${Date.now()}-${version}`) // cache buster
+    const face = new FontFace(family, `url(${url.toString()})`)
+
+    try {
+      const loaded = await face.load()
+      if (this.fontVersion !== version || this.fontLoadToken !== token) return
+      document.fonts.add(loaded)
+      this.fontFace = loaded
+      this.fontFamily.value = family
+      this.fontLoaded.value = true
+      this.fontLoading.value = false
+      if (prevFace && document.fonts.has(prevFace)) {
+        document.fonts.delete(prevFace)
+      }
+    } catch (err) {
+      if (this.fontVersion !== version || this.fontLoadToken !== token) return
+      console.error('Failed to load font face', err)
+      if (!hadActiveFace) {
+        this.fontLoaded.value = false
+      }
+      this.fontLoading.value = false
+    }
   }
 }
