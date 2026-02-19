@@ -16,8 +16,7 @@ const glyphsList = computed(() => {
   // and then `glyphs` for glyph id -> glyph data
 
   let glyphs: GlyphDisplayProps[] = []
-  for (let i = 0; i < renderedFont.glyphs.length; i++) {
-    let glyph = renderedFont.glyphs[i]
+  for (const glyph of renderedFont.glyphs) {
     glyphs.push({
       overview: glyph,
       chars: [],
@@ -36,20 +35,17 @@ const glyphsList = computed(() => {
 
   // Sort glyphs based on the first char in chars array
   glyphs.sort((a, b) => {
-    const aHasChars = a.chars.length > 0
-    const bHasChars = b.chars.length > 0
+    const aHead = a.chars[0]
+    const bHead = b.chars[0]
 
-    if (aHasChars && !bHasChars) {
-      return -1 // a comes first
+    if (aHead === undefined) {
+      return bHead === undefined
+        ? 0 // Keep original order if both have no chars
+        : 1 // b comes first
     }
-    if (!aHasChars && bHasChars) {
-      return 1 // b comes first
-    }
-    if (!aHasChars && !bHasChars) {
-      return 0 // Keep original order if both have no chars
-    }
-    // Both have chars, compare the first char
-    return a.chars[0].codePointAt(0)! - b.chars[0].codePointAt(0)!
+    return bHead === undefined
+      ? -1 // a comes first
+      : aHead.codePointAt(0)! - bHead.codePointAt(0)! // Compare the first char
   })
 
   console.log('glyphs', glyphs)
@@ -60,7 +56,7 @@ const glyphsList = computed(() => {
 <template>
   <NavBar></NavBar>
 
-  <div class="flex flex-col flex-grow p-4">
+  <div class="flex flex-col grow p-4">
     <h1 class="text-2xl font-bold mt-2 mb-2">glyphs list</h1>
     <div class="flex flex-row flex-wrap -mx-2 items-start">
       <GlyphDisplay

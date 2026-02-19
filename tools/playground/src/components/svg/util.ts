@@ -29,8 +29,7 @@ export function xformY(cvt: DraftToSvgXform, y: number): number {
 export function svgPen(cvt: DraftToSvgXform, curve: CubicBezier): string {
   const start = xformPoint(cvt, curve.start)
   let path = `M${start.x} ${start.y}`
-  for (let i = 0; i < curve.segments.length; i++) {
-    const segment = curve.segments[i]
+  for (const segment of curve.segments) {
     if (segment.t === 'curve') {
       const c1 = xformPoint(cvt, segment.c1)
       const c2 = xformPoint(cvt, segment.c2)
@@ -62,13 +61,8 @@ export function drawSvgDirection(bez: CubicBezier, cvt: DraftToSvgXform) {
   if (bez.segments.length === 0) {
     return null
   }
-  let seg0 = bez.segments[0]
-  let p2: Point2D
-  if (seg0.t == 'line') {
-    p2 = seg0.p2
-  } else {
-    p2 = seg0.c1
-  }
+  let seg0 = bez.segments[0]!
+  let p2 = seg0.t === 'line' ? seg0.p2 : seg0.c1
   let p1 = bez.start
 
   // Direction from p1 to p2

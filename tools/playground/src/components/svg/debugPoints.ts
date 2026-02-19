@@ -13,23 +13,16 @@ export function generateDebugPoints(
 
   if (part.kind.t == 'spiro' || part.kind.t == 'stroke') {
     let curves = part.kind.curve
-    for (let i = 0; i < curves.length; i++) {
-      debugSpiro(curves[i], points)
-    }
+    for (const curve of curves) debugSpiro(curve, points)
   } else {
     if (part.kind.t == 'cubic-bezier' || part.kind.t == 'transform') {
-      for (let i = 0; i < part.kind.curve.length; i++) {
-        debugCubicBezier(part.kind.curve[i], points)
-      }
+      for (const curve of part.kind.curve) debugCubicBezier(curve, points)
     }
     if (part.result_curve) {
-      for (let i = 0; i < part.result_curve.length; i++) {
-        debugCubicBezier(part.result_curve[i], points)
-      }
+      for (const curve of part.result_curve) debugCubicBezier(curve, points)
 
       if (part.debug_points) {
-        for (let i = 0; i < part.debug_points.length; i++) {
-          let point = part.debug_points[i]
+        for (const point of part.debug_points) {
           points.push({
             x: point.x,
             y: point.y,
@@ -44,8 +37,7 @@ export function generateDebugPoints(
 }
 
 function debugSpiro(curve: SerializeSpiroPoint[], points: SvgDebugPointInfo[]) {
-  for (let j = 0; j < curve.length; j++) {
-    let point = curve[j]
+  for (const point of curve) {
     points.push({
       x: point.x,
       y: point.y,
@@ -56,13 +48,16 @@ function debugSpiro(curve: SerializeSpiroPoint[], points: SvgDebugPointInfo[]) {
 
 function debugCubicBezier(curve: CubicBezier, points: SvgDebugPointInfo[]) {
   console.log(curve)
+  if (curve.segments.length === 0) return
+
   {
     let startPointKind: DebugPointKind = 'corner'
-    if (curve.segments[0].t === 'curve') {
+    if (
+      curve.segments[0]!.t === 'curve' ||
+      curve.segments[curve.segments.length - 1]!.t === 'curve'
+    )
       startPointKind = 'curve'
-    } else if (curve.segments[curve.segments.length - 1].t === 'curve') {
-      startPointKind = 'curve'
-    }
+
     points.push({
       x: curve.start.x,
       y: curve.start.y,
@@ -72,7 +67,7 @@ function debugCubicBezier(curve: CubicBezier, points: SvgDebugPointInfo[]) {
 
   // Segments
   for (let j = 0; j < curve.segments.length; j++) {
-    let segment = curve.segments[j]
+    let segment = curve.segments[j]!
     if (segment.t === 'curve') {
       points.push({
         x: segment.c1.x,
@@ -98,7 +93,7 @@ function debugCubicBezier(curve: CubicBezier, points: SvgDebugPointInfo[]) {
         })
       }
     } else {
-      let nextSegment = curve.segments[j + 1]
+      let nextSegment = curve.segments[j + 1]!
       let isCurve = segment.t === 'curve' || nextSegment.t === 'curve'
       if (isCurve) {
         points.push({

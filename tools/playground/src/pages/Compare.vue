@@ -20,8 +20,7 @@ watchEffect(() => {
   const missing: string[] = []
   const runs: { ch: string; missing: boolean }[] = []
 
-  for (let i = 0; i < t.length; i++) {
-    const ch = t[i]
+  for (const ch of t) {
     const missingGlyph = rendered ? !rendered.cmap.has(ch) : false
     if (missingGlyph) {
       missing.push(ch)
@@ -60,7 +59,7 @@ watchEffect(() => {
         v-model="text"
         type="text"
         placeholder="Enter text"
-        class="py-1 border-b-2 border-black flex-grow"
+        class="py-1 border-b-2 border-black grow"
       />
     </div>
 
