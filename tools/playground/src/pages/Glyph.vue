@@ -192,7 +192,7 @@ const debugPoints: ComputedRef<SvgDebugPointInfo[]> = computed(() => {
     return []
   }
   if (sel.t === 'part') {
-    let part = glyphDetail.value.construction[sel.id]
+    let part = glyphDetail.value.construction[sel.id]!
     return generateDebugPoints(part)
   } else {
     return [] // TODO
@@ -204,28 +204,18 @@ function debugPathsForPart(
   id: number,
   paths: CubicBezier[],
 ) {
-  let part = glyphDetail.construction[id]
+  let part = glyphDetail.construction[id]!
   if (part.kind.t === 'cubic-bezier') {
-    for (let i = 0; i < part.kind.curve.length; i++) {
-      paths.push(part.kind.curve[i])
-    }
+    for (const bez of part.kind.curve) paths.push(bez)
   }
   if (part.result_curve) {
-    for (let i = 0; i < part.result_curve.length; i++) {
-      paths.push(part.result_curve[i])
-    }
+    for (const bez of part.result_curve) paths.push(bez)
   }
   if (part.debug_lines) {
-    for (let i = 0; i < part.debug_lines.length; i++) {
-      let line = part.debug_lines[i]
+    for (const line of part.debug_lines) {
       paths.push({
         start: line.from,
-        segments: [
-          {
-            t: 'line',
-            p2: line.to,
-          },
-        ],
+        segments: [{ t: 'line', p2: line.to }],
         closed: false,
       })
     }
@@ -274,7 +264,7 @@ const otherGlyphsSelection = computed(() => {
     {{ error }}
   </div>
   <div
-    class="grid grid-cols-1 md:grid-cols-3 flex-grow mx-8 my-8 gap-8"
+    class="grid grid-cols-1 md:grid-cols-3 grow mx-8 my-8 gap-8"
     v-if="overviewGlyph"
   >
     <!-- Glyph display area -->
@@ -322,7 +312,7 @@ const otherGlyphsSelection = computed(() => {
         <div class="flex flex-row gap-2">
           <select
             v-model="selectedOverlay"
-            class="border-0 border-b-2 border-black hover:border-blue-700 py-1 mb-2 flex-grow"
+            class="border-0 border-b-2 border-black hover:border-blue-700 py-1 mb-2 grow"
           >
             <option
               v-for="glyph in otherGlyphsSelection"
