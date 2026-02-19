@@ -95,7 +95,7 @@ pub enum RenderedFontState {
 pub struct CompiledFont {
     pub defs: Box<FontContext>,
     pub ser_defs: Box<SerializedFontContext>,
-    pub ttf: Bytes,
+    pub ttf: Result<Bytes, anyhow::Error>,
 }
 
 /// Extracted app state from the request.

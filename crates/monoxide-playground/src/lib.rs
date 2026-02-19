@@ -78,22 +78,20 @@ impl Playground {
                 }
             };
 
-            let file = match eval(
+            let file = eval(
                 &fcx,
                 &AuxiliarySettings {
                     point_per_em: 2048,
                     font_name: "Monoxide".into(),
                 },
-            ) {
-                Ok(font_file) => font_file,
-                Err(e) => {
-                    send_error(e, &render_tx);
-                    continue;
-                }
-            };
+            );
             let mut out_ttf = BytesMut::new().writer();
-            file.write(&mut out_ttf)
-                .expect("Writing to memory can't fail");
+            if let Ok(f) = &file {
+                f.write(&mut out_ttf).expect("Writing to memory can't fail");
+            }
+            let ttf = file
+                .map(|_| out_ttf.into_inner().freeze())
+                .map_err(|e| e.into());
 
             debug!("Successfully evaluated playground");
             render_tx
@@ -101,7 +99,7 @@ impl Playground {
                     CompiledFont {
                         defs: Box::new(fcx),
                         ser_defs: Box::new(ser_fcx),
-                        ttf: out_ttf.into_inner().freeze(),
+                        ttf,
                     },
                 ))))
                 .unwrap();
