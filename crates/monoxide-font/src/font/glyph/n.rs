@@ -87,7 +87,7 @@ impl IntoOutline for Hook {
                 g4!(x, y_hi + ovs).width(0.9),
                 g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.25)
                     .heading(self.hook_tip_heading)
-                    .width(0.7),
+                    .width(0.8),
             ])
             .into_outline()
     }

@@ -65,7 +65,7 @@ impl JShape {
         // here?
         Hook::new((mid, y - y_lo), (rx, ry), ovs)
             .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
-            .stroked(1.1 * stw)
+            .stroked(1.05 * stw)
             .transformed(Affine2D::translated((-rx + stw / 2., 0.)))
     }
 }
