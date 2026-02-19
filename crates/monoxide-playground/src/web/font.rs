@@ -12,7 +12,13 @@ use super::RenderedFontState;
 pub async fn font(State(state): XAppState) -> Result<Bytes, Response<String>> {
     let st = state.rx.borrow().clone();
     match &*st {
-        RenderedFontState::Font(compiled_font) => Ok(compiled_font.ttf.clone()),
+        RenderedFontState::Font(compiled_font) => match &compiled_font.ttf {
+            Ok(ttf) => Ok(ttf.clone()),
+            Err(e) => Err(Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(format!("Font generation failed: {}", e))
+                .unwrap()),
+        },
 
         // Error cases
         RenderedFontState::Nothing => Err(Response::builder()
