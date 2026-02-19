@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps } from 'vue'
+import { computed } from 'vue'
 import { charList } from '../lib/util'
 import type { GlyphOverview } from '../lib/types'
 import { svgPenMulti } from './svg/util'
