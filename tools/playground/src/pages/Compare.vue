@@ -75,8 +75,8 @@ watchEffect(() => {
           :class="run.missing ? 'text-gray-400' : 'text-black'"
           :style="{
             fontFamily: run.missing
-              ? 'var(--font-mono)'
-              : `${state.fontFamily.value}, var(--font-mono)`,
+              ? 'var(--font-mono-prioritize-1-2)'
+              : `${state.fontFamily.value}, var(--font-mono-prioritize-1-2)`,
           }"
         >
           {{ run.ch }}

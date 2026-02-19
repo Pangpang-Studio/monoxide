@@ -4,6 +4,9 @@
   --font-mono:
     'Cascadia', 'Cascadia Mono', 'Cascadia Code', 'JetBrains Mono', 'Iosevka',
     'Source Code Pro', 'Fira Code', monospace;
+  /* Monospace fonts that prioritizes 1:2 ones */
+  --font-mono-prioritize-1-2:
+    'Iosevka', 'Inconsolata', 'Ubuntu Mono', var(--font-mono);
 }
 
 body {
