@@ -99,7 +99,7 @@ fn calc_curve_lengths(
 /// interpolates the values for every point in a curve of given length,
 /// linearly, by the actual curve length of each segment.
 //
-// This function can be futher generalized to support any type representing a
+// This function can be further generalized to support any type representing a
 // real vector space, i.e. implementing `Add`, `Sub`, `Mul<f64>`.
 fn populate_with_interpolation(
     map: &BTreeMap<usize, f64>,
