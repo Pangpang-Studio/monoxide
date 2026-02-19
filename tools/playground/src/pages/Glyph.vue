@@ -268,6 +268,12 @@ const otherGlyphsSelection = computed(() => {
 <template>
   <NavBar></NavBar>
   <div
+    v-if="error"
+    class="mx-8 mt-6 rounded border border-red-300 bg-red-50 px-3 py-2 text-red-900"
+  >
+    {{ error }}
+  </div>
+  <div
     class="grid grid-cols-1 md:grid-cols-3 flex-grow mx-8 my-8 gap-8"
     v-if="overviewGlyph"
   >

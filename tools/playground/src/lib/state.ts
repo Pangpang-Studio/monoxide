@@ -40,6 +40,7 @@ async function startApp(app: AppState) {
         case 'PrepareForNewEpoch':
           pending_glyphs = []
           app.receiving_new.value = true
+          app.error.value = null
           break
 
         case 'Glyph':
@@ -62,6 +63,7 @@ async function startApp(app: AppState) {
               cmap,
             }
             app.receiving_new.value = false
+            app.error.value = null
             void app.reloadFontFace()
             pending_glyphs = null
           } else {
@@ -103,6 +105,8 @@ export class AppState {
   renderedFont: Ref<FontOverview | null> = ref(null)
   /** The error received from server */
   error: Ref<string | null> = ref(null)
+  /** The error while loading the font file from /api/font */
+  fontFileError: Ref<string | null> = ref(null)
   /** The current font family name loaded into document fonts */
   fontFamily: Ref<string> = ref('monoxide-compare-0')
   /** The font face from /api/font has been loaded */
@@ -144,6 +148,7 @@ export class AppState {
     const token = ++this.fontLoadToken
     const family = `monoxide-compare-${version}`
     this.fontLoading.value = true
+    this.fontFileError.value = null
     if (!hadActiveFace) {
       this.fontLoaded.value = false
     }
@@ -160,16 +165,20 @@ export class AppState {
       this.fontFamily.value = family
       this.fontLoaded.value = true
       this.fontLoading.value = false
+      this.fontFileError.value = null
       if (prevFace && document.fonts.has(prevFace)) {
         document.fonts.delete(prevFace)
       }
     } catch (err) {
       if (this.fontVersion !== version || this.fontLoadToken !== token) return
+      const message =
+        err instanceof Error ? err.message : 'Unknown error loading font'
       console.error('Failed to load font face', err)
       if (!hadActiveFace) {
         this.fontLoaded.value = false
       }
       this.fontLoading.value = false
+      this.fontFileError.value = `Failed to load font file: ${message}`
     }
   }
 }
