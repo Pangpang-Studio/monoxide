@@ -21,7 +21,7 @@ updates:
           - "patch"
 
   - package-ecosystem: "npm"
-    directory: "/tools/playground"
+    directory: "/"
     schedule:
       interval: "weekly"
     groups:
