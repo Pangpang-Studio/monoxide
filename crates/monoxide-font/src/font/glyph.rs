@@ -8,6 +8,7 @@ macro_rules! glyph_mods {
 }
 
 glyph_mods! {
+    pub a;
     b;
     c;
     d;
@@ -32,6 +33,3 @@ glyph_mods! {
 }
 
 use super::InputContext;
-
-// TODO: Finish those modules and move them above.
-pub mod a;

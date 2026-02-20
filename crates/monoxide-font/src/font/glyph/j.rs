@@ -25,7 +25,7 @@ pub struct JShape {
 }
 
 impl JShape {
-    const HOOK_TIP_HEADING: Point2D = Point2D::new(-1., -1.);
+    pub const HOOK_TIP_HEADING: Point2D = Point2D::new(-1., -2.);
 
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { mid, mih, sbl, stw, xh } = settings; }

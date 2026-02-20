@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use monoxide_script::prelude::*;
+use monoxide_script::{g2, prelude::*};
 
 use super::InputContext;
 use crate::font::{
@@ -25,7 +25,10 @@ impl NShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { mid, mih, ovs, sbl, stw, xh } = settings; }
 
-        let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw);
+        let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs)
+            .with_hook_tip_width(0.8)
+            .stroked(stw);
+
         let pipe = Rect::new((sbl, 0.), (sbl, xh))
             .aligned(Alignment::Left)
             .stroked(stw);
@@ -47,19 +50,26 @@ impl IntoOutlines for NShape {
 
 pub struct Hook {
     pub o_shape: OShape,
-    pub hook_tip_heading: Point2D,
+    pub hook_tip_heading: Option<Point2D>,
+    pub hook_tip_width: Option<f64>,
 }
 
 impl Hook {
     pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
         Self {
             o_shape: OShape::new(center, radii, ovs),
-            hook_tip_heading: Dir::L.into(),
+            hook_tip_heading: None,
+            hook_tip_width: None,
         }
     }
 
-    pub fn with_hook_tip_heading(mut self, heading: impl Into<Point2D>) -> Self {
+    pub fn with_hook_tip_heading(mut self, heading: impl Into<Option<Point2D>>) -> Self {
         self.hook_tip_heading = heading.into();
+        self
+    }
+
+    pub fn with_hook_tip_width(mut self, width: impl Into<Option<f64>>) -> Self {
+        self.hook_tip_width = width.into();
         self
     }
 }
@@ -83,11 +93,17 @@ impl IntoOutline for Hook {
                 flat!(x + rx, 0.).aligned(Alignment::Right).width(1.1),
                 curl!(x + rx, y + ry / 3.),
                 // Top arc
-                g4!(x + mid_curve_w, y_hi - mid_curve_h / 2.).width(1.),
-                g4!(x, y_hi + ovs).width(0.9),
-                g4!(x - mid_curve_w, y_hi - mid_curve_h * 1.25)
-                    .heading(self.hook_tip_heading)
-                    .width(0.8),
+                g2!(x + mid_curve_w, y_hi - mid_curve_h / 2.).width(1.),
+                g4!(x, y_hi + ovs).width(1.).heading(Dir::L),
+                g2!(x - mid_curve_w * 0.7, y_hi - mid_curve_h * 0.2).aligned(Alignment::Right),
+                {
+                    let mut tip = g4!(x - rx, y_hi - mid_curve_h * 1.5)
+                        .width(self.hook_tip_width.unwrap_or(1.));
+                    if let Some(heading) = self.hook_tip_heading {
+                        tip = tip.heading(heading);
+                    }
+                    tip
+                },
             ])
             .into_outline()
     }
