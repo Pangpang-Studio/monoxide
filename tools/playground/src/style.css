@@ -1,12 +1,12 @@
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/iosevka@5.2.5/index.min.css');
 @import 'tailwindcss';
 
 @theme {
   --font-mono:
-    'Cascadia', 'Cascadia Mono', 'Cascadia Code', 'JetBrains Mono', 'Iosevka',
-    'Source Code Pro', 'Fira Code', monospace;
+    'Cascadia', 'Cascadia Mono', 'Cascadia Code', 'JetBrains Mono',
+    'Source Code Pro', 'Fira Code', 'Iosevka', monospace;
   /* Monospace fonts that prioritizes 1:2 ones */
-  --font-mono-prioritize-1-2:
-    'Iosevka', 'Inconsolata', 'Ubuntu Mono', var(--font-mono);
+  --font-mono-prioritize-1-2: 'Iosevka', var(--font-mono);
 }
 
 body {

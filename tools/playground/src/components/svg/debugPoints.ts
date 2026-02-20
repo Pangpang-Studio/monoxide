@@ -12,15 +12,14 @@ export function generateDebugPoints(
   let points: SvgDebugPointInfo[] = []
 
   if (part.kind.t == 'spiro' || part.kind.t == 'stroke') {
-    let curves = part.kind.curve
-    for (const curve of curves) debugSpiro(curve, points)
+    for (const curve of part.kind.curve) debugSpiro(curve, points)
   } else {
     if (part.kind.t == 'cubic-bezier' || part.kind.t == 'transform') {
       for (const curve of part.kind.curve) debugCubicBezier(curve, points)
     }
+
     if (part.result_curve) {
       for (const curve of part.result_curve) debugCubicBezier(curve, points)
-
       if (part.debug_points) {
         for (const point of part.debug_points) {
           points.push({
