@@ -43,24 +43,25 @@ watchEffect(() => {
     >
       {{ fontFileError }}
     </div>
-    <div class="flex flow-row gap-6 items-baseline">
-      <div class="flex flex-row gap-2 items-baseline">
-        <label for="text-size">Text Size</label>
+    <div class="flex flex-row gap-6 items-baseline">
+      <textarea
+        v-model="text"
+        type="text"
+        placeholder="Type something..."
+        rows="2"
+        class="border-b-2 border-black grow"
+      />
+      <div class="flex flex-col items-baseline">
+        <label for="text-size" class="font-bold">Size</label>
         <input
           v-model="textSize"
           type="number"
           id="text-size"
           min="1"
           max="100"
-          class="py-1 border-b-2 border-black"
+          class="border-b-2 border-black"
         />
       </div>
-      <input
-        v-model="text"
-        type="text"
-        placeholder="Enter text"
-        class="py-1 border-b-2 border-black grow"
-      />
     </div>
 
     <div class="max-w-full overflow-x-scroll">
