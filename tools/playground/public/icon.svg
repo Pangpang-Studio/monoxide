@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1080 1080" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-1180,0)">
+        <rect id="_250209-monoxide-icon" serif:id="250209-monoxide-icon" x="1180" y="0" width="1080" height="1080" style="fill:none;"/>
+        <g id="_250209-monoxide-icon1" serif:id="250209-monoxide-icon">
+            <g transform="matrix(3.927602,0,0,3.927602,221.61991,-1580.404977)">
+                <circle cx="337" cy="540" r="66" style="fill:rgb(145,145,145);"/>
+            </g>
+            <g transform="matrix(3.927602,0,0,3.927602,571.176471,-1580.404977)">
+                <circle cx="337" cy="540" r="66" style="fill:rgb(58,58,58);"/>
+            </g>
+            <g transform="matrix(3.953851,0,0,3.953851,-4465.683505,-3002.575606)">
+                <g transform="matrix(100,0,0,100,1572.251214,927.953332)">
+                    <path d="M0.045,-0.644L0.228,-0.644L0.388,-0.317L0.547,-0.644L0.729,-0.644L0.729,-0L0.541,-0L0.541,-0.322L0.438,-0.11L0.337,-0.11L0.233,-0.322L0.233,-0L0.045,-0L0.045,-0.644Z" style="fill:rgb(246,247,247);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
