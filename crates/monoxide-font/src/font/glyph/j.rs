@@ -54,16 +54,13 @@ impl JShape {
         settings: &FontParamSettings,
         y_hi: impl Into<Option<f64>>,
     ) -> Arc<OutlineExpr> {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, xh } = settings; }
+        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, dsc, xh } = settings; }
 
-        let y = cap / 2.;
-        let ry = mih;
-        let y_lo = y_hi.into().map_or(0., |y_hi| y + ry - y_hi);
         let rx = (mid - sbl) * 0.9;
+        let ry = mih;
+        let y_hi = y_hi.into().unwrap_or(xh - dsc);
 
-        // TODO: Consider using the boundary expression instead of the center-radii expression
-        // here?
-        Hook::new((mid, y - y_lo), (rx, ry), ovs)
+        Hook::new((mid, y_hi - ry), (rx, ry), ovs)
             .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
             .stroked(1.05 * stw)
             .transformed(Affine2D::translated((-rx + stw / 2., 0.)))
