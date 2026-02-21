@@ -4,6 +4,7 @@ import NavBar from '../components/NavBar.vue'
 import { useAppState } from '../lib/state'
 
 const textSize = ref(72)
+const showMonoxide = ref(true)
 const text = ref('')
 const state = useAppState()
 const fontFileError = computed(() => state.fontFileError.value)
@@ -15,16 +16,15 @@ const glyphRuns = ref<{ ch: string; missing: boolean }[]>([])
 
 watchEffect(() => {
   const t = text.value
-  const rendered = state.renderedFont.value
+  const shouldShow = showMonoxide.value
 
   const missing: string[] = []
   const runs: { ch: string; missing: boolean }[] = []
 
+  const rendered = state.renderedFont.value
   for (const ch of t) {
     const missingGlyph = rendered ? !rendered.cmap.has(ch) : false
-    if (missingGlyph) {
-      missing.push(ch)
-    }
+    if (shouldShow && missingGlyph) missing.push(ch)
     runs.push({ ch, missing: missingGlyph })
   }
 
@@ -51,6 +51,7 @@ watchEffect(() => {
         rows="2"
         class="border-b-2 border-black grow"
       />
+
       <div class="flex flex-col items-baseline">
         <label for="text-size" class="font-bold">Size</label>
         <input
@@ -58,8 +59,17 @@ watchEffect(() => {
           type="number"
           id="text-size"
           min="1"
-          max="100"
+          max="192"
           class="border-b-2 border-black"
+        />
+      </div>
+      <div class="flex flex-col gap-2 items-baseline">
+        <label for="show-monoxide" class="switch">Show</label>
+        <input
+          type="checkbox"
+          v-model="showMonoxide"
+          id="show-monoxide"
+          class="h-4 w-4 self-center"
         />
       </div>
     </div>
@@ -72,11 +82,12 @@ watchEffect(() => {
         <span
           v-for="(run, index) in glyphRuns"
           :key="index"
-          :class="run.missing ? 'text-gray-400' : 'text-black'"
+          :class="!showMonoxide || run.missing ? 'text-gray-400' : 'text-black'"
           :style="{
-            fontFamily: run.missing
-              ? 'var(--font-mono-prioritize-1-2)'
-              : `${state.fontFamily.value}, var(--font-mono-prioritize-1-2)`,
+            fontFamily:
+              !showMonoxide || run.missing
+                ? 'var(--font-mono-prioritize-1-2)'
+                : `${state.fontFamily.value}, var(--font-mono-prioritize-1-2)`,
           }"
         >
           {{ run.ch }}
@@ -91,6 +102,9 @@ watchEffect(() => {
           {{ glyph }}
         </li>
       </ul>
+      <p v-if="missingGlyphs.length === 0" class="text-gray-500">
+        Crickets... :)
+      </p>
     </div>
   </div>
 </template>
