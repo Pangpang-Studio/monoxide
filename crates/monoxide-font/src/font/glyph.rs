@@ -30,6 +30,7 @@ glyph_mods! {
     v;
     x;
     y;
+    z;
     space;
     tofu;
 }
