@@ -27,6 +27,7 @@ glyph_mods! {
     r;
     t;
     u;
+    v;
     x;
     space;
     tofu;
