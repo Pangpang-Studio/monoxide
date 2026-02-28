@@ -22,8 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v7
-
       - uses: Swatinem/rust-cache@v2
 
       - uses: dtolnay/rust-toolchain@stable
@@ -37,18 +35,69 @@ jobs:
       - name: Run heavy tests
         run: cargo test --workspace -- --ignored
 
-      - name: Check font generation
+      - name: Generate font for validation
+        run: cargo run
+
+      - name: Upload generated font
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-font
+          path: out.ttf
+          if-no-files-found: error
+
+  validate-font:
+    runs-on: ubuntu-latest
+    needs: rust
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download generated font
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-font
+          path: .
+
+      - name: Validate font with FontValidator
+        id: fontvalidator
         run: |
-          # Generate the font file as `out.ttf`.
-          cargo run
+          set -euo pipefail
+          mkdir -p target/fontval_tmp target/validate
+          curl -fsSL -o target/fontval_tmp/fontval.tgz https://github.com/HinTak/Font-Validator/releases/download/FontVal-2.1.6/FontVal-2.1.6-ubuntu-18.04-x64.tgz
+          tar -xzf target/fontval_tmp/fontval.tgz -C target/fontval_tmp
+          FONTVALIDATOR_BIN="$(find target/fontval_tmp -type f -name 'FontValidator*' -perm -u+x -print -quit)"
+          if [ -z "$FONTVALIDATOR_BIN" ]; then
+            echo "FontValidator binary not found in archive" >&2
+            echo "exit_code=2" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          chmod +x "$FONTVALIDATOR_BIN"
+          set +e
+          "$FONTVALIDATOR_BIN" -file out.ttf -report-dir target/validate
+          exit_code=$?
+          set -e
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
 
-          # Dump info using xml. The process read all data in the file, so it
-          # will fail if the file is corrupted.
-          uvx --from fonttools ttx out.ttf
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fontvalidator-report
+          path: target/validate/out.ttf.report.html
+          if-no-files-found: warn
 
-          # Convert the XML back to TTF for an additional round of error
-          # checking.
-          uvx --from fonttools ttx out.ttx
+      - name: Check results
+        if: always()
+        run: |
+          ./tools/fontvalidator_report.py target/validate/out.ttf.report.xml
+          exit_code="${{ steps.fontvalidator.outputs.exit_code }}"
+          if [ -z "$exit_code" ]; then
+            echo "FontValidator exit code missing" >&2
+            exit 1
+          fi
+          if [ "$exit_code" -ne 0 ]; then
+            echo "FontValidator reported errors (exit $exit_code)"
+            exit "$exit_code"
+          fi
 
   web-playground:
     runs-on: ubuntu-latest
