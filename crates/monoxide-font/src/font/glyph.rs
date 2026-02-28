@@ -28,6 +28,7 @@ glyph_mods! {
     t;
     u;
     v;
+    w;
     x;
     y;
     z;
