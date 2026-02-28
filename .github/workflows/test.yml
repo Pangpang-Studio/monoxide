@@ -66,3 +66,6 @@ jobs:
       - name: Build playground
         working-directory: tools/playground
         run: pnpm build
+
+      - name: Check formatting
+        run: pnpm fmt --check
