@@ -25,7 +25,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Test native build
-        run: cargo build --verbose --locked
+        run: cargo build --workspace --verbose --locked
 
       - name: Run simple tests
         run: cargo test --workspace
