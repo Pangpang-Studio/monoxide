@@ -25,9 +25,15 @@ impl NShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { mid, mih, ovs, sbl, stw, xh } = settings; }
 
-        let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs)
-            .with_hook_tip_width(0.8)
-            .stroked(stw);
+        let hook = {
+            let rx = mid - sbl;
+            let ry = mih;
+            let hook_tip_width = 0.8;
+            Hook::new((mid, mih), (rx, ry), ovs)
+                .with_hook_tip_width(hook_tip_width)
+                .with_hook_tip_r_factor(1. - stw * (1. - hook_tip_width) / rx)
+                .stroked(stw)
+        };
 
         let pipe = Rect::new((sbl, 0.), (sbl, xh))
             .aligned(Alignment::Left)
@@ -52,6 +58,7 @@ pub struct Hook {
     pub o_shape: OShape,
     pub hook_tip_heading: Option<Point2D>,
     pub hook_tip_width: Option<f64>,
+    pub hook_tip_r_factor: Option<f64>,
 }
 
 impl Hook {
@@ -60,6 +67,7 @@ impl Hook {
             o_shape: OShape::new(center, radii, ovs),
             hook_tip_heading: None,
             hook_tip_width: None,
+            hook_tip_r_factor: None,
         }
     }
 
@@ -70,6 +78,11 @@ impl Hook {
 
     pub fn with_hook_tip_width(mut self, width: impl Into<Option<f64>>) -> Self {
         self.hook_tip_width = width.into();
+        self
+    }
+
+    pub fn with_hook_tip_r_factor(mut self, offset: impl Into<Option<f64>>) -> Self {
+        self.hook_tip_r_factor = offset.into();
         self
     }
 }
@@ -85,7 +98,11 @@ impl IntoOutline for Hook {
         let mid_curve_w = o_shape.mid_curve_w();
         let mid_curve_h = o_shape.mid_curve_h();
 
+        let r_factor = self.hook_tip_r_factor.unwrap_or(1.);
+        let hook_tip_width = self.hook_tip_width.unwrap_or(1.);
+
         let y_hi = y + ry;
+        let y_hi1 = y + ry * r_factor;
 
         SpiroBuilder::open()
             .insts([
@@ -93,12 +110,13 @@ impl IntoOutline for Hook {
                 flat!(x + rx, 0.).aligned(Alignment::Right).width(1.1),
                 curl!(x + rx, y + ry / 3.),
                 // Top arc
-                g2!(x + mid_curve_w, y_hi - mid_curve_h / 2.).width(1.),
+                g2!(x + mid_curve_w * 0.9, y_hi - mid_curve_h / 2.).width(1.),
                 g4!(x, y_hi + ovs).width(1.).heading(Dir::L),
-                g2!(x - mid_curve_w * 0.7, y_hi - mid_curve_h * 0.2).aligned(Alignment::Right),
+                g2!(x - mid_curve_w * 0.9 * r_factor, y_hi1 - mid_curve_h / 2.)
+                    .aligned(Alignment::Right),
                 {
-                    let mut tip = g4!(x - rx, y_hi - mid_curve_h * 1.5)
-                        .width(self.hook_tip_width.unwrap_or(1.));
+                    let mut tip =
+                        g4!(x - rx * r_factor, y_hi1 - mid_curve_h * 1.4).width(hook_tip_width);
                     if let Some(heading) = self.hook_tip_heading {
                         tip = tip.heading(heading);
                     }
