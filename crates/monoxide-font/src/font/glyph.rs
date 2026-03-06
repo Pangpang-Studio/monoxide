@@ -26,6 +26,7 @@ glyph_mods! {
     p;
     q;
     r;
+    s;
     t;
     u;
     v;
