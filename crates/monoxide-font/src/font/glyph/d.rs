@@ -42,7 +42,7 @@ impl IntoOutlines for DShape {
     }
 }
 
-struct Bowl {
+pub struct Bowl {
     pub o_shape: OShape,
 }
 
