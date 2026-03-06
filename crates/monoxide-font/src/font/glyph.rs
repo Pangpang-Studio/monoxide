@@ -14,6 +14,7 @@ glyph_mods! {
     d;
     e;
     f;
+    g;
     h;
     i;
     pub j;
