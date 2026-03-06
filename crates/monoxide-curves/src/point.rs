@@ -48,6 +48,14 @@ impl Point2D {
     pub fn with_y(self, y: f64) -> Self {
         Self::new(self.x, y)
     }
+
+    pub fn neg_x(self) -> Self {
+        Self::new(-self.x, self.y)
+    }
+
+    pub fn neg_y(self) -> Self {
+        Self::new(self.x, -self.y)
+    }
 }
 
 impl Point for Point2D {
