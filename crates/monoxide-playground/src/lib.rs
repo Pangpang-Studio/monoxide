@@ -4,14 +4,10 @@ mod web;
 use std::{fmt::Debug, sync::Arc};
 
 use anyhow::{Result, anyhow};
-use bytes::{BufMut, BytesMut};
 use clap::Parser;
 use dioxus_devtools::subsecond;
 use futures_util::StreamExt;
-use monoxide_script::{
-    ast::FontContext,
-    eval::{AuxiliarySettings, eval, layout_glyphs},
-};
+use monoxide_script::ast::FontContext;
 use tokio::sync::watch;
 use tracing::{debug, info};
 
@@ -41,7 +37,17 @@ impl Playground {
             .init();
 
         let args = Playground::parse();
+        match args.cmd {
+            Subcommand::Serve(cmd) => cmd.run(&mut make_font).await,
+        }
+    }
+}
 
+impl web::ServerCommand {
+    async fn run<E: Debug>(
+        self,
+        make_font: &mut impl FnMut() -> Result<FontContext, E>,
+    ) -> Result<()> {
         let (tx, rx) = tokio::sync::mpsc::channel::<()>(10);
         let mut rx = std::pin::pin!(tokio_stream::wrappers::ReceiverStream::new(rx));
 
@@ -49,60 +55,28 @@ impl Playground {
 
         // Establish the connection to the subsecond launcher.
         dioxus_devtools::connect_subsecond();
+
         let send = Arc::new(move || {
             _ = tx.try_send(());
         });
-        subsecond::register_handler(send.clone());
 
-        let _fut = match args.cmd {
-            Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
-        };
-
-        // Send an initial message to trigger the evaluation.
+        // Trigger an initial evaluation and register the hot-reload handler.
         send();
+        subsecond::register_handler(send);
+
+        let _fut = tokio::spawn(self.start_web_server(render_rx));
 
         while rx.next().await.is_some() {
             info!("Re-evaluating playground");
-            let fcx = match make_font() {
-                Ok(fcx) => fcx,
-                Err(e) => {
-                    send_error(e, &render_tx);
-                    continue;
+            match CompiledFont::new(make_font) {
+                Ok(compiled) => {
+                    debug!("Successfully evaluated playground");
+                    render_tx
+                        .send(Arc::new(web::RenderedFontState::Font(Box::new(compiled))))
+                        .unwrap();
                 }
-            };
-            let ser_fcx = match layout_glyphs(&fcx) {
-                Ok(ser_fcx) => ser_fcx,
-                Err(e) => {
-                    send_error(e, &render_tx);
-                    continue;
-                }
-            };
-
-            let file = eval(
-                &fcx,
-                &AuxiliarySettings {
-                    point_per_em: 2048,
-                    font_name: "Monoxide".into(),
-                },
-            );
-            let mut out_ttf = BytesMut::new().writer();
-            if let Ok(f) = &file {
-                f.write(&mut out_ttf).expect("Writing to memory can't fail");
+                Err(e) => send_error(e, &render_tx),
             }
-            let ttf = file
-                .map(|_| out_ttf.into_inner().freeze())
-                .map_err(|e| e.into());
-
-            debug!("Successfully evaluated playground");
-            render_tx
-                .send(Arc::new(web::RenderedFontState::Font(Box::new(
-                    CompiledFont {
-                        defs: Box::new(fcx),
-                        ser_defs: Box::new(ser_fcx),
-                        ttf,
-                    },
-                ))))
-                .unwrap();
         }
 
         Ok(())
