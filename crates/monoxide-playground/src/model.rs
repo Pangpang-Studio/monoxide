@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
 
 use monoxide_curves::{CubicBezier, point::Point2D};
+use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
 use serde::Serialize;
+
+use crate::web::{self, glyph_detail::serialized_glyph_to_detail};
 
 /// Represents the information about the font other than the list of glyphs,
 /// sent over the websocket wire. Glyphs are sent in separate messages to
@@ -177,6 +180,52 @@ impl From<monoxide_spiro::SpiroCpTy> for SerializeSpiroKind {
             monoxide_spiro::SpiroCpTy::Handle => SerializeSpiroKind::Handle,
             monoxide_spiro::SpiroCpTy::Open => SerializeSpiroKind::Open,
             monoxide_spiro::SpiroCpTy::EndOpen => SerializeSpiroKind::EndOpen,
+        }
+    }
+}
+
+#[derive(Serialize, Clone)]
+pub struct FontMetadata {
+    pub cmap: BTreeMap<char, usize>,
+    pub glyphs: Vec<GlyphOverview>,
+    pub glyph_details: Vec<Result<GlyphDetail, GlyphDetailError>>,
+}
+
+impl FontMetadata {
+    pub fn new(fcx: &FontContext, ser_fcx: SerializedFontContext) -> Self {
+        let SerializedFontContext {
+            cmap, glyph_list, ..
+        } = ser_fcx;
+
+        let glyphs = glyph_list
+            .iter()
+            .enumerate()
+            .map(|(i, glyph)| {
+                let outline = web::ws::render_glyph_to_beziers(glyph);
+                let (outline, error) = match outline {
+                    Ok(outline) => (outline, None),
+                    Err(e) => (vec![], Some(e.to_string())),
+                };
+                GlyphOverview {
+                    id: i,
+                    name: None,
+                    outline,
+                    error,
+                    advance: fcx.settings().mono_width(),
+                }
+            })
+            .collect();
+
+        let glyph_details = glyph_list
+            .iter()
+            .enumerate()
+            .map(|(i, glyph)| serialized_glyph_to_detail(i, fcx, glyph))
+            .collect();
+
+        Self {
+            cmap,
+            glyphs,
+            glyph_details,
         }
     }
 }

@@ -18,11 +18,13 @@ use axum::{
 use bytes::{BufMut, Bytes, BytesMut};
 use monoxide_script::{
     ast::FontContext,
-    eval::{AuxiliarySettings, SerializedFontContext, eval, layout_glyphs},
+    eval::{AuxiliarySettings, eval, layout_glyphs},
 };
 use tokio::sync::watch;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
+
+use crate::model::FontMetadata;
 
 #[derive(Debug, clap::Parser)]
 pub struct ServerCommand {
@@ -78,7 +80,7 @@ impl ServerCommand {
         info!("Listening on {}", listener.local_addr().unwrap());
 
         let state = Arc::new(AppState { rx });
-        let app = app.with_state(state.clone());
+        let app = app.with_state(state);
 
         axum::serve(listener, app).await.unwrap();
 
@@ -99,8 +101,7 @@ pub enum RenderedFontState {
 }
 
 pub struct CompiledFont {
-    pub defs: Box<FontContext>,
-    pub ser_defs: Box<SerializedFontContext>,
+    pub metadata: Box<FontMetadata>,
     pub ttf: Result<Bytes, anyhow::Error>,
 }
 
@@ -108,6 +109,7 @@ impl CompiledFont {
     pub fn new<E: Debug>(make_font: &mut impl FnMut() -> Result<FontContext, E>) -> Result<Self> {
         let fcx = make_font().map_err(|e| anyhow!("{e:?}"))?;
         let ser_fcx = layout_glyphs(&fcx)?;
+        let metadata = FontMetadata::new(&fcx, ser_fcx);
 
         let file = eval(
             &fcx,
@@ -124,9 +126,8 @@ impl CompiledFont {
             })
             .map_err(Into::into);
 
-        Ok(Self {
-            defs: Box::new(fcx),
-            ser_defs: Box::new(ser_fcx),
+        Ok(CompiledFont {
+            metadata: Box::new(metadata),
             ttf,
         })
     }
