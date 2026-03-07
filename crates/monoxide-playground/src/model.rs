@@ -12,7 +12,7 @@ pub struct FontOverview {
 }
 
 /// Represents the minimal information to represent a glyph
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct GlyphOverview {
     /// The index of the current glyph, to be used in other interfaces.
     pub id: usize,
@@ -28,14 +28,14 @@ pub struct GlyphOverview {
 
 /// A guideline in either horizontal or vertical direction, with a position
 /// and tag
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Guideline {
     pub pos: f64,
     pub label: Option<String>,
 }
 
 /// The guidelines of a glyph, including horizontal and vertical ones
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Guidelines {
     pub h: Vec<Guideline>,
     pub v: Vec<Guideline>,
@@ -43,7 +43,7 @@ pub struct Guidelines {
 
 /// Represent the detail of a glyph, including the comptation tree, debug
 /// points, etc.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct GlyphDetail {
     pub overview: GlyphOverview,
     pub guidelines: Guidelines,
@@ -52,7 +52,13 @@ pub struct GlyphDetail {
     pub errors: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
+#[serde(tag = "t", rename_all = "kebab-case")]
+pub enum GlyphDetailError {
+    Unsupported { msg: String },
+}
+
+#[derive(Serialize, Clone)]
 pub struct SerializedGlyphConstruction {
     pub id: usize,
 
@@ -82,7 +88,7 @@ impl SerializedGlyphConstruction {
 }
 
 /// A point for debugging
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct DebugPoint {
     pub kind: &'static str,
     pub tag: String,
@@ -91,14 +97,14 @@ pub struct DebugPoint {
 }
 
 /// A line for debugging
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct DebugLine {
     pub from: Point2D,
     pub to: Point2D,
     pub tag: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(tag = "t", rename_all = "kebab-case")]
 pub enum ConstructionKind {
     Spiro {
@@ -128,7 +134,7 @@ pub enum ConstructionKind {
     Placeholder,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct SerializeSpiroPoint {
     #[serde(flatten)]
     pub point: Point2D,

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use anyhow::bail;
 use axum::{
     extract::{
         State, WebSocketUpgrade,
@@ -106,7 +107,6 @@ async fn send_ws_task(
                 let overview = FontOverview {
                     cmap: b.ser_defs.cmap.clone(),
                 };
-
                 ws.feed(Message::Text(
                     serde_json::to_string(&WsServerMsg::EpochComplete(overview))?.into(),
                 ))
@@ -130,7 +130,9 @@ async fn send_ws_task(
     }
 }
 
-fn render_glyph_to_beziers(glyph: &SerializedGlyph) -> anyhow::Result<Vec<CubicBezier<Point2D>>> {
+pub(crate) fn render_glyph_to_beziers(
+    glyph: &SerializedGlyph,
+) -> anyhow::Result<Vec<CubicBezier<Point2D>>> {
     let mut rendered = vec![];
     match &glyph.kind {
         SerializedGlyphKind::Simple(outlines) => {
@@ -138,7 +140,7 @@ fn render_glyph_to_beziers(glyph: &SerializedGlyph) -> anyhow::Result<Vec<CubicB
                 eval_outline(outline, &mut rendered, &mut ())?;
             }
         }
-        SerializedGlyphKind::Compound(_) => todo!(),
+        SerializedGlyphKind::Compound(_) => bail!("Compound glyphs are not supported yet"),
     }
     Ok(rendered)
 }

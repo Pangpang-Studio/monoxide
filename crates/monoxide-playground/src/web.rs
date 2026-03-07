@@ -1,6 +1,6 @@
 mod font;
-mod glyph_detail;
-mod ws;
+pub(crate) mod glyph_detail;
+pub(crate) mod ws;
 
 use std::{
     net::{Ipv4Addr, SocketAddrV4},
