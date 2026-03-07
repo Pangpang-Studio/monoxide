@@ -30,25 +30,23 @@ pub async fn glyph_detail(
 ) -> Result<Json<GlyphDetail>, Response> {
     let latest_state = state.rx.borrow().clone();
 
-    let (cx, ser_fcx) = match &*latest_state {
+    let metadata = match &*latest_state {
         crate::web::RenderedFontState::Nothing | crate::web::RenderedFontState::Error(_) => {
             return Err(Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body("No font loaded".into())
                 .unwrap());
         }
-        crate::web::RenderedFontState::Font(b) => (&b.defs, &b.ser_defs),
+        crate::web::RenderedFontState::Font(b) => &b.metadata,
     };
 
-    let glyph = ser_fcx.glyph_list.get(id).ok_or_else(|| {
-        Response::builder()
+    let Some(detail) = metadata.glyph_details.get(id) else {
+        return Err(Response::builder()
             .status(StatusCode::NOT_FOUND)
             .body("Glyph not found".into())
-            .unwrap()
-    })?;
-    serialized_glyph_to_detail(id, cx, glyph)
-        .map(Json)
-        .map_err(|e| Response::from(&e))
+            .unwrap());
+    };
+    Ok(Json(detail.as_ref().map_err(Response::from)?.clone()))
 }
 
 pub(crate) fn serialized_glyph_to_detail(
