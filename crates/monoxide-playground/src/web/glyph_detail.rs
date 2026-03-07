@@ -4,7 +4,7 @@ use axum::{
     Json,
     extract::{Path, State},
     http::StatusCode,
-    response::Response,
+    response::{IntoResponse, Response},
 };
 use monoxide_curves::{
     CubicBezier,
@@ -27,10 +27,10 @@ use crate::model::{
 pub async fn glyph_detail(
     State(state): XAppState,
     Path(id): Path<usize>,
-) -> Result<Json<GlyphDetail>, Response> {
-    let latest_state = state.rx.borrow().clone();
+) -> Result<Response, Response> {
+    let latest_state = state.rx.borrow();
 
-    let metadata = match &*latest_state {
+    let metadata = match &**latest_state {
         crate::web::RenderedFontState::Nothing | crate::web::RenderedFontState::Error(_) => {
             return Err(Response::builder()
                 .status(StatusCode::NOT_FOUND)
@@ -46,7 +46,7 @@ pub async fn glyph_detail(
             .body("Glyph not found".into())
             .unwrap());
     };
-    Ok(Json(detail.as_ref().map_err(Response::from)?.clone()))
+    Ok(Json(detail.as_ref()?).into_response())
 }
 
 pub(crate) fn serialized_glyph_to_detail(
