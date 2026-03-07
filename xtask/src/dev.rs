@@ -9,7 +9,7 @@ use std::{
 
 use tracing::{info, warn};
 
-use crate::{CARGO, workspace_root};
+use crate::{CARGO, util, workspace_root};
 
 #[derive(clap::Parser)]
 pub struct DevCommand {
@@ -72,20 +72,13 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
 }
 
 pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
-    let root = workspace_root();
     let playground_crate = "monoxide-font";
     let playground_example = "playground";
-    let playground_webui_dir = root.join("tools/playground");
-    let playground_webui_dist = playground_webui_dir.join("dist");
+    let playground_webui_dir = util::playground_webui_dir();
+    let playground_webui_dist = util::playground_webui_dist_dir();
 
     // We use PNPM to develop everything
-    let pnpm = std::env::var("PNPM").unwrap_or_else(|_| {
-        if cfg!(windows) {
-            "pnpm.cmd".to_string()
-        } else {
-            "pnpm".to_string()
-        }
-    });
+    let pnpm = util::resolve_pnpm();
     info!("Using pnpm = {}", pnpm);
 
     // Graceful shutdown stuff
@@ -116,7 +109,7 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
     } else {
         if !webui_built || cmd.build_webui {
             info!("Building webui...");
-            build_webui(&pnpm, &playground_webui_dir);
+            util::build_playground_webui(&pnpm, None, false)?;
         }
         info!("Built webui found at {}", playground_webui_dist.display());
         None
@@ -248,16 +241,6 @@ fn start_playground(
     }
     info!("Playground server started on port {}", cmd.port);
     Ok(child)
-}
-
-fn build_webui(pnpm: &str, dir: &Path) {
-    let mut cmd = Command::new(pnpm);
-    cmd.arg("build");
-    cmd.current_dir(dir);
-    let status = cmd.status().expect("Failed to run pnpm build");
-    if !status.success() {
-        panic!("Failed to build playground, status: {status}");
-    }
 }
 
 const RETRY_COUNT: usize = 10;
