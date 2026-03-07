@@ -33,6 +33,12 @@ export interface Cmap {
   [key: string]: number
 }
 
+export interface PrebuiltMetadata {
+  cmap: Cmap
+  glyphs: GlyphOverview[]
+  glyph_details: unknown[]
+}
+
 /** Maps to `struct FontOverview` in `model.rs` */
 export interface FontOverview {
   glyphs: GlyphOverview[]
