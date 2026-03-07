@@ -74,7 +74,7 @@ pub async fn start_web_server(
     info!("Listening on {}", listener.local_addr().unwrap());
 
     let state = Arc::new(AppState { rx });
-    let app = app.with_state(state.clone());
+    let app = app.with_state(state);
 
     axum::serve(listener, app).await.unwrap();
 

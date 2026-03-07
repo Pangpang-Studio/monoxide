@@ -7,8 +7,8 @@ use serde::Serialize;
 /// sent over the websocket wire. Glyphs are sent in separate messages to
 /// reduce size.
 #[derive(Serialize, Debug, Clone)]
-pub struct FontOverview {
-    pub cmap: BTreeMap<char, usize>,
+pub struct FontOverview<'a> {
+    pub cmap: &'a BTreeMap<char, usize>,
 }
 
 /// Represents the minimal information to represent a glyph

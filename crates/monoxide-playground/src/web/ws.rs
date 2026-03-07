@@ -20,15 +20,15 @@ use crate::model::{FontOverview, GlyphOverview};
 
 #[derive(Serialize, Debug)]
 #[serde(tag = "t")]
-enum WsServerMsg {
+enum WsServerMsg<'a> {
     /// Notify the client that new font data is going to arrive
     PrepareForNewEpoch,
     /// Send a single glyph to the client. This is to avoid having a too large
     /// WebSocket message
-    Glyph(GlyphOverview),
+    Glyph(&'a GlyphOverview),
     /// Notify the client that construction is now complete, and the client can
     /// flush the pending data to UI.
-    EpochComplete(FontOverview),
+    EpochComplete(FontOverview<'a>),
     /// There's an error when evaluating the font
     Error { msg: String },
 }
@@ -87,13 +87,13 @@ async fn send_ws_task(
 
                 for glyph in &b.metadata.glyphs {
                     ws.feed(Message::Text(
-                        serde_json::to_string(&WsServerMsg::Glyph(glyph.clone()))?.into(),
+                        serde_json::to_string(&WsServerMsg::Glyph(glyph))?.into(),
                     ))
                     .await?;
                 }
 
                 let overview = FontOverview {
-                    cmap: b.metadata.cmap.clone(),
+                    cmap: &b.metadata.cmap,
                 };
                 ws.feed(Message::Text(
                     serde_json::to_string(&WsServerMsg::EpochComplete(overview))?.into(),
