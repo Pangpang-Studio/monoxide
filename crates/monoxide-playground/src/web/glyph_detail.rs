@@ -4,7 +4,7 @@ use axum::{
     Json,
     extract::{Path, State},
     http::StatusCode,
-    response::Response,
+    response::{IntoResponse, Response},
 };
 use monoxide_curves::{
     CubicBezier,
@@ -12,7 +12,7 @@ use monoxide_curves::{
 };
 use monoxide_script::{
     ast::{FontContext, OutlineExpr},
-    eval::{SerializedGlyphKind, eval_outline},
+    eval::{SerializedGlyph, SerializedGlyphKind, eval_outline},
     prelude::*,
     trace::EvalTracer,
 };
@@ -20,46 +20,71 @@ use monoxide_spiro::SpiroCp;
 
 use super::XAppState;
 use crate::model::{
-    ConstructionKind, DebugLine, DebugPoint, GlyphDetail, GlyphOverview, Guideline, Guidelines,
-    SerializedGlyphConstruction,
+    ConstructionKind, DebugLine, DebugPoint, GlyphDetail, GlyphDetailError, GlyphOverview,
+    Guideline, Guidelines, SerializedGlyphConstruction,
 };
 
 pub async fn glyph_detail(
     State(state): XAppState,
     Path(id): Path<usize>,
-) -> Result<Json<GlyphDetail>, Response> {
-    let latest_state = state.rx.borrow().clone();
+) -> Result<Response, Response> {
+    let latest_state = state.rx.borrow();
 
-    let (cx, ser_fcx) = match &*latest_state {
+    let metadata = match &**latest_state {
         crate::web::RenderedFontState::Nothing | crate::web::RenderedFontState::Error(_) => {
             return Err(Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body("No font loaded".into())
                 .unwrap());
         }
-        crate::web::RenderedFontState::Font(b) => (&b.defs, &b.ser_defs),
+        crate::web::RenderedFontState::Font(b) => &b.metadata,
     };
 
-    let glyph = ser_fcx.glyph_list.get(id).ok_or_else(|| {
-        Response::builder()
+    let Some(detail) = metadata.glyph_details.get(id) else {
+        return Err(Response::builder()
             .status(StatusCode::NOT_FOUND)
             .body("Glyph not found".into())
-            .unwrap()
-    })?;
+            .unwrap());
+    };
+    Ok(Json(detail.as_ref().map_err(Response::from)?).into_response())
+}
 
+pub(crate) fn serialized_glyph_to_detail(
+    id: usize,
+    cx: &FontContext,
+    glyph: &SerializedGlyph,
+) -> Result<GlyphDetail, GlyphDetailError> {
     let advance = glyph.advance.unwrap_or(cx.settings().mono_width());
     match &glyph.kind {
         SerializedGlyphKind::Simple(simple_glyph) => {
-            let detail = simple_glyph_to_detail(id, cx, simple_glyph, advance);
-            Ok(Json(detail))
+            Ok(simple_glyph_to_detail(id, cx, simple_glyph, advance))
         }
-        SerializedGlyphKind::Compound(_compound_glyph) => {
-            // we don't support compound glyphs yet
-            Err(Response::builder()
-                .status(StatusCode::NOT_IMPLEMENTED)
-                .body("Compound glyphs are not supported yet".into())
-                .unwrap())
+        SerializedGlyphKind::Compound(_compound_glyph) => Err(GlyphDetailError::Unsupported {
+            msg: "Compound glyphs are not supported yet".into(),
+        }),
+    }
+}
+
+impl GlyphDetailError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            GlyphDetailError::Unsupported { .. } => StatusCode::NOT_IMPLEMENTED,
         }
+    }
+
+    fn message(&self) -> &str {
+        match self {
+            GlyphDetailError::Unsupported { msg } => msg,
+        }
+    }
+}
+
+impl From<&GlyphDetailError> for Response {
+    fn from(e: &GlyphDetailError) -> Self {
+        Response::builder()
+            .status(e.status_code())
+            .body(e.message().to_owned().into())
+            .unwrap()
     }
 }
 

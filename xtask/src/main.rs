@@ -1,4 +1,6 @@
 mod dev;
+mod ssg;
+mod util;
 
 use clap::Parser;
 
@@ -16,6 +18,7 @@ fn main() {
     let cmd = Command::parse();
     match cmd {
         Command::Dev(dev_command) => dev::run(dev_command).expect("Failed to run dev command"),
+        Command::Ssg(ssg_command) => ssg::run(ssg_command).expect("Failed to run ssg command"),
     }
 }
 
@@ -30,4 +33,5 @@ fn workspace_root() -> std::path::PathBuf {
 #[derive(clap::Parser)]
 enum Command {
     Dev(dev::DevCommand),
+    Ssg(ssg::SsgCommand),
 }

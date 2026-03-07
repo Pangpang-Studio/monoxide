@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use anyhow::bail;
 use axum::{
     extract::{
         State, WebSocketUpgrade,
@@ -19,15 +20,15 @@ use crate::model::{FontOverview, GlyphOverview};
 
 #[derive(Serialize, Debug)]
 #[serde(tag = "t")]
-enum WsServerMsg {
+enum WsServerMsg<'a> {
     /// Notify the client that new font data is going to arrive
     PrepareForNewEpoch,
     /// Send a single glyph to the client. This is to avoid having a too large
     /// WebSocket message
-    Glyph(GlyphOverview),
+    Glyph(&'a GlyphOverview),
     /// Notify the client that construction is now complete, and the client can
     /// flush the pending data to UI.
-    EpochComplete(FontOverview),
+    EpochComplete(FontOverview<'a>),
     /// There's an error when evaluating the font
     Error { msg: String },
 }
@@ -84,19 +85,7 @@ async fn send_ws_task(
                 ))
                 .await?;
 
-                for (i, glyph) in b.ser_defs.glyph_list.iter().enumerate() {
-                    let outline = render_glyph_to_beziers(glyph);
-                    let (outline, error) = match outline {
-                        Ok(outline) => (outline, None),
-                        Err(e) => (vec![], Some(e.to_string())),
-                    };
-                    let glyph = GlyphOverview {
-                        id: i,
-                        name: None,
-                        outline,
-                        error,
-                        advance: b.defs.settings().mono_width(),
-                    };
+                for glyph in &b.metadata.glyphs {
                     ws.feed(Message::Text(
                         serde_json::to_string(&WsServerMsg::Glyph(glyph))?.into(),
                     ))
@@ -104,9 +93,8 @@ async fn send_ws_task(
                 }
 
                 let overview = FontOverview {
-                    cmap: b.ser_defs.cmap.clone(),
+                    cmap: &b.metadata.cmap,
                 };
-
                 ws.feed(Message::Text(
                     serde_json::to_string(&WsServerMsg::EpochComplete(overview))?.into(),
                 ))
@@ -130,7 +118,9 @@ async fn send_ws_task(
     }
 }
 
-fn render_glyph_to_beziers(glyph: &SerializedGlyph) -> anyhow::Result<Vec<CubicBezier<Point2D>>> {
+pub(crate) fn render_glyph_to_beziers(
+    glyph: &SerializedGlyph,
+) -> anyhow::Result<Vec<CubicBezier<Point2D>>> {
     let mut rendered = vec![];
     match &glyph.kind {
         SerializedGlyphKind::Simple(outlines) => {
@@ -138,7 +128,7 @@ fn render_glyph_to_beziers(glyph: &SerializedGlyph) -> anyhow::Result<Vec<CubicB
                 eval_outline(outline, &mut rendered, &mut ())?;
             }
         }
-        SerializedGlyphKind::Compound(_) => todo!(),
+        SerializedGlyphKind::Compound(_) => bail!("Compound glyphs are not supported yet"),
     }
     Ok(rendered)
 }

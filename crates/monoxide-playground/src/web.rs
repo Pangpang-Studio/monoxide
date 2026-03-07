@@ -1,6 +1,6 @@
 mod font;
-mod glyph_detail;
-mod ws;
+pub(crate) mod glyph_detail;
+pub(crate) mod ws;
 
 use std::{
     net::{Ipv4Addr, SocketAddrV4},
@@ -15,10 +15,11 @@ use axum::{
     routing::{any, method_routing::get},
 };
 use bytes::Bytes;
-use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
 use tokio::sync::watch;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
+
+use crate::model::PrebuiltMetadata;
 
 #[derive(Debug, clap::Parser)]
 pub struct ServerCommand {
@@ -73,7 +74,7 @@ pub async fn start_web_server(
     info!("Listening on {}", listener.local_addr().unwrap());
 
     let state = Arc::new(AppState { rx });
-    let app = app.with_state(state.clone());
+    let app = app.with_state(state);
 
     axum::serve(listener, app).await.unwrap();
 
@@ -93,8 +94,7 @@ pub enum RenderedFontState {
 }
 
 pub struct CompiledFont {
-    pub defs: Box<FontContext>,
-    pub ser_defs: Box<SerializedFontContext>,
+    pub metadata: Box<PrebuiltMetadata>,
     pub ttf: Result<Bytes, anyhow::Error>,
 }
 
