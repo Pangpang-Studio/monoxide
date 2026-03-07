@@ -41,72 +41,76 @@ impl Playground {
             .init();
 
         let args = Playground::parse();
-
-        let (tx, rx) = tokio::sync::mpsc::channel::<()>(10);
-        let mut rx = std::pin::pin!(tokio_stream::wrappers::ReceiverStream::new(rx));
-
-        let (render_tx, render_rx) = watch::channel(Arc::new(web::RenderedFontState::Nothing));
-
-        // Establish the connection to the subsecond launcher.
-        dioxus_devtools::connect_subsecond();
-        let send = Arc::new(move || {
-            _ = tx.try_send(());
-        });
-        subsecond::register_handler(send.clone());
-
-        let _fut = match args.cmd {
-            Subcommand::Serve(cmd) => tokio::spawn(web::start_web_server(cmd, render_rx)),
-        };
-
-        // Send an initial message to trigger the evaluation.
-        send();
-
-        while rx.next().await.is_some() {
-            info!("Re-evaluating playground");
-            let fcx = match make_font() {
-                Ok(fcx) => fcx,
-                Err(e) => {
-                    send_error(e, &render_tx);
-                    continue;
-                }
-            };
-            let ser_fcx = match layout_glyphs(&fcx) {
-                Ok(ser_fcx) => ser_fcx,
-                Err(e) => {
-                    send_error(e, &render_tx);
-                    continue;
-                }
-            };
-
-            let file = eval(
-                &fcx,
-                &AuxiliarySettings {
-                    point_per_em: 2048,
-                    font_name: "Monoxide".into(),
-                },
-            );
-            let mut out_ttf = BytesMut::new().writer();
-            if let Ok(f) = &file {
-                f.write(&mut out_ttf).expect("Writing to memory can't fail");
-            }
-            let ttf = file
-                .map(|_| out_ttf.into_inner().freeze())
-                .map_err(|e| e.into());
-
-            debug!("Successfully evaluated playground");
-            render_tx
-                .send(Arc::new(web::RenderedFontState::Font(Box::new(
-                    CompiledFont {
-                        defs: Box::new(fcx),
-                        ser_defs: Box::new(ser_fcx),
-                        ttf,
-                    },
-                ))))
-                .unwrap();
+        match args.cmd {
+            Subcommand::Serve(cmd) => run_serve(cmd, &mut make_font).await,
         }
-
-        Ok(())
     }
+}
+
+async fn run_serve<E: Debug>(
+    cmd: web::ServerCommand,
+    make_font: &mut impl FnMut() -> Result<FontContext, E>,
+) -> Result<()> {
+    let (tx, rx) = tokio::sync::mpsc::channel::<()>(10);
+    let mut rx = std::pin::pin!(tokio_stream::wrappers::ReceiverStream::new(rx));
+
+    let (render_tx, render_rx) = watch::channel(Arc::new(web::RenderedFontState::Nothing));
+
+    // Establish the connection to the subsecond launcher.
+    dioxus_devtools::connect_subsecond();
+    // Trigger an initial evaluation before registering the hot-reload handler.
+    _ = tx.try_send(());
+    let send = Arc::new(move || {
+        _ = tx.try_send(());
+    });
+    subsecond::register_handler(send);
+
+    let _fut = tokio::spawn(web::start_web_server(cmd, render_rx));
+
+    while rx.next().await.is_some() {
+        info!("Re-evaluating playground");
+        match compile_font(make_font) {
+            Ok(compiled) => {
+                debug!("Successfully evaluated playground");
+                render_tx
+                    .send(Arc::new(web::RenderedFontState::Font(Box::new(compiled))))
+                    .unwrap();
+            }
+            Err(e) => {
+                send_error(e, &render_tx);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn compile_font<E: Debug>(
+    make_font: &mut impl FnMut() -> Result<FontContext, E>,
+) -> Result<CompiledFont> {
+    let fcx = make_font().map_err(|e| anyhow!("{e:?}"))?;
+    let ser_fcx = layout_glyphs(&fcx)?;
+
+    let file = eval(
+        &fcx,
+        &AuxiliarySettings {
+            point_per_em: 2048,
+            font_name: "Monoxide".into(),
+        },
+    );
+    let ttf = file
+        .map(|f| {
+            let mut out_ttf = BytesMut::new().writer();
+            f.write(&mut out_ttf).expect("Writing to memory can't fail");
+            out_ttf.into_inner().freeze()
+        })
+        .map_err(Into::into);
+
+    Ok(CompiledFont {
+        defs: Box::new(fcx),
+        ser_defs: Box::new(ser_fcx),
+        ttf,
+    })
 }
 
 fn send_error(e: impl Debug, render_tx: &watch::Sender<Arc<web::RenderedFontState>>) {
