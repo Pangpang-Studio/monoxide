@@ -1,12 +1,13 @@
 mod model;
 mod web;
 
-use std::{fmt::Debug, path::PathBuf, sync::Arc};
+use std::{fmt::Debug, io::Write as _, path::PathBuf, sync::Arc};
 
 use anyhow::{Result, anyhow};
 use bytes::{BufMut, BytesMut};
 use clap::Parser;
 use dioxus_devtools::subsecond;
+use flate2::{Compression, write::GzEncoder};
 use futures_util::StreamExt;
 use monoxide_script::{
     ast::FontContext,
@@ -33,8 +34,18 @@ pub enum Subcommand {
 
 #[derive(Debug, clap::Parser)]
 pub struct RenderCommand {
+    /// Compress format(s) to be used by metadata output.
+    #[clap(long, value_delimiter = ',', default_value = "gz", value_enum)]
+    meta_compress: Vec<MetaCompressKind>,
+
     /// The directory where generated files will be written.
     dir: PathBuf,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+enum MetaCompressKind {
+    None,
+    Gz,
 }
 
 impl Playground {
@@ -108,17 +119,28 @@ async fn run_render<E: Debug>(
     let ttf = compiled
         .ttf
         .map_err(|e| anyhow!("Font generation failed: {e}"))?;
-    let metadata = serde_json::to_vec_pretty(&*compiled.metadata)?;
+    let metadata = serde_json::to_vec(&*compiled.metadata)?;
 
     std::fs::create_dir_all(&out_dir)?;
 
     let ttf_path = out_dir.join("monoxide.ttf");
-    let metadata_path = out_dir.join("monoxide.ttf.meta");
     std::fs::write(&ttf_path, &ttf)?;
-    std::fs::write(&metadata_path, &metadata)?;
 
     info!("Wrote {}", ttf_path.display());
-    info!("Wrote {}", metadata_path.display());
+
+    if cmd.meta_compress.contains(&MetaCompressKind::None) {
+        let metadata_path = out_dir.join("monoxide.ttf.meta");
+        std::fs::write(&metadata_path, &metadata)?;
+        info!("Wrote {}", metadata_path.display());
+    }
+
+    if cmd.meta_compress.contains(&MetaCompressKind::Gz) {
+        let metadata_gz = compress_gzip(&metadata)?;
+        let metadata_gz_path = out_dir.join("monoxide.ttf.meta.gz");
+        std::fs::write(&metadata_gz_path, &metadata_gz)?;
+        info!("Wrote {}", metadata_gz_path.display());
+    }
+
     Ok(())
 }
 
@@ -192,4 +214,11 @@ fn send_error(e: impl Debug, render_tx: &watch::Sender<Arc<web::RenderedFontStat
     render_tx
         .send(Arc::new(web::RenderedFontState::Error(anyhow!("{e:?}"))))
         .unwrap();
+}
+
+fn compress_gzip(payload: &[u8]) -> Result<Vec<u8>> {
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
+    encoder.write_all(payload)?;
+    let compressed = encoder.finish()?;
+    Ok(compressed)
 }

@@ -58,18 +58,86 @@ export async function getPrebuiltMetadata() {
   }
 
   prebuiltMetadataPromise = (async () => {
-    let res = await fetch(PREBUILT_METADATA_URL)
-    if (!res.ok) {
-      let body = await res.text()
-      throw new Error(
-        `Failed to fetch prebuilt metadata: ${res.statusText}; ${body}`,
-      )
+    const errors: string[] = []
+    for (const url of prebuiltMetadataCandidateUrls()) {
+      let res = await fetch(url)
+      if (!res.ok) {
+        errors.push(`${url}: ${res.status} ${res.statusText}`)
+        continue
+      }
+
+      try {
+        return await decodeMetadataResponse(res, url)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : `${err}`
+        errors.push(`${url}: ${msg}`)
+      }
     }
-    let data = await res.json()
-    return data as PrebuiltMetadata
+
+    throw new Error(`Failed to fetch prebuilt metadata:\n${errors.join('\n')}`)
   })()
 
   return prebuiltMetadataPromise
+}
+
+function prebuiltMetadataCandidateUrls(): string[] {
+  if (
+    PREBUILT_METADATA_URL.endsWith('.zst') ||
+    PREBUILT_METADATA_URL.endsWith('.gz')
+  ) {
+    return [PREBUILT_METADATA_URL]
+  }
+  return [
+    `${PREBUILT_METADATA_URL}.zst`,
+    `${PREBUILT_METADATA_URL}.gz`,
+    PREBUILT_METADATA_URL,
+  ]
+}
+
+async function decodeMetadataResponse(
+  res: Response,
+  url: string,
+): Promise<PrebuiltMetadata> {
+  if (url.endsWith('.gz')) {
+    return await decodeCompressedMetadata(res, 'gzip')
+  }
+
+  const data = await res.json()
+  return data as PrebuiltMetadata
+}
+
+async function decodeCompressedMetadata(
+  res: Response,
+  format: CompressionFormat,
+): Promise<PrebuiltMetadata> {
+  const bytes = new Uint8Array(await res.arrayBuffer())
+
+  // Some hosts may transparently decompress based on content encoding.
+  const plainText = new TextDecoder().decode(bytes)
+  const plain = tryParseMetadata(plainText)
+  if (plain) return plain
+
+  if (typeof DecompressionStream === 'undefined') {
+    throw new Error('Browser does not support DecompressionStream')
+  }
+
+  const decompressed = new Blob([bytes])
+    .stream()
+    .pipeThrough(new DecompressionStream(format))
+  const text = await new Response(decompressed).text()
+  const data = tryParseMetadata(text)
+  if (!data) {
+    throw new Error('Compressed metadata payload is not valid JSON')
+  }
+  return data
+}
+
+function tryParseMetadata(text: string): PrebuiltMetadata | null {
+  try {
+    return JSON.parse(text) as PrebuiltMetadata
+  } catch {
+    return null
+  }
 }
 
 function decodePrebuiltGlyphDetail(raw: unknown): GlyphDetail | Error {
