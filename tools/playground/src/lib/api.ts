@@ -47,18 +47,77 @@ export async function getFontMetadata() {
   }
 
   prebuiltMetadataPromise = (async () => {
-    let res = await fetch(PREBUILT_METADATA_URL)
-    if (!res.ok) {
-      let body = await res.text()
-      throw new Error(
-        `Failed to fetch prebuilt metadata: ${res.statusText}; ${body}`,
-      )
+    const errors: string[] = []
+    for (const url of prebuiltMetadataCandidateUrls()) {
+      let res = await fetch(url)
+      if (!res.ok) {
+        errors.push(`${url}: ${res.status} ${res.statusText}`)
+        continue
+      }
+
+      try {
+        return await decodeMetadataResponse(res, url)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : `${err}`
+        errors.push(`${url}: ${msg}`)
+      }
     }
-    let data = await res.json()
-    return data as FontMetadata
+
+    throw new Error(`Failed to fetch prebuilt metadata:\n${errors.join('\n')}`)
   })()
 
   return prebuiltMetadataPromise
+}
+
+const COMPRESSION_FORMATS: Record<string, CompressionFormat> = {
+  ['.gz']: 'gzip',
+}
+
+function prebuiltMetadataCandidateUrls(): string[] {
+  const candidates: string[] = []
+  for (const ext of Object.keys(COMPRESSION_FORMATS)) {
+    if (PREBUILT_METADATA_URL.endsWith(ext)) return [PREBUILT_METADATA_URL]
+    candidates.push(`${PREBUILT_METADATA_URL}${ext}`)
+  }
+
+  candidates.push(PREBUILT_METADATA_URL)
+  return candidates
+}
+
+async function decodeMetadataResponse(
+  res: Response,
+  url: string,
+): Promise<FontMetadata> {
+  for (const [ext, fmt] of Object.entries(COMPRESSION_FORMATS)) {
+    if (url.endsWith(ext)) return await decodeCompressedMetadata(res, fmt)
+  }
+
+  const data = await res.json()
+  return data as FontMetadata
+}
+
+async function decodeCompressedMetadata(
+  res: Response,
+  format: CompressionFormat,
+): Promise<FontMetadata> {
+  const bytes = new Uint8Array(await res.arrayBuffer())
+
+  try {
+    // Some hosts may transparently decompress based on content encoding.
+    const plainText = new TextDecoder().decode(bytes)
+    const plain = JSON.parse(plainText) as FontMetadata
+    if (plain) return plain
+  } catch {}
+
+  if (typeof DecompressionStream === 'undefined')
+    throw new Error('Browser does not support DecompressionStream')
+
+  const decompressed = new Blob([bytes])
+    .stream()
+    .pipeThrough(new DecompressionStream(format))
+  const text = await new Response(decompressed).text()
+  const data = JSON.parse(text) as FontMetadata
+  return data
 }
 
 export type RawPrebuiltGlyphDetail = { Ok: GlyphDetail } | { Err: object }
