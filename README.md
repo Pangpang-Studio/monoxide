@@ -42,3 +42,9 @@ And if you want to edit the Rust part outside of `monoxide-font`:
 ```
 
 See `cargo xtask dev --help` for more knobs to tweak.
+
+To generate a static playground build for e.g. GitHub Pages, run:
+
+```console
+> cargo xtask ssg
+```
