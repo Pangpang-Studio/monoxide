@@ -4,9 +4,8 @@ use axum::{
     http::{Response, StatusCode},
 };
 
-use crate::web::XAppState;
-
 use super::RenderedFontState;
+use crate::web::XAppState;
 
 /// Get the full contents of the compiled font file
 pub async fn font(State(state): XAppState) -> Result<Bytes, Response<String>> {

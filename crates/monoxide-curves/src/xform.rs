@@ -149,7 +149,8 @@ impl<P: IPoint2D<Scalar = S> + Clone, S: Real> Affine2D<P> {
         Self::id().rotate(angle)
     }
 
-    /// Create a transformation that rotates the point by `angle` around `center`.
+    /// Create a transformation that rotates the point by `angle` around
+    /// `center`.
     pub fn rotated_around(center: impl Into<P>, angle: impl Into<P::Scalar>) -> Self {
         Self::id().rotate_around(center, angle)
     }

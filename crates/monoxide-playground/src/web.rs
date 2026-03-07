@@ -1,21 +1,25 @@
 mod font;
-mod glyph_detail;
-mod ws;
+pub(crate) mod glyph_detail;
+pub(crate) mod ws;
 
 use std::{
+    fmt::Debug,
     net::{Ipv4Addr, SocketAddrV4},
     path::PathBuf,
     sync::Arc,
 };
 
-use anyhow::bail;
+use anyhow::{Result, anyhow, bail};
 use axum::{
     Router,
     extract::State,
     routing::{any, method_routing::get},
 };
-use bytes::Bytes;
-use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
+use bytes::{BufMut, Bytes, BytesMut};
+use monoxide_script::{
+    ast::FontContext,
+    eval::{AuxiliarySettings, SerializedFontContext, eval, layout_glyphs},
+};
 use tokio::sync::watch;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
@@ -37,47 +41,49 @@ pub struct ServerCommand {
     serve_dir: Option<String>,
 }
 
-pub async fn start_web_server(
-    cmd: ServerCommand,
-    rx: watch::Receiver<Arc<RenderedFontState>>,
-) -> anyhow::Result<()> {
-    let mut app = Router::new()
-        .route("/api/ping", any(reply_200))
-        .route("/api/ws", any(ws::serve_ws))
-        .route("/api/glyph/{id}", get(glyph_detail::glyph_detail))
-        .route("/api/font", get(font::font));
+impl ServerCommand {
+    pub async fn start_web_server(
+        self,
+        rx: watch::Receiver<Arc<RenderedFontState>>,
+    ) -> anyhow::Result<()> {
+        let mut app = Router::new()
+            .route("/api/ping", any(reply_200))
+            .route("/api/ws", any(ws::serve_ws))
+            .route("/api/glyph/{id}", get(glyph_detail::glyph_detail))
+            .route("/api/font", get(font::font));
 
-    if let Some(url) = &cmd.reverse_proxy {
-        info!("Reverse proxying to {}", url);
-        let rev_proxy = axum_reverse_proxy::ReverseProxy::new("/", url);
-        app = app.merge(rev_proxy);
-    } else if let Some(dir) = &cmd.serve_dir {
-        let dir = PathBuf::from(dir);
-        if !dir.exists() {
-            bail!("Served directory {} does not exist", dir.display());
+        if let Some(url) = &self.reverse_proxy {
+            info!("Reverse proxying to {}", url);
+            let rev_proxy = axum_reverse_proxy::ReverseProxy::new("/", url);
+            app = app.merge(rev_proxy);
+        } else if let Some(dir) = &self.serve_dir {
+            let dir = PathBuf::from(dir);
+            if !dir.exists() {
+                bail!("Served directory {} does not exist", dir.display());
+            }
+            info!("Serving directory {} as fallback", dir.display());
+            let serve_dir =
+                ServeDir::new(&dir).not_found_service(ServeFile::new(dir.join("index.html")));
+
+            app = app.fallback_service(serve_dir);
+        } else {
+            info!("No reverse proxy or serve dir specified, no fallback service will be used.");
         }
-        info!("Serving directory {} as fallback", dir.display());
-        let serve_dir =
-            ServeDir::new(&dir).not_found_service(ServeFile::new(dir.join("index.html")));
 
-        app = app.fallback_service(serve_dir);
-    } else {
-        info!("No reverse proxy or serve dir specified, no fallback service will be used.");
+        let listener =
+            tokio::net::TcpListener::bind(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, self.port))
+                .await
+                .unwrap();
+
+        info!("Listening on {}", listener.local_addr().unwrap());
+
+        let state = Arc::new(AppState { rx });
+        let app = app.with_state(state.clone());
+
+        axum::serve(listener, app).await.unwrap();
+
+        Ok(())
     }
-
-    let listener =
-        tokio::net::TcpListener::bind(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, cmd.port))
-            .await
-            .unwrap();
-
-    info!("Listening on {}", listener.local_addr().unwrap());
-
-    let state = Arc::new(AppState { rx });
-    let app = app.with_state(state.clone());
-
-    axum::serve(listener, app).await.unwrap();
-
-    Ok(())
 }
 
 pub struct AppState {
@@ -96,6 +102,34 @@ pub struct CompiledFont {
     pub defs: Box<FontContext>,
     pub ser_defs: Box<SerializedFontContext>,
     pub ttf: Result<Bytes, anyhow::Error>,
+}
+
+impl CompiledFont {
+    pub fn new<E: Debug>(make_font: &mut impl FnMut() -> Result<FontContext, E>) -> Result<Self> {
+        let fcx = make_font().map_err(|e| anyhow!("{e:?}"))?;
+        let ser_fcx = layout_glyphs(&fcx)?;
+
+        let file = eval(
+            &fcx,
+            &AuxiliarySettings {
+                point_per_em: 2048,
+                font_name: "Monoxide".into(),
+            },
+        );
+        let ttf = file
+            .map(|f| {
+                let mut out_ttf = BytesMut::new().writer();
+                f.write(&mut out_ttf).expect("Writing to memory can't fail");
+                out_ttf.into_inner().freeze()
+            })
+            .map_err(Into::into);
+
+        Ok(Self {
+            defs: Box::new(fcx),
+            ser_defs: Box::new(ser_fcx),
+            ttf,
+        })
+    }
 }
 
 /// Extracted app state from the request.

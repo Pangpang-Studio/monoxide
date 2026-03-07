@@ -12,7 +12,7 @@ use monoxide_curves::{
 };
 use monoxide_script::{
     ast::{FontContext, OutlineExpr},
-    eval::{SerializedGlyphKind, eval_outline},
+    eval::{SerializedGlyph, SerializedGlyphKind, eval_outline},
     prelude::*,
     trace::EvalTracer,
 };
@@ -20,8 +20,8 @@ use monoxide_spiro::SpiroCp;
 
 use super::XAppState;
 use crate::model::{
-    ConstructionKind, DebugLine, DebugPoint, GlyphDetail, GlyphOverview, Guideline, Guidelines,
-    SerializedGlyphConstruction,
+    ConstructionKind, DebugLine, DebugPoint, GlyphDetail, GlyphDetailError, GlyphOverview,
+    Guideline, Guidelines, SerializedGlyphConstruction,
 };
 
 pub async fn glyph_detail(
@@ -46,20 +46,47 @@ pub async fn glyph_detail(
             .body("Glyph not found".into())
             .unwrap()
     })?;
+    serialized_glyph_to_detail(id, cx, glyph)
+        .map(Json)
+        .map_err(|e| Response::from(&e))
+}
 
+pub(crate) fn serialized_glyph_to_detail(
+    id: usize,
+    cx: &FontContext,
+    glyph: &SerializedGlyph,
+) -> Result<GlyphDetail, GlyphDetailError> {
     let advance = glyph.advance.unwrap_or(cx.settings().mono_width());
     match &glyph.kind {
         SerializedGlyphKind::Simple(simple_glyph) => {
-            let detail = simple_glyph_to_detail(id, cx, simple_glyph, advance);
-            Ok(Json(detail))
+            Ok(simple_glyph_to_detail(id, cx, simple_glyph, advance))
         }
-        SerializedGlyphKind::Compound(_compound_glyph) => {
-            // we don't support compound glyphs yet
-            Err(Response::builder()
-                .status(StatusCode::NOT_IMPLEMENTED)
-                .body("Compound glyphs are not supported yet".into())
-                .unwrap())
+        SerializedGlyphKind::Compound(_compound_glyph) => Err(GlyphDetailError::Unsupported {
+            msg: "Compound glyphs are not supported yet".into(),
+        }),
+    }
+}
+
+impl GlyphDetailError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            GlyphDetailError::Unsupported { .. } => StatusCode::NOT_IMPLEMENTED,
         }
+    }
+
+    fn message(&self) -> &str {
+        match self {
+            GlyphDetailError::Unsupported { msg } => msg,
+        }
+    }
+}
+
+impl From<&GlyphDetailError> for Response {
+    fn from(e: &GlyphDetailError) -> Self {
+        Response::builder()
+            .status(e.status_code())
+            .body(e.message().to_owned().into())
+            .unwrap()
     }
 }
 
