@@ -15,10 +15,11 @@ use axum::{
     routing::{any, method_routing::get},
 };
 use bytes::Bytes;
-use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
 use tokio::sync::watch;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
+
+use crate::model::PrebuiltMetadata;
 
 #[derive(Debug, clap::Parser)]
 pub struct ServerCommand {
@@ -93,8 +94,7 @@ pub enum RenderedFontState {
 }
 
 pub struct CompiledFont {
-    pub defs: Box<FontContext>,
-    pub ser_defs: Box<SerializedFontContext>,
+    pub metadata: Box<PrebuiltMetadata>,
     pub ttf: Result<Bytes, anyhow::Error>,
 }
 

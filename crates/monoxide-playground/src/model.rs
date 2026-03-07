@@ -6,7 +6,7 @@ use serde::Serialize;
 /// Represents the information about the font other than the list of glyphs,
 /// sent over the websocket wire. Glyphs are sent in separate messages to
 /// reduce size.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct FontOverview {
     pub cmap: BTreeMap<char, usize>,
 }
@@ -163,6 +163,13 @@ pub enum SerializeSpiroKind {
     Handle,
     Open,
     EndOpen,
+}
+
+#[derive(Serialize, Clone)]
+pub struct PrebuiltMetadata {
+    pub cmap: BTreeMap<char, usize>,
+    pub glyphs: Vec<GlyphOverview>,
+    pub glyph_details: Vec<Result<GlyphDetail, GlyphDetailError>>,
 }
 
 impl From<monoxide_spiro::SpiroCpTy> for SerializeSpiroKind {

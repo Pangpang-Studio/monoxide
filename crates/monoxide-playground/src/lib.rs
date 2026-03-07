@@ -10,11 +10,12 @@ use dioxus_devtools::subsecond;
 use futures_util::StreamExt;
 use monoxide_script::{
     ast::FontContext,
-    eval::{AuxiliarySettings, eval, layout_glyphs},
+    eval::{AuxiliarySettings, SerializedFontContext, eval, layout_glyphs},
 };
 use tokio::sync::watch;
 use tracing::{debug, info};
 
+use crate::model::{GlyphOverview, PrebuiltMetadata};
 use crate::web::CompiledFont;
 
 #[derive(Parser)]
@@ -90,6 +91,7 @@ fn compile_font<E: Debug>(
 ) -> Result<CompiledFont> {
     let fcx = make_font().map_err(|e| anyhow!("{e:?}"))?;
     let ser_fcx = layout_glyphs(&fcx)?;
+    let metadata = build_prebuilt_metadata(&fcx, ser_fcx);
 
     let file = eval(
         &fcx,
@@ -107,10 +109,46 @@ fn compile_font<E: Debug>(
         .map_err(Into::into);
 
     Ok(CompiledFont {
-        defs: Box::new(fcx),
-        ser_defs: Box::new(ser_fcx),
+        metadata: Box::new(metadata),
         ttf,
     })
+}
+
+fn build_prebuilt_metadata(fcx: &FontContext, ser_fcx: SerializedFontContext) -> PrebuiltMetadata {
+    let SerializedFontContext {
+        cmap, glyph_list, ..
+    } = ser_fcx;
+
+    let glyphs = glyph_list
+        .iter()
+        .enumerate()
+        .map(|(i, glyph)| {
+            let outline = web::ws::render_glyph_to_beziers(glyph);
+            let (outline, error) = match outline {
+                Ok(outline) => (outline, None),
+                Err(e) => (vec![], Some(e.to_string())),
+            };
+            GlyphOverview {
+                id: i,
+                name: None,
+                outline,
+                error,
+                advance: fcx.settings().mono_width(),
+            }
+        })
+        .collect();
+
+    let glyph_details = glyph_list
+        .iter()
+        .enumerate()
+        .map(|(i, glyph)| web::glyph_detail::serialized_glyph_to_detail(i, fcx, glyph))
+        .collect();
+
+    PrebuiltMetadata {
+        cmap,
+        glyphs,
+        glyph_details,
+    }
 }
 
 fn send_error(e: impl Debug, render_tx: &watch::Sender<Arc<web::RenderedFontState>>) {

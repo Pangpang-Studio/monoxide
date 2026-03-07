@@ -85,27 +85,15 @@ async fn send_ws_task(
                 ))
                 .await?;
 
-                for (i, glyph) in b.ser_defs.glyph_list.iter().enumerate() {
-                    let outline = render_glyph_to_beziers(glyph);
-                    let (outline, error) = match outline {
-                        Ok(outline) => (outline, None),
-                        Err(e) => (vec![], Some(e.to_string())),
-                    };
-                    let glyph = GlyphOverview {
-                        id: i,
-                        name: None,
-                        outline,
-                        error,
-                        advance: b.defs.settings().mono_width(),
-                    };
+                for glyph in &b.metadata.glyphs {
                     ws.feed(Message::Text(
-                        serde_json::to_string(&WsServerMsg::Glyph(glyph))?.into(),
+                        serde_json::to_string(&WsServerMsg::Glyph(glyph.clone()))?.into(),
                     ))
                     .await?;
                 }
 
                 let overview = FontOverview {
-                    cmap: b.ser_defs.cmap.clone(),
+                    cmap: b.metadata.cmap.clone(),
                 };
                 ws.feed(Message::Text(
                     serde_json::to_string(&WsServerMsg::EpochComplete(overview))?.into(),
