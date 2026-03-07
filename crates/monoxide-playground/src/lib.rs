@@ -1,7 +1,7 @@
 mod model;
 mod web;
 
-use std::{fmt::Debug, sync::Arc};
+use std::{fmt::Debug, fs, path::PathBuf, sync::Arc};
 
 use anyhow::{Result, anyhow};
 use clap::Parser;
@@ -23,6 +23,7 @@ pub struct Playground {
 #[derive(clap::Parser)]
 pub enum Subcommand {
     Serve(web::ServerCommand),
+    Render(RenderCommand),
 }
 
 impl Playground {
@@ -39,6 +40,7 @@ impl Playground {
         let args = Playground::parse();
         match args.cmd {
             Subcommand::Serve(cmd) => cmd.run(&mut make_font).await,
+            Subcommand::Render(cmd) => cmd.run(&mut make_font).await,
         }
     }
 }
@@ -79,6 +81,41 @@ impl web::ServerCommand {
             }
         }
 
+        Ok(())
+    }
+}
+
+#[derive(Debug, clap::Parser)]
+pub struct RenderCommand {
+    /// The directory where generated files will be written.
+    dir: PathBuf,
+}
+
+impl RenderCommand {
+    async fn run<E: Debug>(
+        self,
+        make_font: &mut impl FnMut() -> Result<FontContext, E>,
+    ) -> Result<()> {
+        let mut out_dir = self.dir;
+        if !out_dir.is_absolute() {
+            out_dir = std::env::current_dir()?.join(out_dir);
+        };
+
+        let compiled = CompiledFont::new(make_font)?;
+        let ttf = compiled
+            .ttf
+            .map_err(|e| anyhow!("Font generation failed: {e}"))?;
+        let metadata = serde_json::to_vec(&*compiled.metadata)?;
+
+        fs::create_dir_all(&out_dir)?;
+
+        let ttf_path = out_dir.join("monoxide.ttf");
+        let metadata_path = out_dir.join("monoxide.ttf.meta");
+        fs::write(&ttf_path, &ttf)?;
+        fs::write(&metadata_path, &metadata)?;
+
+        info!("Wrote {}", ttf_path.display());
+        info!("Wrote {}", metadata_path.display());
         Ok(())
     }
 }
