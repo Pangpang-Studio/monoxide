@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use monoxide_script::{g2, prelude::*};
+use monoxide_script::prelude::*;
 
 use super::InputContext;
 use crate::font::{
