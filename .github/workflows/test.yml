@@ -91,14 +91,18 @@ jobs:
       - name: Check results
         if: always()
         run: |
-          ./tools/fontvalidator_report.py target/validate/out.ttf.report.xml
+          report_output="$(./tools/fontvalidator_report.py target/validate/out.ttf.report.xml)"
+          echo "$report_output"
           exit_code="${{ steps.fontvalidator.outputs.exit_code }}"
           if [ -z "$exit_code" ]; then
             echo "FontValidator exit code missing" >&2
             exit 1
           fi
           if [ "$exit_code" -ne 0 ]; then
-            echo "::warning title=FontValidator reported errors::Exit code $exit_code"
+            escaped_report_output="${report_output//'%'/'%25'}"
+            escaped_report_output="${escaped_report_output//$'\n'/'%0A'}"
+            escaped_report_output="${escaped_report_output//$'\r'/'%0D'}"
+            echo "::warning title=FontValidator reported errors::Exit code $exit_code%0A$escaped_report_output"
             # TODO: Make this a hard failure once the font rendering is fixed
             # exit "$exit_code"
           fi
