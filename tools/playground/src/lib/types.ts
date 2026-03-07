@@ -1,3 +1,5 @@
+import type { RawPrebuiltGlyphDetail } from './api'
+
 // API is served at /api, the server will handle the reverse proxies
 export interface ErrorMsg {
   t: 'Error'
@@ -31,6 +33,12 @@ export type WSRecvMsg =
  */
 export interface Cmap {
   [key: string]: number
+}
+
+export interface FontMetadata {
+  cmap: Cmap
+  glyphs: GlyphOverview[]
+  glyph_details: RawPrebuiltGlyphDetail[]
 }
 
 /** Maps to `struct FontOverview` in `model.rs` */

@@ -1,5 +1,6 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import type { GlyphOverview, WSRecvMsg } from './types'
+import { FONT_FILE_URL, getFontMetadata, IS_STATIC_MODE } from './api'
 
 export function useAppState(): AppState {
   if (globalState) {
@@ -18,6 +19,11 @@ export function useAppState(): AppState {
 }
 
 async function startApp(app: AppState) {
+  if (IS_STATIC_MODE) {
+    await startStaticApp(app)
+    return
+  }
+
   let current_href = window.location.href
   let ws_url = new URL(current_href)
   ws_url.protocol = ws_url.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -88,6 +94,27 @@ async function startApp(app: AppState) {
   }
 }
 
+async function startStaticApp(app: AppState) {
+  app.receiving_new.value = true
+  app.error.value = null
+
+  try {
+    const metadata = await getFontMetadata()
+    const cmap = new Map<string, number>()
+    for (const [k, v] of Object.entries(metadata.cmap)) cmap.set(k, v)
+
+    app.renderedFont.value = {
+      glyphs: metadata.glyphs,
+      cmap,
+    }
+    app.receiving_new.value = false
+    await app.reloadFontFace()
+  } catch (e) {
+    app.receiving_new.value = false
+    app.error.value = e instanceof Error ? e.message : 'Unknown error'
+  }
+}
+
 export interface FontOverview {
   glyphs: GlyphOverview[]
   cmap: Map<string, number>
@@ -105,11 +132,11 @@ export class AppState {
   renderedFont: Ref<FontOverview | null> = ref(null)
   /** The error received from server */
   error: Ref<string | null> = ref(null)
-  /** The error while loading the font file from /api/font */
+  /** The error while loading the font file */
   fontFileError: Ref<string | null> = ref(null)
   /** The current font family name loaded into document fonts */
   fontFamily: Ref<string> = ref('monoxide-compare-0')
-  /** The font face from /api/font has been loaded */
+  /** The font face has been loaded */
   fontLoaded: Ref<boolean> = ref(false)
   /** A font load is currently in progress */
   fontLoading: Ref<boolean> = ref(false)
@@ -153,7 +180,7 @@ export class AppState {
       this.fontLoaded.value = false
     }
 
-    const url = new URL('/api/font', window.location.href)
+    const url = new URL(FONT_FILE_URL, window.location.href)
     url.searchParams.set('v', `${Date.now()}-${version}`) // cache buster
     const face = new FontFace(family, `url(${url.toString()})`)
 
