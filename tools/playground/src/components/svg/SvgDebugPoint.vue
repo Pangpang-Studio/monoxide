@@ -26,7 +26,8 @@ type PointShape =
 const props = defineProps<DebugPointProps>()
 
 const pointShape: ComputedRef<PointShape> = computed(() => {
-  switch (props.info.kind) {
+  const kind = props.info.kind
+  switch (kind) {
     case 'corner':
       return 'square'
     case 'g2':
@@ -47,6 +48,8 @@ const pointShape: ComputedRef<PointShape> = computed(() => {
       return 'diamond'
     case 'hidden':
       return 'hidden'
+    default:
+      throw new Error(`Unknown point kind: ${kind}`)
   }
 })
 

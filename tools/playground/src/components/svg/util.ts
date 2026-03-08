@@ -61,20 +61,20 @@ export function drawSvgDirection(bez: CubicBezier, cvt: DraftToSvgXform) {
   if (bez.segments.length === 0) {
     return null
   }
-  let seg0 = bez.segments[0]!
-  let p2 = seg0.t === 'line' ? seg0.p2 : seg0.c1
-  let p1 = bez.start
+  const seg0 = bez.segments[0]!
+  const p2 = seg0.t === 'line' ? seg0.p2 : seg0.c1
+  const p1 = bez.start
 
   // Direction from p1 to p2
-  let dx = p2.x - p1.x
-  let dy = p2.y - p1.y
-  let d = Math.sqrt(dx * dx + dy * dy)
+  const dx = p2.x - p1.x
+  const dy = p2.y - p1.y
+  const d = Math.sqrt(dx * dx + dy * dy)
   if (d < 1e-8) {
     return null
   }
 
   // Marker line
-  let line_len = 0.04
+  const line_len = 0.04
   const tip = {
     x: p1.x + (dx / d) * line_len,
     y: p1.y + (dy / d) * line_len,
@@ -102,10 +102,10 @@ export function drawSvgDirection(bez: CubicBezier, cvt: DraftToSvgXform) {
   const b2 = { x: bx - halfWidth * vx, y: by - halfWidth * vy }
 
   // Path: tip -> b1 -> b2 -> close
-  let p1x = xformPoint(cvt, p1)
-  let tipx = xformPoint(cvt, tip)
-  let b1x = xformPoint(cvt, b1)
-  let b2x = xformPoint(cvt, b2)
+  const p1x = xformPoint(cvt, p1)
+  const tipx = xformPoint(cvt, tip)
+  const b1x = xformPoint(cvt, b1)
+  const b2x = xformPoint(cvt, b2)
 
   return `M ${p1x.x} ${p1x.y} L ${tipx.x} ${tipx.y} L ${b1x.x} ${b1x.y} L ${b2x.x} ${b2x.y} L ${tipx.x} ${tipx.y} Z`
 }

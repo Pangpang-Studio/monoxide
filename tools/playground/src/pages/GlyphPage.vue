@@ -44,6 +44,7 @@ const error: Ref<string | null> = ref(null)
 
 watchEffect(async () => {
   // Add dependency to the state's overview
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   state.renderedFont.value
 
   try {
@@ -158,26 +159,29 @@ const canvasSelectionMode = computed(() => {
 })
 
 const debugPaths: ComputedRef<CubicBezier[]> = computed(() => {
-  let paths: CubicBezier[] = []
+  const paths: CubicBezier[] = []
   if (glyphDetail.value) {
-    let sel = selected.value
-    if (!sel) {
-    } else if (sel.t === 'part') {
-      debugPathsForPart(glyphDetail.value, sel.id, paths)
-    } else if (sel.t === 'overlay') {
+    const sel = selected.value
+    switch (sel?.t) {
+      case 'part':
+        debugPathsForPart(glyphDetail.value, sel.id, paths)
+        break
+      case 'overlay':
+        break
     }
   }
   return paths
 })
 const debugFill: ComputedRef<CubicBezier[]> = computed(() => {
-  let paths: CubicBezier[] = []
+  const paths: CubicBezier[] = []
   if (glyphDetail.value) {
-    let sel = selected.value
-    if (!sel) {
-    } else if (sel.t === 'part') {
-    } else if (sel.t === 'overlay') {
-      // Overlay another glyph
-      debugPathsForOverlay(sel.id, paths)
+    const sel = selected.value
+    switch (sel?.t) {
+      case 'part':
+        break
+      case 'overlay':
+        debugPathsForOverlay(sel.id, paths)
+        break
     }
   }
   return paths
@@ -264,8 +268,8 @@ const otherGlyphsSelection = computed(() => {
     {{ error }}
   </div>
   <div
-    class="grid grid-cols-1 md:grid-cols-3 grow mx-8 my-8 gap-8"
     v-if="overviewGlyph"
+    class="grid grid-cols-1 md:grid-cols-3 grow mx-8 my-8 gap-8"
   >
     <!-- Glyph display area -->
     <div class="md:col-span-2">

@@ -55,9 +55,9 @@ watchEffect(() => {
       <div class="flex flex-col items-baseline">
         <label for="text-size" class="font-bold">Size</label>
         <input
+          id="text-size"
           v-model="textSize"
           type="number"
-          id="text-size"
           min="1"
           max="192"
           class="border-b-2 border-black"
@@ -66,9 +66,9 @@ watchEffect(() => {
       <div class="flex flex-col gap-2 items-baseline">
         <label for="show-monoxide" class="switch">Show</label>
         <input
-          type="checkbox"
-          v-model="showMonoxide"
           id="show-monoxide"
+          v-model="showMonoxide"
+          type="checkbox"
           class="h-4 w-4 self-center"
         />
       </div>

@@ -9,7 +9,7 @@ import type { SvgDebugPointInfo } from './types'
 export function generateDebugPoints(
   part: SerializedGlyphConstruction,
 ): SvgDebugPointInfo[] {
-  let points: SvgDebugPointInfo[] = []
+  const points: SvgDebugPointInfo[] = []
 
   if (part.kind.t == 'spiro' || part.kind.t == 'stroke') {
     for (const curve of part.kind.curve) debugSpiro(curve, points)
@@ -66,7 +66,7 @@ function debugCubicBezier(curve: CubicBezier, points: SvgDebugPointInfo[]) {
 
   // Segments
   for (let j = 0; j < curve.segments.length; j++) {
-    let segment = curve.segments[j]!
+    const segment = curve.segments[j]!
     if (segment.t === 'curve') {
       points.push({
         x: segment.c1.x,
@@ -92,8 +92,8 @@ function debugCubicBezier(curve: CubicBezier, points: SvgDebugPointInfo[]) {
         })
       }
     } else {
-      let nextSegment = curve.segments[j + 1]!
-      let isCurve = segment.t === 'curve' || nextSegment.t === 'curve'
+      const nextSegment = curve.segments[j + 1]!
+      const isCurve = segment.t === 'curve' || nextSegment.t === 'curve'
       if (isCurve) {
         points.push({
           x: segment.p2.x,

@@ -1,7 +1,7 @@
 <template>
   <svg
-    class="w-full border-2 border-black bg-white"
     ref="svg"
+    class="w-full border-2 border-black bg-white"
     :view-box="viewbox"
     :height="height"
   >

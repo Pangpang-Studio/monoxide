@@ -17,7 +17,7 @@ let prebuiltMetadataPromise: Promise<FontMetadata> | null = null
 
 export async function ping() {
   if (IS_STATIC_MODE) return
-  let res = await fetch('/api/ping')
+  const res = await fetch('/api/ping')
   if (!res.ok) {
     throw new Error('Failed to ping API')
   }
@@ -25,19 +25,19 @@ export async function ping() {
 
 export async function getGlyphDetail(id: number) {
   if (IS_STATIC_MODE) {
-    let metadata = await getFontMetadata()
-    let rawDetail = metadata.glyph_details[id]
+    const metadata = await getFontMetadata()
+    const rawDetail = metadata.glyph_details[id]
     if (rawDetail === undefined)
       throw new Error(`Glyph ${id} was not found in prebuilt metadata`)
     return unwrapPrebuiltGlyphDetail(rawDetail)
   }
 
-  let res = await fetch(`/api/glyph/${id}`)
+  const res = await fetch(`/api/glyph/${id}`)
   if (!res.ok) {
-    let body = await res.text()
+    const body = await res.text()
     throw new Error(`Failed to fetch glyph detail: ${res.statusText}; ${body}`)
   }
-  let data = await res.json()
+  const data = await res.json()
   return data as GlyphDetail
 }
 
@@ -49,7 +49,7 @@ export async function getFontMetadata() {
   prebuiltMetadataPromise = (async () => {
     const errors: string[] = []
     for (const url of prebuiltMetadataCandidateUrls()) {
-      let res = await fetch(url)
+      const res = await fetch(url)
       if (!res.ok) {
         errors.push(`${url}: ${res.status} ${res.statusText}`)
         continue
@@ -107,7 +107,9 @@ async function decodeCompressedMetadata(
     const plainText = new TextDecoder().decode(bytes)
     const plain = JSON.parse(plainText) as FontMetadata
     if (plain) return plain
-  } catch {}
+  } catch {
+    // Fall back to decompression if parsing as plain text fails.
+  }
 
   if (typeof DecompressionStream === 'undefined')
     throw new Error('Browser does not support DecompressionStream')
