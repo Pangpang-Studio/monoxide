@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "fmt": "prettier --write ."
+    "fmt": "prettier --write .",
+    "lint": "cd tools/playground && $npm_execpath run-script lint"
   },
   "devDependencies": {
     "prettier": "^3.8.1"
