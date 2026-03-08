@@ -6,7 +6,7 @@ export interface CharListOutput {
 
 export function charList(chars: string[]): CharListOutput[] {
   return chars.map((c) => {
-    let n = c.codePointAt(0)
+    const n = c.codePointAt(0)
     if (n === undefined) {
       throw new Error(`Invalid character: ${c}`)
     }

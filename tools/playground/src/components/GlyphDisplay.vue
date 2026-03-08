@@ -11,7 +11,7 @@
       <path :d="drawnPath" style="fill: black" fill-rule="nonzero" />
     </svg>
     <div class="flex flex-col">
-      <h3 class="font-bold" v-if="props.name">{{ props.name }}</h3>
+      <h3 v-if="props.name" class="font-bold">{{ props.name }}</h3>
       <div>#{{ props.overview.id }}</div>
       <div v-for="(c, i) in chars_list" :key="i" class="">
         {{ c.unicode }}

@@ -17,17 +17,20 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: () => import('./pages/Overview.vue'),
+      component: () => import('./pages/OverviewPage.vue'),
       name: 'home',
     },
     {
       path: '/glyph/:glyphId',
-      component: () => import('./pages/Glyph.vue'),
+      component: () => import('./pages/GlyphPage.vue'),
       props: true,
       name: 'glyph',
     },
-    { path: '/compare', component: () => import('./pages/Compare.vue') },
-    { path: '/:pathMatch(.*)*', component: () => import('./pages/404.vue') },
+    { path: '/compare', component: () => import('./pages/ComparePage.vue') },
+    {
+      path: '/:pathMatch(.*)*',
+      component: () => import('./pages/404Page.vue'),
+    },
   ],
 })
 

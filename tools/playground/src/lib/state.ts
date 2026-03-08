@@ -6,11 +6,11 @@ export function useAppState(): AppState {
   if (globalState) {
     return globalState
   }
-  let state = new AppState()
+  const state = new AppState()
   globalState = state
 
   // Spawn the app running in the background
-  let promise = startApp(state).catch((e) => {
+  const promise = startApp(state).catch((e) => {
     console.error('Error starting app:', e)
   })
   state.running.value = promise
@@ -24,24 +24,24 @@ async function startApp(app: AppState) {
     return
   }
 
-  let current_href = window.location.href
-  let ws_url = new URL(current_href)
+  const current_href = window.location.href
+  const ws_url = new URL(current_href)
   ws_url.protocol = ws_url.protocol === 'https:' ? 'wss:' : 'ws:'
   ws_url.pathname = '/api/ws'
   ws_url.search = ''
   ws_url.hash = ''
 
-  let ws = new WebSocket(ws_url)
+  const ws = new WebSocket(ws_url)
   app.ws = ws
 
   // Temporary workspace
   let pending_glyphs: GlyphOverview[] | null = null
 
   ws.onmessage = (event) => {
-    let data = event.data
+    const data = event.data
     console.log('Received message from server:', data)
     if (typeof data === 'string') {
-      let msg: WSRecvMsg = JSON.parse(data)
+      const msg: WSRecvMsg = JSON.parse(data)
       switch (msg.t) {
         case 'PrepareForNewEpoch':
           pending_glyphs = []
@@ -51,7 +51,7 @@ async function startApp(app: AppState) {
 
         case 'Glyph':
           if (pending_glyphs) {
-            let glyph = msg as GlyphOverview
+            const glyph = msg as GlyphOverview
             pending_glyphs[glyph.id] = glyph
           } else {
             console.error('Received Glyph message before PrepareForNewEpoch')
@@ -60,8 +60,8 @@ async function startApp(app: AppState) {
 
         case 'EpochComplete':
           if (pending_glyphs) {
-            let cmap = new Map<string, number>()
-            for (let [k, v] of Object.entries(msg.cmap)) {
+            const cmap = new Map<string, number>()
+            for (const [k, v] of Object.entries(msg.cmap)) {
               cmap.set(k, v)
             }
             app.renderedFont.value = {
@@ -148,12 +148,12 @@ export class AppState {
 
   constructor() {
     this.revCmap = computed(() => {
-      let cmap = this.renderedFont.value?.cmap
+      const cmap = this.renderedFont.value?.cmap
       if (!cmap) {
         return new Map<number, string[]>()
       }
-      let revCmap = new Map<number, string[]>()
-      for (let [k, v] of cmap.entries()) {
+      const revCmap = new Map<number, string[]>()
+      for (const [k, v] of cmap.entries()) {
         if (!revCmap.has(v)) {
           revCmap.set(v, [])
         }

@@ -1,25 +1,17 @@
 <template>
   <div class="flex flex-row px-1">
     <div aria-label="logo" class="px-3 py-2 font-bold">monoxide</div>
-    <template
-      v-for="route in computedRoutes"
-      :key="route.name"
-      :to="route.path"
-    >
+    <template v-for="r in computedRoutes" :key="r.name">
       <RouterLink
-        v-if="route.path"
-        :to="route.path"
+        v-if="r.path"
+        :to="r.path"
         class="px-3 py-2 hover:bg-gray-100"
-        :class="{ 'text-blue-600': route.isActive }"
+        :class="{ 'text-blue-600': r.isActive }"
       >
-        {{ route.name }}
+        {{ r.name }}
       </RouterLink>
-      <div
-        v-else
-        class="px-3 py-2"
-        :class="{ 'text-blue-600': route.isActive }"
-      >
-        {{ route.name }}
+      <div v-else class="px-3 py-2" :class="{ 'text-blue-600': r.isActive }">
+        {{ r.name }}
       </div>
     </template>
   </div>
