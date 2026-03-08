@@ -130,3 +130,6 @@ jobs:
 
       - name: Check formatting
         run: pnpm fmt --check
+
+      - name: Run lint
+        run: pnpm lint
