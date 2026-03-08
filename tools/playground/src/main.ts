@@ -1,10 +1,19 @@
 import { createApp } from 'vue'
-import './style.css'
+import {
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+} from 'vue-router'
 import App from './App.vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import './style.css'
+import { IS_STATIC_MODE } from './lib/api'
+
+const history = (IS_STATIC_MODE ? createWebHashHistory : createWebHistory)(
+  import.meta.env.BASE_URL,
+)
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history,
   routes: [
     {
       path: '/',
