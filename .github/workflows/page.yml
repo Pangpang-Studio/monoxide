@@ -15,6 +15,10 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  # Relative path to the root of the GitHub Pages site.
+  PAGES_BASE_PATH: /monoxide/
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +32,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
-          cache-dependency-path: "**/pnpm-lock.yaml"
+          cache-dependency-path: '**/pnpm-lock.yaml'
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
@@ -38,6 +42,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Create static site
+        env:
+          VITE_BASE_URL: ${{ env.PAGES_BASE_PATH }}
         run: cargo xtask ssg
 
       # https://github.com/actions/upload-pages-artifact#example-permissions-fix-for-linux
