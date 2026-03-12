@@ -1,13 +1,24 @@
 # monoxide
 
-<p><img src="assets/banner.png" width="300" title="Monoxide Banner"></p>
+<p><img src="tools/playground/public/icon.svg" width="120" title="Monoxide Banner"></p>
 
-A love letter to _[Iosevka]_.
+> A love letter to _[Iosevka]_.
 
 [Iosevka]: https://github.com/be5invis/Iosevka
 
-> [!WARNING]  
-> This project is still a work in progress.
+Monoxide is an experimental project to build a monospace typeface in Rust.
+
+The immediate goal of the project is to create a typeface that can be used to
+edit monoxide itself with: after all, who doesn't love the ouroboros?
+
+So far, we have achieved the first working version of:
+
+- A Rust-based eDSL to describe the typeface design.
+- A backend that can generate real TTF files.
+- A hot-reloadable playground powered by Axum and Vue to enable editing the
+  design and previewing the results in real time.
+- An expanding set of glyphs that will hopefully cover our basic programming
+  needs soon™.
 
 ## Prerequisites
 
@@ -20,7 +31,7 @@ Please make sure you have the following installed on your machine:
     dependency.
 - PNPM for the JavaScript part of the project, namely the WebUI.
 
-## Getting Started
+## Development
 
 Launching the playground is as simple as:
 
@@ -42,6 +53,14 @@ And if you want to edit the Rust part outside of `monoxide-font`:
 ```
 
 See `cargo xtask dev --help` for more knobs to tweak.
+
+## Distribution
+
+To generate a TTF file from the current design, run:
+
+```console
+> cargo run
+```
 
 To generate a static playground build for e.g. GitHub Pages, run:
 
