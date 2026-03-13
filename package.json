@@ -1,9 +1,9 @@
 {
   "scripts": {
-    "fmt": "prettier --write .",
+    "fmt": "oxfmt .",
     "lint": "cd tools/playground && $npm_execpath run-script lint"
   },
   "devDependencies": {
-    "prettier": "^3.8.1"
+    "oxfmt": "^0.40.0"
   }
 }
