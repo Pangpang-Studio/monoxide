@@ -6,10 +6,12 @@
 
 [Iosevka]: https://github.com/be5invis/Iosevka
 
-Monoxide is an experimental project to build a monospace typeface in Rust.
+Monoxide is an experimental project to build a monospaced typeface in Rust.
 
-The immediate goal of the project is to create a typeface that can be used to
-edit monoxide itself with: after all, who doesn't love the ouroboros?
+The immediate goal of monoxide is to create a typeface that can be used by its
+makers to code monoxide itself.
+
+> After all, who doesn't love the ouroboros?
 
 So far, we have achieved the first working version of:
 
