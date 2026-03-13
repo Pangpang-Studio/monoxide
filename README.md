@@ -17,8 +17,10 @@ So far, we have achieved the first working version of:
 - A backend that can generate real TTF files.
 - A hot-reloadable playground powered by Axum and Vue to enable editing the
   design and previewing the results in real time.
-- An expanding set of glyphs that will hopefully cover our basic programming
-  needs soon™.
+- An expanding set of [glyphs][playground] that will hopefully cover our basic
+  programming needs soon™.
+
+[playground]: https://pangpang-studio.github.io/monoxide/
 
 ## Prerequisites
 
