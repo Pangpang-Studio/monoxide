@@ -19,9 +19,9 @@
       :cvt="cvt"
       class="stroke-2"
       :class="{
-        'stroke-black fill-gray-200': props.selected === SelectionMode.None,
-        'stroke-gray-300 fill-gray-100': props.selected === SelectionMode.Part,
-        'stroke-gray-400 fill-gray-200':
+        'fill-gray-200 stroke-black': props.selected === SelectionMode.None,
+        'fill-gray-100 stroke-gray-300': props.selected === SelectionMode.Part,
+        'fill-gray-200 stroke-gray-400':
           props.selected === SelectionMode.Overlay,
       }"
     ></SvgPath>
@@ -29,12 +29,12 @@
     <SvgPath
       :path="props.debugPaths"
       :cvt="cvt"
-      class="stroke-2 stroke-blue-600 fill-none"
+      class="fill-none stroke-blue-600 stroke-2"
     ></SvgPath>
     <SvgDirection
       :path="props.debugPaths"
       :cvt="cvt"
-      class="stroke-2 stroke-purple-600 fill-none"
+      class="fill-none stroke-purple-600 stroke-2"
     ></SvgDirection>
     <SvgPath
       :path="props.debugFill"
@@ -56,15 +56,16 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef, watch, type Ref } from 'vue'
+
+import SvgDebugPoint from './SvgDebugPoint.vue'
+import SvgDirection from './SvgDirection.vue'
+import SvgGuidelines from './SvgGuidelines.vue'
+import SvgPath from './SvgPath.vue'
 import {
   SelectionMode,
   type DraftToSvgXform,
   type SvgCanvasProps,
 } from './types'
-import SvgGuidelines from './SvgGuidelines.vue'
-import SvgPath from './SvgPath.vue'
-import SvgDebugPoint from './SvgDebugPoint.vue'
-import SvgDirection from './SvgDirection.vue'
 
 const svgRef = useTemplateRef('svg')
 

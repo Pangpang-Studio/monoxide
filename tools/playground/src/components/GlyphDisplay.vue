@@ -24,10 +24,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { charList } from '../lib/util'
+
 import type { GlyphOverview } from '../lib/types'
-import { svgPenMulti } from './svg/util'
+import { charList } from '../lib/util'
 import type { DraftToSvgXform } from './svg/types'
+import { svgPenMulti } from './svg/util'
 
 export interface GlyphDisplayProps {
   overview: GlyphOverview

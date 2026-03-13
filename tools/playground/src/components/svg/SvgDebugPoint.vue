@@ -5,6 +5,7 @@
 
 <script setup lang="ts">
 import { computed, type ComputedRef } from 'vue'
+
 import type { AcceptedKinds, DraftToSvgXform, SvgDebugPointInfo } from './types'
 import { xformPoint } from './util'
 

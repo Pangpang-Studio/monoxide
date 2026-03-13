@@ -1,7 +1,7 @@
 <!-- This component is designed to be put within an SVG element -->
 <template>
   <!-- Guide lines -->
-  <g class="stroke-2 stroke-gray-300">
+  <g class="stroke-gray-300 stroke-2">
     <line
       v-for="(line, i) in scaledGuidelines.h"
       :key="i"
@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import type { SvgGuidelinesProps } from './types'
 import { xformX, xformY } from './util'
 

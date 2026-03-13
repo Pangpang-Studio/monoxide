@@ -1,6 +1,7 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
-import type { GlyphOverview, WSRecvMsg } from './types'
+
 import { FONT_FILE_URL, getFontMetadata, IS_STATIC_MODE } from './api'
+import type { GlyphOverview, WSRecvMsg } from './types'
 
 export function useAppState(): AppState {
   if (globalState) {

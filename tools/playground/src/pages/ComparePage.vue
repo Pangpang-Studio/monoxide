@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
+
 import NavBar from '../components/NavBar.vue'
 import { useAppState } from '../lib/state'
 
@@ -43,13 +44,13 @@ watchEffect(() => {
     >
       {{ fontFileError }}
     </div>
-    <div class="flex flex-row gap-6 items-baseline">
+    <div class="flex flex-row items-baseline gap-6">
       <textarea
         v-model="text"
         type="text"
         placeholder="Type something..."
         rows="2"
-        class="border-b-2 border-black grow"
+        class="grow border-b-2 border-black"
       />
 
       <div class="flex flex-col items-baseline">
@@ -63,7 +64,7 @@ watchEffect(() => {
           class="border-b-2 border-black"
         />
       </div>
-      <div class="flex flex-col gap-2 items-baseline">
+      <div class="flex flex-col items-baseline gap-2">
         <label for="show-monoxide" class="switch">Show</label>
         <input
           id="show-monoxide"
