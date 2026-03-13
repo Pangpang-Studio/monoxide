@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import NavBar from '../components/NavBar.vue'
-import { useAppState } from '../lib/state'
 import { computed, ref, watchEffect, type ComputedRef, type Ref } from 'vue'
+import { useRoute } from 'vue-router'
+
+import NavBar from '../components/NavBar.vue'
+import { generateDebugPoints } from '../components/svg/debugPoints'
+import SvgCanvas from '../components/svg/SvgCanvas.vue'
+import { SelectionMode, type SvgDebugPointInfo } from '../components/svg/types'
+import { getGlyphDetail } from '../lib/api'
+import { useAppState } from '../lib/state'
 import type {
   CubicBezier,
   GlyphDetail,
   Point2D,
   SerializedGlyphConstruction,
 } from '../lib/types'
-import { getGlyphDetail } from '../lib/api'
 import { charList } from '../lib/util'
-import SvgCanvas from '../components/svg/SvgCanvas.vue'
-import { SelectionMode, type SvgDebugPointInfo } from '../components/svg/types'
-import { generateDebugPoints } from '../components/svg/debugPoints'
 
 const route = useRoute()
 const state = useAppState()
@@ -269,7 +270,7 @@ const otherGlyphsSelection = computed(() => {
   </div>
   <div
     v-if="overviewGlyph"
-    class="grid grid-cols-1 md:grid-cols-3 grow mx-8 my-8 gap-8"
+    class="mx-8 my-8 grid grow grid-cols-1 gap-8 md:grid-cols-3"
   >
     <!-- Glyph display area -->
     <div class="md:col-span-2">
@@ -284,9 +285,9 @@ const otherGlyphsSelection = computed(() => {
     </div>
 
     <!-- Metadata & control area -->
-    <div class="md:col-span-1 overflow-scroll flex flex-col">
+    <div class="flex flex-col overflow-scroll md:col-span-1">
       <!-- ID -->
-      <h1 class="text-2xl font-bold mt-2 mb-2">glyph #{{ glyphId }}</h1>
+      <h1 class="mt-2 mb-2 text-2xl font-bold">glyph #{{ glyphId }}</h1>
       <!-- Characters -->
       <div class="mb-2 flex flex-col">
         <h2 class="font-bold">Characters</h2>
@@ -301,7 +302,7 @@ const otherGlyphsSelection = computed(() => {
         <div
           v-for="(step, i) in constructionSteps"
           :key="i"
-          class="hover:text-blue-900 cursor-pointer"
+          class="cursor-pointer hover:text-blue-900"
           :class="{
             'text-blue-700': selected?.t === 'part' && selected.id === step.id,
           }"
@@ -316,7 +317,7 @@ const otherGlyphsSelection = computed(() => {
         <div class="flex flex-row gap-2">
           <select
             v-model="selectedOverlay"
-            class="border-0 border-b-2 border-black hover:border-blue-700 py-1 mb-2 grow"
+            class="mb-2 grow border-0 border-b-2 border-black py-1 hover:border-blue-700"
           >
             <option
               v-for="glyph in otherGlyphsSelection"
@@ -327,7 +328,7 @@ const otherGlyphsSelection = computed(() => {
             </option>
           </select>
           <button
-            class="border-2 border-black hover:border-blue-700 py-1 px-2 mb-2"
+            class="mb-2 border-2 border-black px-2 py-1 hover:border-blue-700"
             @click="selectNone"
           >
             clear
@@ -336,7 +337,7 @@ const otherGlyphsSelection = computed(() => {
       </div>
     </div>
   </div>
-  <div v-else class="flex flex-col items-center justify-center h-screen">
+  <div v-else class="flex h-screen flex-col items-center justify-center">
     <h1 class="text-4xl font-bold">
       no glyph with the given index is available.
     </h1>

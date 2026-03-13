@@ -4,6 +4,8 @@
   "semi": false,
   "singleQuote": true,
   "printWidth": 80,
-  "sortPackageJson": false,
+  "sortPackageJson": true,
+  "sortImports": {},
+  "sortTailwindcss": {},
   "ignorePatterns": ["pnpm-lock.yaml"]
 }

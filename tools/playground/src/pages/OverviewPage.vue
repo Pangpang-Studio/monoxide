@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import GlyphDisplay, {
   type GlyphDisplayProps,
 } from '../components/GlyphDisplay.vue'
@@ -56,9 +57,9 @@ const glyphsList = computed(() => {
 <template>
   <NavBar></NavBar>
 
-  <div class="flex flex-col grow p-4">
-    <h1 class="text-2xl font-bold mt-2 mb-2">glyphs list</h1>
-    <div class="flex flex-row flex-wrap -mx-2 items-start">
+  <div class="flex grow flex-col p-4">
+    <h1 class="mt-2 mb-2 text-2xl font-bold">glyphs list</h1>
+    <div class="-mx-2 flex flex-row flex-wrap items-start">
       <GlyphDisplay
         v-for="(glyph, index) in glyphsList"
         :key="index"
