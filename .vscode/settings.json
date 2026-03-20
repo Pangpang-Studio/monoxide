@@ -1,0 +1,9 @@
+{
+  "rust-analyzer.files.excludeDirs": [
+    ".direnv",
+    ".git",
+    "target",
+    "node_modules/",
+    "tools/playground/"
+  ]
+}
