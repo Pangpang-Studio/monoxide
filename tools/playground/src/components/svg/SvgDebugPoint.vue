@@ -14,6 +14,7 @@ export interface DebugPointProps {
   cvt: DraftToSvgXform
 }
 
+
 /** The shape of the actual point displayed */
 type PointShape =
   | 'square'
@@ -24,7 +25,9 @@ type PointShape =
   | 'diamond'
   | 'hidden'
 
+
 const props = defineProps<DebugPointProps>()
+
 
 const pointShape: ComputedRef<PointShape> = computed(() => {
   const kind = props.info.kind
@@ -54,10 +57,12 @@ const pointShape: ComputedRef<PointShape> = computed(() => {
   }
 })
 
+
 const squareSize = 8
 const circleSize = squareSize
 const diamondSize = squareSize * Math.sqrt(2)
 const forwardAngle = computed(() => props.info.forward ?? 0)
+
 
 function strokeClass(kind: AcceptedKinds): string {
   switch (kind) {
@@ -79,9 +84,11 @@ function strokeClass(kind: AcceptedKinds): string {
   }
 }
 
+
 const classes = computed(() => {
   return ['stroke-2', 'fill-white', strokeClass(props.info.kind)]
 })
+
 
 const coords = computed(() => xformPoint(props.cvt, props.info))
 </script>

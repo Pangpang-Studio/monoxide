@@ -69,7 +69,9 @@ import {
 
 const svgRef = useTemplateRef('svg')
 
+
 const props = defineProps<SvgCanvasProps>()
+
 
 // These determine the scale of the canvas
 const width = ref(0)
@@ -85,6 +87,7 @@ const cvt: Ref<DraftToSvgXform> = ref({
 })
 const viewbox = ref('')
 
+
 function updateWidth() {
   let newWidth = svgRef.value?.clientWidth || 0
   if (newWidth !== width.value) {
@@ -92,6 +95,7 @@ function updateWidth() {
   }
 }
 onMounted(updateWidth)
+
 
 const resizeObserver = new ResizeObserver(() => {
   updateWidth()
@@ -109,6 +113,7 @@ watch(svgRef, (newRef, oldRef) => {
     resizeObserver.observe(newRef)
   }
 })
+
 
 watch(
   [width, margin, props],

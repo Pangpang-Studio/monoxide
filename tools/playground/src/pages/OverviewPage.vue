@@ -9,6 +9,7 @@ import { useAppState } from '../lib/state'
 
 const state = useAppState()
 
+
 const glyphsList = computed(() => {
   let renderedFont = state.renderedFont.value
   if (!renderedFont) return []

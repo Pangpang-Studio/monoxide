@@ -36,8 +36,10 @@ export interface GlyphDisplayProps {
   name: string | undefined
 }
 
+
 const props = defineProps<GlyphDisplayProps>()
 const chars_list = computed(() => charList(props.chars))
+
 
 const drawnPath = computed(() => {
   let overview = props.overview

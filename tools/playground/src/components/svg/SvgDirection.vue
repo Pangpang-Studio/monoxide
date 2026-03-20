@@ -16,6 +16,7 @@ export interface SvgDirectionProps {
 }
 const props = defineProps<SvgDirectionProps>()
 
+
 const computedPath = computed(() => {
   let res = ''
   for (let bez of props.path) {
