@@ -23,7 +23,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^17.4.0",
-    "typescript": "~5.9.3",
+    "typescript": "~6.0.2",
     "typescript-eslint": "^8.57.1",
     "vite": "^8.0.1",
     "vue-eslint-parser": "^10.4.0",
