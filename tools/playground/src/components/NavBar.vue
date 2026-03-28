@@ -28,22 +28,18 @@ interface NavRoute {
   path: string | null
 }
 
-
 const routes: NavRoute[] = [
   { matcher: /\/$/, name: 'home', path: '/' },
   { matcher: /glyph/, name: 'glyph', path: null },
   { matcher: /compare/, name: 'compare', path: '/compare' },
 ]
 
-
 interface ComputedRoute extends NavRoute {
   isActive: boolean
 }
 
-
 const route = useRoute()
 const computedRoutes: Ref<ComputedRoute[]> = ref(calcRoutes(route))
-
 
 function calcRoutes(route: RouteLocation) {
   return routes.map((thisRoute) => {
@@ -54,7 +50,6 @@ function calcRoutes(route: RouteLocation) {
     }
   })
 }
-
 
 onBeforeRouteUpdate((_from, to) => {
   computedRoutes.value = calcRoutes(to)

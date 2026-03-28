@@ -50,7 +50,6 @@ import { xformX, xformY } from './util'
 const labelMargin = 8
 const props = defineProps<SvgGuidelinesProps>()
 
-
 const scaledGuidelines = computed(() => {
   let h = props.h.map((line) => ({
     ...line,

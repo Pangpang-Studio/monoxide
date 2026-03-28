@@ -16,7 +16,6 @@ export interface SvgPathProps {
 }
 const props = defineProps<SvgPathProps>()
 
-
 const computedPath = computed(() => {
   return svgPenMulti(props.cvt, props.path)
 })

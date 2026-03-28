@@ -19,14 +19,11 @@ import { charList } from '../lib/util'
 const route = useRoute()
 const state = useAppState()
 
-
 interface Props {
   glyphId: number | string
 }
 
-
 let props = defineProps<Props>()
-
 
 const glyphId = computed(() => {
   let id = props.glyphId
@@ -36,18 +33,15 @@ const glyphId = computed(() => {
   return id
 })
 
-
 const overviewGlyph = computed(() => {
   let v = state.renderedFont.value
   if (!v) return null
   return v.glyphs[glyphId.value]
 })
 
-
 // the detail we fetch from the server
 const glyphDetail: Ref<GlyphDetail | undefined> = ref()
 const error: Ref<string | null> = ref(null)
-
 
 watchEffect(async () => {
   // Add dependency to the state's overview
@@ -76,7 +70,6 @@ watchEffect(async () => {
   }
 })
 
-
 const svg = computed(() => {
   if (glyphDetail.value) {
     return glyphDetail.value.overview.outline
@@ -85,20 +78,16 @@ const svg = computed(() => {
   }
 })
 
-
 const chars = computed(() => {
   return charList(state.revCmap.value.get(glyphId.value) ?? [])
 })
-
 
 // Meta & control
 /// Either a selected subpart of the glyph, or overlaying another glyph
 type Selected = { t: 'part'; id: number } | { t: 'overlay'; id: number }
 
-
 const selected = ref<Selected | null>(null)
 const selectedOverlay = ref<number | null>(null)
-
 
 watchEffect(() => {
   let v = selectedOverlay.value
@@ -107,13 +96,11 @@ watchEffect(() => {
   }
 })
 
-
 interface ConstructionStep {
   id: number
   desc: string
   raw: SerializedGlyphConstruction
 }
-
 
 const constructionSteps: ComputedRef<ConstructionStep[]> = computed(() => {
   if (!glyphDetail.value) {
@@ -145,7 +132,6 @@ const constructionSteps: ComputedRef<ConstructionStep[]> = computed(() => {
   })
 })
 
-
 function selectPart(id: number) {
   if (selected.value?.t === 'part' && selected.value.id === id) {
     selected.value = null
@@ -154,12 +140,10 @@ function selectPart(id: number) {
   selected.value = { t: 'part', id: id }
 }
 
-
 function selectNone() {
   selected.value = null
   selectedOverlay.value = null
 }
-
 
 const canvasSelectionMode = computed(() => {
   let sel = selected.value
@@ -174,7 +158,6 @@ const canvasSelectionMode = computed(() => {
     return SelectionMode.None
   }
 })
-
 
 const debugPaths: ComputedRef<CubicBezier[]> = computed(() => {
   const paths: CubicBezier[] = []
@@ -205,7 +188,6 @@ const debugFill: ComputedRef<CubicBezier[]> = computed(() => {
   return paths
 })
 
-
 const debugPoints: ComputedRef<SvgDebugPointInfo[]> = computed(() => {
   if (!glyphDetail.value) {
     return []
@@ -221,7 +203,6 @@ const debugPoints: ComputedRef<SvgDebugPointInfo[]> = computed(() => {
     return [] // TODO
   }
 })
-
 
 function debugPathsForPart(
   glyphDetail: GlyphDetail,
@@ -246,7 +227,6 @@ function debugPathsForPart(
   }
 }
 
-
 function debugPathsForOverlay(overlayId: number, paths: CubicBezier[]) {
   let overlayGlyph = state.renderedFont.value?.glyphs[overlayId]
   if (!overlayGlyph) {
@@ -255,7 +235,6 @@ function debugPathsForOverlay(overlayId: number, paths: CubicBezier[]) {
   }
   paths.push(...overlayGlyph.outline)
 }
-
 
 const otherGlyphsSelection = computed(() => {
   let glyphs = state.renderedFont.value?.glyphs
