@@ -10,12 +10,10 @@ const text = ref('')
 const state = useAppState()
 const fontFileError = computed(() => state.fontFileError.value)
 
-
 /** These are the glyphs that are not found in the font */
 const missingGlyphs = ref<string[]>([])
 /** Each character in the type tester field to be displayed */
 const glyphRuns = ref<{ ch: string; missing: boolean }[]>([])
-
 
 watchEffect(() => {
   const t = text.value
