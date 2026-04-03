@@ -40,7 +40,9 @@ struct Chevron {
 }
 
 impl IntoOutlines for Chevron {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
+    type Outlines = [Arc<OutlineExpr>; 2];
+
+    fn into_outlines(self) -> Self::Outlines {
         let Self {
             x_range: Range {
                 start: sbl,
@@ -67,6 +69,6 @@ impl IntoOutlines for Chevron {
         let backslash =
             SpiroBuilder::open().insts([bot, g4!(sbl, xh).heading(Dir::U).aligned(aln).width(1.1)]);
 
-        [slash, backslash].into_iter().map(|it| it.into_outline())
+        [slash, backslash].map(|it| it.into_outline())
     }
 }

@@ -32,7 +32,9 @@ impl LShape {
 }
 
 impl IntoOutlines for LShape {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
+    type Outlines = [Arc<OutlineExpr>; 3];
+
+    fn into_outlines(self) -> Self::Outlines {
         let Self {
             x_range: Range {
                 start: x_min,
@@ -56,8 +58,6 @@ impl IntoOutlines for LShape {
         let bottom_serif =
             Rect::new((mid - hw, y_min), (mid + hw, y_min)).aligned(Alignment::Right);
 
-        [top_serif, pipe, bottom_serif]
-            .into_iter()
-            .map(|it| it.into_outline())
+        [top_serif, pipe, bottom_serif].map(|it| it.into_outline())
     }
 }

@@ -32,8 +32,10 @@ impl EShape {
 }
 
 impl IntoOutlines for EShape {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
-        [self.bowl.into_outline(), self.bar.into_outline()].into_iter()
+    type Outlines = [Arc<OutlineExpr>; 2];
+
+    fn into_outlines(self) -> Self::Outlines {
+        [self.bowl.into_outline(), self.bar.into_outline()]
     }
 }
 

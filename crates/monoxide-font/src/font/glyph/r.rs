@@ -41,9 +41,10 @@ impl RShape {
 }
 
 impl IntoOutlines for RShape {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
+    type Outlines = [Arc<OutlineExpr>; 2];
+
+    fn into_outlines(self) -> Self::Outlines {
         [self.hook.into_outline(), self.pipe.into_outline()]
-            .into_iter()
             .map(move |it| it.transformed(Affine2D::translated(self.offset)))
     }
 }

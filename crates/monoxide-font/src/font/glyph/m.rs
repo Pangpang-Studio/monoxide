@@ -40,8 +40,11 @@ impl MShape {
 }
 
 impl IntoOutlines for MShape {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
-        self.hooks.into_outlines().chain([self.pipe.into_outline()])
+    type Outlines = [Arc<OutlineExpr>; 3];
+
+    fn into_outlines(self) -> Self::Outlines {
+        let [h, h1] = self.hooks.map(|it| it.into_outline());
+        [h, h1, self.pipe.into_outline()]
     }
 }
 

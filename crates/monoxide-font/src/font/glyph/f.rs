@@ -40,9 +40,9 @@ impl FShape {
 }
 
 impl IntoOutlines for FShape {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
-        [self.hook, self.crossbar]
-            .into_iter()
-            .map(move |it| it.transformed(Affine2D::translated(self.offset)))
+    type Outlines = [Arc<OutlineExpr>; 2];
+
+    fn into_outlines(self) -> Self::Outlines {
+        [self.hook, self.crossbar].map(move |it| it.transformed(Affine2D::translated(self.offset)))
     }
 }
