@@ -1,9 +1,7 @@
-mod font;
-
 use anyhow::Result;
 use dioxus_devtools::subsecond;
 
-use crate::font::make_font;
+use monoxide_font::make_font;
 
 #[tokio::main]
 async fn main() -> Result<()> {
