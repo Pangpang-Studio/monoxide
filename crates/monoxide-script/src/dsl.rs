@@ -54,29 +54,35 @@ impl IntoStrokeAlignment for f64 {
 }
 
 pub trait IntoOutlines {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>>;
+    type Outlines: IntoIterator<Item = Arc<OutlineExpr>>;
+
+    fn into_outlines(self) -> Self::Outlines;
 }
 
 impl<I: IntoIterator<Item = Arc<OutlineExpr>>> IntoOutlines for I {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
-        self.into_iter()
+    type Outlines = Self;
+
+    fn into_outlines(self) -> Self::Outlines {
+        self
     }
 }
 
 pub trait IntoOutlinesExt: IntoOutlines {
-    fn stroked(self, width: f64) -> impl Iterator<Item = Arc<OutlineExpr>>
+    fn stroked(self, width: f64) -> impl IntoIterator<Item = Arc<OutlineExpr>>
     where
         Self: Sized,
     {
         self.into_outlines()
+            .into_iter()
             .map(move |outline| outline.stroked(width))
     }
 
-    fn transformed(self, xform: Affine2D<Point2D>) -> impl Iterator<Item = Arc<OutlineExpr>>
+    fn transformed(self, xform: Affine2D<Point2D>) -> impl IntoIterator<Item = Arc<OutlineExpr>>
     where
         Self: Sized,
     {
         self.into_outlines()
+            .into_iter()
             .map(move |outline| outline.transformed(xform))
     }
 }

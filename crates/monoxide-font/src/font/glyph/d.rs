@@ -37,8 +37,10 @@ impl DShape {
 }
 
 impl IntoOutlines for DShape {
-    fn into_outlines(self) -> impl Iterator<Item = Arc<OutlineExpr>> {
-        [self.bowl, self.pipe.into_outline()].into_iter()
+    type Outlines = [Arc<OutlineExpr>; 2];
+
+    fn into_outlines(self) -> Self::Outlines {
+        [self.bowl, self.pipe.into_outline()]
     }
 }
 
