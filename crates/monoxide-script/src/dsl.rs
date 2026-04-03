@@ -1,9 +1,10 @@
 mod bezier_builder;
 mod spiro_builder;
 
-use std::sync::Arc;
+use std::{iter, sync::Arc};
 
 pub use bezier_builder::{BezierBuilder, BezierInst};
+use itertools::chain;
 use monoxide_curves::{point::Point2D, xform::Affine2D};
 pub use spiro_builder::{SpiroBuilder, SpiroInst, SpiroInstOpts};
 
@@ -85,9 +86,29 @@ pub trait IntoOutlinesExt: IntoOutlines {
             .into_iter()
             .map(move |outline| outline.transformed(xform))
     }
+
+    fn add<U: IntoOutlines>(self, other: U) -> Add<Self, U>
+    where
+        Self: Sized,
+    {
+        Add(self, other)
+    }
 }
 
 impl<T: IntoOutlines> IntoOutlinesExt for T {}
+
+pub struct Add<T, U>(T, U);
+
+impl<T: IntoOutlines, U: IntoOutlines> IntoOutlines for Add<T, U> {
+    type Outlines = iter::Chain<
+        <T::Outlines as IntoIterator>::IntoIter,
+        <U::Outlines as IntoIterator>::IntoIter,
+    >;
+
+    fn into_outlines(self) -> Self::Outlines {
+        chain!(self.0.into_outlines(), self.1.into_outlines())
+    }
+}
 
 #[doc(hidden)]
 #[macro_export]
