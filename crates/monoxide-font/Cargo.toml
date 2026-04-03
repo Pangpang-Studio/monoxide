@@ -20,8 +20,3 @@ anyhow.workspace = true
 dioxus-devtools.workspace = true
 tokio.workspace = true
 monoxide-playground.workspace = true
-
-[[example]]
-name = "playground"
-# HACK: To make `subsecond` aware of `font.rs`, we have to put it under `src/`.
-path = "src/playground.rs"
