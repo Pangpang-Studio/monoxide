@@ -22,7 +22,7 @@ glyph_mods! {
     l;
     m;
     n;
-    o;
+    pub o;
     p;
     q;
     r;

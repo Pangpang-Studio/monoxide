@@ -31,7 +31,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         descender: -0.2,
         stroke_width: 0.144 * width,
         side_bearing: 0.125 * width,
-        overshoot: x_height / 40.,
+        overshoot: 1. / 40.,
         dot_size: 0.25 * width,
     };
 
@@ -55,6 +55,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         ('l', glyph::l(&cx)),
         ('m', glyph::m(&cx)),
         ('n', glyph::n(&cx)),
+        ('O', glyph::o::o_cap(&cx)),
         ('o', glyph::o(&cx)),
         ('p', glyph::p(&cx)),
         ('q', glyph::q(&cx)),

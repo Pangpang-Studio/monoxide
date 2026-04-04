@@ -61,6 +61,7 @@ impl IntoOutline for Hook {
             center: Point2D { x, y },
             radii: Point2D { x: rx, y: ry },
             ovs,
+            ..
         } = self.o_shape;
 
         let mid_curve_w = o_shape.mid_curve_w();
