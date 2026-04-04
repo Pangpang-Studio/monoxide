@@ -32,7 +32,10 @@ pub struct FontParamSettings {
     /// Primary stroke width.
     pub stroke_width: f64,
 
-    /// Vertical overshoot for arcs.
+    /// Overshoot factor for arcs.
+    /// For vertical overshoot, this is the ratio between the overshoot and the x-height; for
+    /// horizontal overshoot, this is the ratio between the overshoot and the width between the left
+    /// and right side bearings.
     /// See: <http://designwithfontforge.com/en-US/Creating_o_and_n.html>
     pub overshoot: f64,
 
@@ -71,8 +74,8 @@ impl FontParamSettings {
         self.stroke_width
     }
 
-    /// The overshoot.
-    pub const fn ovs(&self) -> f64 {
+    /// The overshoot factor for arcs.
+    pub const fn ovf(&self) -> f64 {
         self.overshoot
     }
 
@@ -84,6 +87,16 @@ impl FontParamSettings {
     /// The dot size in glyphs like 'i' and 'j'.
     pub const fn dot(&self) -> f64 {
         self.dot_size
+    }
+
+    /// The vertical overshoot.
+    pub const fn ovs(&self) -> f64 {
+        self.overshoot * self.xh()
+    }
+
+    /// The horizontal overshoot.
+    pub const fn ovh(&self) -> f64 {
+        self.overshoot * (self.sbr() - self.sbl())
     }
 
     /// The horizontal midline of a half-width character.

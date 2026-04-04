@@ -73,6 +73,7 @@ impl IntoOutline for Bowl {
             center: Point2D { x, y },
             radii: Point2D { x: rx, y: ry },
             ovs,
+            ..
         } = self.c_shape.o_shape;
 
         let mid_curve_w = self.mid_curve_w();

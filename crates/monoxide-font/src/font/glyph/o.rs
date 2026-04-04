@@ -13,10 +13,23 @@ pub fn o(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn o_cap(cx: &InputContext) -> Glyph {
+    let_settings! { { mid, cap, ovs, ovh, sbl, stw } = cx.settings(); }
+
+    Glyph::builder()
+        .outline(
+            OShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs)
+                .with_ovh(ovh)
+                .stroked(stw),
+        )
+        .build()
+}
+
 pub struct OShape {
     pub center: Point2D,
     pub radii: Point2D,
     pub ovs: f64,
+    pub ovh: f64,
 }
 
 impl OShape {
@@ -25,7 +38,13 @@ impl OShape {
             center: center.into(),
             radii: radii.into(),
             ovs,
+            ovh: Default::default(),
         }
+    }
+
+    pub fn with_ovh(mut self, ovh: impl Into<Option<f64>>) -> Self {
+        self.ovh = ovh.into().unwrap_or_default();
+        self
     }
 
     pub const fn mid_curve_w(&self) -> f64 {
@@ -47,12 +66,15 @@ impl IntoOutline for OShape {
             center: Point2D { x, y },
             radii: Point2D { x: rx, y: ry },
             ovs,
+            ovh,
         } = self;
 
         let mid_curve_w = self.mid_curve_w();
         let mid_curve_h = self.mid_curve_h();
         let end_curve_h = self.end_curve_h();
 
+        let left = x - rx - ovh;
+        let right = x + rx + ovh;
         let y_hi = y + ry;
         let y_lo = y - ry;
 
@@ -63,15 +85,15 @@ impl IntoOutline for OShape {
                 g4!(x, y_hi + ovs),
                 g4!(x - mid_curve_w, y_hi - mid_curve_h),
                 // Left side
-                flat!(x - rx, y_hi - end_curve_h),
-                curl!(x - rx, y_lo + end_curve_h),
+                flat!(left, y_hi - end_curve_h),
+                curl!(left, y_lo + end_curve_h),
                 // Bottom arc
                 g4!(x - mid_curve_w, y_lo + mid_curve_h).aligned(Alignment::Right),
                 g4!(x, y_lo - ovs),
                 g4!(x + mid_curve_w, y_lo + mid_curve_h),
                 // Right side
-                flat!(x + rx, y_lo + end_curve_h),
-                curl!(x + rx, y_hi - end_curve_h),
+                flat!(right, y_lo + end_curve_h),
+                curl!(right, y_hi - end_curve_h),
             ])
             .into_outline()
     }
