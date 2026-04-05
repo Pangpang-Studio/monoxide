@@ -32,7 +32,7 @@ pub use self::{
     b::b,
     c::c,
     d::d,
-    digit::zero,
+    digit::{one, zero},
     e::e,
     f::f,
     g::g,
