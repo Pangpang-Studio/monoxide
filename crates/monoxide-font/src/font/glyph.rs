@@ -1,41 +1,35 @@
-macro_rules! glyph_mods {
-    ( $( $vis:vis $mod:ident; )+ ) => {
-        $(
-            $vis mod $mod;
-            pub use self::$mod::$mod;
-        )+
-    }
-}
+pub mod a;
+mod b;
+mod c;
+mod d;
+mod e;
+mod f;
+mod g;
+mod h;
+mod i;
+pub mod j;
+mod k;
+mod l;
+mod m;
+mod n;
+pub mod o;
+mod p;
+mod q;
+mod r;
+mod s;
+mod space;
+mod t;
+mod tofu;
+mod u;
+mod v;
+mod w;
+mod x;
+mod y;
+mod z;
 
-glyph_mods! {
-    pub a;
-    b;
-    c;
-    d;
-    e;
-    f;
-    g;
-    h;
-    i;
-    pub j;
-    k;
-    l;
-    m;
-    n;
-    pub o;
-    p;
-    q;
-    r;
-    s;
-    t;
-    u;
-    v;
-    w;
-    x;
-    y;
-    z;
-    space;
-    tofu;
-}
+pub use self::{
+    a::a, b::b, c::c, d::d, e::e, f::f, g::g, h::h, i::i, j::j, k::k, l::l, m::m, n::n, o::o, p::p,
+    q::q, r::r, s::s, space::space, t::t, tofu::tofu, u::u, v::v, w::w, x::x, y::y, z::z,
+};
 
 use super::InputContext;
