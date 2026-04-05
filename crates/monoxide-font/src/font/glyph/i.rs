@@ -1,6 +1,6 @@
 use monoxide_script::prelude::*;
 
-use super::InputContext;
+use crate::InputContext;
 use crate::font::{glyph::l::LShape, math::mix, settings::FontParamSettings, shape::Ring};
 
 pub fn i(cx: &InputContext) -> Glyph {

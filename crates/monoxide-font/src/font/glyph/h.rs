@@ -1,6 +1,6 @@
 use monoxide_script::prelude::*;
 
-use super::InputContext;
+use crate::InputContext;
 use crate::font::glyph::n::NShape;
 
 pub fn h(cx: &InputContext) -> Glyph {
