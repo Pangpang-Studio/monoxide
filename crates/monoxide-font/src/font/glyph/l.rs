@@ -2,7 +2,7 @@ use std::{ops::Range, sync::Arc};
 
 use monoxide_script::prelude::*;
 
-use super::InputContext;
+use crate::InputContext;
 use crate::font::{dir::Alignment, shape::Rect};
 
 pub fn l(cx: &InputContext) -> Glyph {

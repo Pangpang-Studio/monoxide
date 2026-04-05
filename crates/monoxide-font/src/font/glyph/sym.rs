@@ -5,8 +5,12 @@ use monoxide_script::{
     let_settings,
 };
 
-use super::InputContext;
+use crate::InputContext;
 use crate::font::dir::Alignment;
+
+pub fn space(_cx: &InputContext) -> Glyph {
+    Glyph::builder().build()
+}
 
 pub fn tofu(cx: &InputContext) -> Glyph {
     let_settings! { { cap, sbl, sbr, stw } = cx.settings(); }

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use super::InputContext;
+use crate::InputContext;
 use crate::font::{
     dir::{Alignment, Dir},
     glyph::o::OShape,
