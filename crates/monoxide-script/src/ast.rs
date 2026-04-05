@@ -82,6 +82,14 @@ impl Deref for Glyph {
     }
 }
 
+impl From<Glyph> for GlyphBuilder {
+    fn from(glyph: Glyph) -> Self {
+        Self {
+            inner: (*glyph).clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct GlyphInner {
     /// The outlines contained by this glyph.

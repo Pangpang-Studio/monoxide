@@ -2,6 +2,7 @@ mod a;
 mod b;
 mod c;
 mod d;
+mod digit;
 mod e;
 mod f;
 mod g;
@@ -31,6 +32,7 @@ pub use self::{
     b::b,
     c::c,
     d::d,
+    digit::zero,
     e::e,
     f::f,
     g::g,
