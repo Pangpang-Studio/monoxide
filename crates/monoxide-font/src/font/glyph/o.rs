@@ -2,8 +2,7 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::dir::Alignment;
+use crate::{InputContext, font::dir::Alignment};
 
 pub fn o(cx: &InputContext) -> Glyph {
     let_settings! { { mid, mih, ovs, sbl, stw } = cx.settings(); }
@@ -58,23 +57,31 @@ impl OShape {
     pub const fn end_curve_h(&self) -> f64 {
         (15. / 16.) * self.radii.y
     }
+
+    pub const fn left(&self) -> f64 {
+        self.center.x - self.radii.x - self.ovh
+    }
+
+    pub const fn right(&self) -> f64 {
+        self.center.x + self.radii.x + self.ovh
+    }
 }
 
 impl IntoOutline for OShape {
     fn into_outline(self) -> Arc<OutlineExpr> {
         let Self {
             center: Point2D { x, y },
-            radii: Point2D { x: rx, y: ry },
+            radii: Point2D { y: ry, .. },
             ovs,
-            ovh,
+            ..
         } = self;
 
         let mid_curve_w = self.mid_curve_w();
         let mid_curve_h = self.mid_curve_h();
         let end_curve_h = self.end_curve_h();
 
-        let left = x - rx - ovh;
-        let right = x + rx + ovh;
+        let left = self.left();
+        let right = self.right();
         let y_hi = y + ry;
         let y_lo = y - ry;
 
