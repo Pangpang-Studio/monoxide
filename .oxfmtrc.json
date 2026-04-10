@@ -4,6 +4,7 @@
   "semi": false,
   "singleQuote": true,
   "printWidth": 80,
+  "useTabs": false,
   "sortPackageJson": true,
   "sortImports": {},
   "sortTailwindcss": {},
