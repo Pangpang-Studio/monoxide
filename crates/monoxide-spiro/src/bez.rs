@@ -7,7 +7,6 @@ use crate::{SpiroCp, SpiroCpTy};
 pub trait BezCtx {
     fn move_to(&mut self, x: f64, y: f64, is_open: bool);
     fn line_to(&mut self, x: f64, y: f64);
-    fn quad_to(&mut self, x1: f64, y1: f64, x2: f64, y2: f64);
     fn curve_to(&mut self, x1: f64, y1: f64, x2: f64, y2: f64, x3: f64, y3: f64);
     fn mark_knot(&mut self, knot_idx: usize);
 
@@ -53,7 +52,7 @@ impl<T: BezCtx> BezCtxAdapter<'_, T> {
         bezctx {
             moveto: Some(Self::_move_to),
             lineto: Some(Self::_line_to),
-            quadto: Some(Self::_quad_to),
+            quadto: None,
             curveto: Some(Self::_curve_to),
             mark_knot: Some(Self::_mark_knot),
         }
@@ -74,11 +73,6 @@ impl<T: BezCtx> BezCtxAdapter<'_, T> {
     unsafe extern "C" fn _line_to(bc: *mut bezctx, x: f64, y: f64) {
         let this = unsafe { &mut *(bc as *mut Self) };
         this.data.line_to(x, y);
-    }
-
-    unsafe extern "C" fn _quad_to(bc: *mut bezctx, x1: f64, y1: f64, x2: f64, y2: f64) {
-        let this = unsafe { &mut *(bc as *mut Self) };
-        this.data.quad_to(x1, y1, x2, y2);
     }
 
     unsafe extern "C" fn _curve_to(

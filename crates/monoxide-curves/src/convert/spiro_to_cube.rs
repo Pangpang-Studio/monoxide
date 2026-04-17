@@ -110,10 +110,6 @@ impl BezCtx for BezierContext {
         builder.curve_to((c1x, c1y).into(), (c2x, c2y).into(), (p2x, p2y).into());
     }
 
-    fn quad_to(&mut self, _: f64, _: f64, _: f64, _: f64) {
-        unimplemented!("quad curves are not yet supported")
-    }
-
     fn mark_knot(&mut self, id: usize) {
         if self.log_cps {
             assert_eq!(id, self.cp_indices.len(), "unexpected control point index");

@@ -22,11 +22,6 @@ impl BezCtx for TestBezCtx {
         _ = writeln!(self.buf, "L {x:.p$} {y:.p$}");
     }
 
-    fn quad_to(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) {
-        let p = Self::PRECISION;
-        _ = writeln!(self.buf, "Q {x1:.p$} {y1:.p$}, {x2:.p$} {y2:.p$}");
-    }
-
     fn curve_to(&mut self, x1: f64, y1: f64, x2: f64, y2: f64, x3: f64, y3: f64) {
         let p = Self::PRECISION;
         _ = writeln!(
