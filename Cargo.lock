@@ -1194,6 +1194,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "katexit"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ccfb0b7ce7938f84a5ecbdca5d0a991e46bc9d6d078934ad5e92c5270fe547db"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1421,6 +1432,7 @@ name = "monoxide-spiro"
 version = "0.1.0"
 dependencies = [
  "insta",
+ "sirop",
  "spiro-sys-rs",
 ]
 
@@ -2023,6 +2035,15 @@ name = "similar"
 version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
+
+[[package]]
+name = "sirop"
+version = "0.1.0"
+dependencies = [
+ "insta",
+ "katexit",
+ "thiserror",
+]
 
 [[package]]
 name = "slab"

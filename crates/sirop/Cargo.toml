@@ -1,0 +1,30 @@
+[package]
+name = "sirop"
+description = "A libspiro port in pure Rust."
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+readme = "README.md"
+
+[dependencies]
+katexit = "0.1.5"
+thiserror.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+
+[lints.rust]
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
+trivial_numeric_casts = "warn"
+unsafe_code = "forbid"
+unused_allocation = "warn"
+
+[lints.clippy]
+dbg_macro = "warn"
+nursery = "warn"
+pedantic = "warn"
+todo = "warn"
