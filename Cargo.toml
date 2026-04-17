@@ -41,6 +41,7 @@ members = [
     "crates/monoxide-script",
     "crates/monoxide-spiro",
     "crates/monoxide-ttf",
+    "crates/sirop",
     "xtask",
 ]
 
@@ -57,13 +58,14 @@ version = "0.1.0"
 
 [workspace.dependencies]
 # Monoxide itself
+monoxide = { path = "." }
 monoxide-curves = { path = "crates/monoxide-curves" }
 monoxide-font = { path = "crates/monoxide-font" }
 monoxide-playground = { path = "crates/monoxide-playground" }
 monoxide-script = { path = "crates/monoxide-script" }
 monoxide-spiro = { path = "crates/monoxide-spiro" }
 monoxide-ttf = { path = "crates/monoxide-ttf" }
-monoxide = { path = "." }
+sirop = { path = "crates/sirop" }
 # Deps
 anyhow = "1.0.102"
 bytes = "1.11.1"
@@ -81,3 +83,5 @@ thiserror = "2.0"
 petgraph = "0.8.3"
 by_address = "1.2.1"
 itertools = "0.14.0"
+# Dev-deps
+insta = "1.47.2"

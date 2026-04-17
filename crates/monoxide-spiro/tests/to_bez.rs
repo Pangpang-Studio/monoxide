@@ -46,6 +46,26 @@ macro_rules! spiro_cp {
 }
 
 #[test]
+fn spiro_to_beziers_ring() {
+    use monoxide_spiro::SpiroCpTy::*;
+
+    let path = [
+        spiro_cp!({   0,  10, G4 }),
+        spiro_cp!({  10,   0, G4 }),
+        spiro_cp!({   0, -10, G4 }),
+        spiro_cp!({ -10,   0, G4 }),
+    ];
+
+    let mut ctx = TestBezCtx::default();
+    assert!(ctx.run_spiro(&path));
+
+    #[cfg(all(feature = "backend-spiro-sys", not(feature = "backend-sirop")))]
+    insta::assert_snapshot!("spiro_to_beziers_ring_spiro_sys", &ctx.buf);
+    #[cfg(feature = "backend-sirop")]
+    insta::assert_snapshot!("spiro_to_beziers_ring_sirop", &ctx.buf);
+}
+
+#[test]
 fn spiro_to_beziers() {
     use monoxide_spiro::SpiroCpTy::*;
 
@@ -70,5 +90,8 @@ fn spiro_to_beziers() {
     assert!(ctx.run_spiro(&path5));
 
     // You may verify the output at <https://svg-path-visualizer.netlify.app>.
-    insta::assert_snapshot!(&ctx.buf);
+    #[cfg(all(feature = "backend-spiro-sys", not(feature = "backend-sirop")))]
+    insta::assert_snapshot!("spiro_to_beziers_spiro_sys", &ctx.buf);
+    #[cfg(feature = "backend-sirop")]
+    insta::assert_snapshot!("spiro_to_beziers_sirop", &ctx.buf);
 }

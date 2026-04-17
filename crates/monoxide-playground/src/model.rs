@@ -162,8 +162,6 @@ pub enum SerializeSpiroKind {
     G2,
     Flat,
     Curl,
-    Anchor,
-    Handle,
     Open,
     EndOpen,
 }
@@ -176,8 +174,6 @@ impl From<monoxide_spiro::SpiroCpTy> for SerializeSpiroKind {
             monoxide_spiro::SpiroCpTy::G2 => SerializeSpiroKind::G2,
             monoxide_spiro::SpiroCpTy::Left => SerializeSpiroKind::Flat,
             monoxide_spiro::SpiroCpTy::Right => SerializeSpiroKind::Curl,
-            monoxide_spiro::SpiroCpTy::Anchor => SerializeSpiroKind::Anchor,
-            monoxide_spiro::SpiroCpTy::Handle => SerializeSpiroKind::Handle,
             monoxide_spiro::SpiroCpTy::Open => SerializeSpiroKind::Open,
             monoxide_spiro::SpiroCpTy::EndOpen => SerializeSpiroKind::EndOpen,
         }

@@ -1,48 +1,52 @@
 mod bez;
 
-use std::mem;
-
+#[cfg(feature = "backend-sirop")]
+use sirop::CpTy;
+#[cfg(feature = "backend-spiro-sys")]
 use spiro_sys::{
-    SPIRO_ANCHOR, SPIRO_CORNER, SPIRO_END_OPEN_CONTOUR, SPIRO_G2, SPIRO_G4, SPIRO_HANDLE,
-    SPIRO_LEFT, SPIRO_OPEN_CONTOUR, SPIRO_RIGHT, spiro_cp,
+    SPIRO_CORNER, SPIRO_END_OPEN_CONTOUR, SPIRO_G2, SPIRO_G4, SPIRO_LEFT, SPIRO_OPEN_CONTOUR,
+    SPIRO_RIGHT,
 };
 
 pub use self::bez::BezCtx;
 
 /// A Spiro control point.
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[repr(C)]
 pub struct SpiroCp {
     pub x: f64,
     pub y: f64,
     pub ty: SpiroCpTy,
 }
 
-impl SpiroCp {
-    #[allow(clippy::unnecessary_operation, clippy::identity_op)]
-    const _HAS_SAME_LAYOUT_AS_SPIRO_SYS_CP: () = {
-        ["Size of SpiroCp"][mem::size_of::<spiro_cp>() - mem::size_of::<SpiroCp>()];
-        ["Alignment of SpiroCp"][mem::align_of::<spiro_cp>() - mem::align_of::<SpiroCp>()];
-        ["Offset of field: SpiroCp::x"][mem::offset_of!(spiro_cp, x) - mem::offset_of!(SpiroCp, x)];
-        ["Offset of field: SpiroCp::y"][mem::offset_of!(spiro_cp, y) - mem::offset_of!(SpiroCp, y)];
-        ["Offset of field: SpiroCp::ty"]
-            [mem::offset_of!(spiro_cp, ty) - mem::offset_of!(SpiroCp, ty)];
-    };
-}
-
-impl From<spiro_cp> for SpiroCp {
-    fn from(cp: spiro_cp) -> Self {
-        // SAFETY: This is safe because the two types have the same layout,
-        // as guaranteed by the static assertions above.
-        unsafe { mem::transmute(cp) }
+#[cfg(feature = "backend-spiro-sys")]
+impl From<spiro_sys::spiro_cp> for SpiroCp {
+    fn from(cp: spiro_sys::spiro_cp) -> Self {
+        Self {
+            x: cp.x,
+            y: cp.y,
+            ty: SpiroCpTy::from_sys(cp.ty as _),
+        }
     }
 }
 
-impl From<SpiroCp> for spiro_cp {
+#[cfg(feature = "backend-spiro-sys")]
+impl From<SpiroCp> for spiro_sys::spiro_cp {
     fn from(cp: SpiroCp) -> Self {
-        // SAFETY: This is safe because the two types have the same layout,
-        // as guaranteed by the static assertions above.
-        unsafe { mem::transmute(cp) }
+        Self {
+            x: cp.x,
+            y: cp.y,
+            ty: cp.ty.to_sys() as _,
+        }
+    }
+}
+
+#[cfg(feature = "backend-sirop")]
+impl From<SpiroCp> for sirop::Cp {
+    fn from(cp: SpiroCp) -> Self {
+        Self {
+            pt: (cp.x, cp.y),
+            ty: cp.ty.into(),
+        }
     }
 }
 
@@ -50,17 +54,58 @@ impl From<SpiroCp> for spiro_cp {
 #[repr(u8)]
 pub enum SpiroCpTy {
     #[default]
-    Corner = SPIRO_CORNER,
-    G4 = SPIRO_G4,
-    G2 = SPIRO_G2,
+    Corner,
+    G4,
+    G2,
     /// Also known as "flat".
-    Left = SPIRO_LEFT,
+    Left,
     /// Also known as "curl".
-    Right = SPIRO_RIGHT,
-    Anchor = SPIRO_ANCHOR,
-    Handle = SPIRO_HANDLE,
-    Open = SPIRO_OPEN_CONTOUR,
-    EndOpen = SPIRO_END_OPEN_CONTOUR,
+    Right,
+    Open,
+    EndOpen,
+}
+
+#[cfg(feature = "backend-spiro-sys")]
+impl SpiroCpTy {
+    const fn from_sys(val: u8) -> Self {
+        match val {
+            SPIRO_CORNER => Self::Corner,
+            SPIRO_G4 => Self::G4,
+            SPIRO_G2 => Self::G2,
+            SPIRO_LEFT => Self::Left,
+            SPIRO_RIGHT => Self::Right,
+            SPIRO_OPEN_CONTOUR => Self::Open,
+            SPIRO_END_OPEN_CONTOUR => Self::EndOpen,
+            _ => unreachable!(),
+        }
+    }
+
+    const fn to_sys(self) -> u8 {
+        match self {
+            Self::Corner => SPIRO_CORNER,
+            Self::G4 => SPIRO_G4,
+            Self::G2 => SPIRO_G2,
+            Self::Left => SPIRO_LEFT,
+            Self::Right => SPIRO_RIGHT,
+            Self::Open => SPIRO_OPEN_CONTOUR,
+            Self::EndOpen => SPIRO_END_OPEN_CONTOUR,
+        }
+    }
+}
+
+#[cfg(feature = "backend-sirop")]
+impl From<SpiroCpTy> for CpTy {
+    fn from(val: SpiroCpTy) -> Self {
+        match val {
+            SpiroCpTy::Corner => Self::Corner,
+            SpiroCpTy::G4 => Self::G4,
+            SpiroCpTy::G2 => Self::G2,
+            SpiroCpTy::Left => Self::Flat,
+            SpiroCpTy::Right => Self::Curl,
+            SpiroCpTy::Open => Self::Open,
+            SpiroCpTy::EndOpen => Self::EndOpen,
+        }
+    }
 }
 
 impl SpiroCpTy {

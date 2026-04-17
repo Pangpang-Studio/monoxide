@@ -98,26 +98,6 @@ macro_rules! curl {
     };
 }
 
-/// Convenience macro to create a [`SpiroInst`] of type [`SpiroCpTy::Anchor`].
-///
-/// See [`corner`] for usage examples of this macro.
-#[macro_export]
-macro_rules! anchor {
-    ($($body:tt)+) => {
-        $crate::ctrl_pt!(|p| $crate::dsl::SpiroInst::from(::monoxide_spiro::SpiroCpTy::Anchor.at(p)), $($body)+)
-    };
-}
-
-/// Convenience macro to create a [`SpiroInst`] of type [`SpiroCpTy::Handle`].
-///
-/// See [`corner`] for usage examples of this macro.
-#[macro_export]
-macro_rules! handle {
-    ($($body:tt)+) => {
-        $crate::ctrl_pt!(|p| $crate::dsl::SpiroInst::from(::monoxide_spiro::SpiroCpTy::Handle.at(p)), $($body)+)
-    };
-}
-
 impl SpiroInst {
     pub fn heading(mut self, pt: impl Into<Point2D>) -> Self {
         self.opts.heading = Some(pt.into());
