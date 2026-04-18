@@ -32,7 +32,7 @@ pub fn make_font() -> Result<FontContext, ()> {
     Ok(fcx)
 }
 
-pub fn make_font_params() -> FontParamSettings {
+pub const fn make_font_params() -> FontParamSettings {
     let width = 0.5;
     let cap_height = 0.7;
     let x_height = 0.75 * cap_height;

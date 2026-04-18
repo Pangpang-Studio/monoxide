@@ -98,3 +98,6 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('z', z),
     (char::REPLACEMENT_CHARACTER, tofu),
 ];
+
+#[cfg(test)]
+mod test;

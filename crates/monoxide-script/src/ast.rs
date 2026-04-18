@@ -96,14 +96,14 @@ pub struct GlyphInner {
     /// The outlines contained by this glyph.
     ///
     /// If both `outlines` and `subglyphs`
-    pub(crate) outlines: Vec<Arc<OutlineExpr>>,
+    pub outlines: Vec<Arc<OutlineExpr>>,
 
     /// The other glyphs that are inserted into this glyph.
-    pub(crate) components: Vec<GlyphComponent>,
+    pub components: Vec<GlyphComponent>,
 
     /// The advance width of the glyph. If unset, uses the default advance width
     /// of the font.
-    pub(crate) advance: Option<f64>,
+    pub advance: Option<f64>,
 }
 
 /// The type to use for building a glyph.
