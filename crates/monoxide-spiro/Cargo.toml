@@ -7,14 +7,8 @@ homepage.workspace = true
 repository.workspace = true
 license.workspace = true
 
-[features]
-default = ["backend-sirop"]
-backend-sirop = ["dep:sirop"]
-backend-spiro-sys = ["dep:spiro-sys"]
-
 [dependencies]
-spiro-sys = { workspace = true, optional = true }
-sirop = { workspace = true, optional = true }
+sirop.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
