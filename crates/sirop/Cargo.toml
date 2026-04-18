@@ -14,7 +14,7 @@ katexit = "0.1.5"
 thiserror.workspace = true
 
 [dev-dependencies]
-insta.workspace = true
+snapbox.workspace = true
 
 [lints.rust]
 missing_copy_implementations = "warn"
