@@ -1,7 +1,6 @@
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::glyph::n::NShape;
+use crate::{InputContext, font::glyph::n::NShape};
 
 pub fn h(cx: &InputContext) -> Glyph {
     let_settings! { { cap } = cx.settings(); }

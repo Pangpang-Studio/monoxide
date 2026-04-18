@@ -5,8 +5,7 @@ use monoxide_script::{
     let_settings,
 };
 
-use crate::InputContext;
-use crate::font::dir::Alignment;
+use crate::{InputContext, font::dir::Alignment};
 
 pub fn space(_cx: &InputContext) -> Glyph {
     Glyph::builder().build()
