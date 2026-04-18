@@ -1,12 +1,12 @@
 # monoxide
 
-<p><img src="tools/playground/public/icon.svg" width="120" title="Monoxide Banner"></p>
+[<p><img src="tools/playground/public/icon.svg" width="120" title="Monoxide Banner"></p>][playground]
 
 > A love letter to _[Iosevka]_.
 
 [Iosevka]: https://github.com/be5invis/Iosevka
 
-Monoxide is an experimental project to build a monospaced typeface in Rust.
+Monoxide is an experiment to build a monospaced typeface in Rust.
 
 The immediate goal of monoxide is to create a typeface that can be used by its
 makers to code monoxide itself.
@@ -17,10 +17,12 @@ So far, we have achieved the first working version of:
 
 - A Rust-based eDSL to describe the typeface design.
 - A backend that can generate real TTF files.
-- A hot-reloadable playground powered by Axum and Vue to enable editing the
-  design and previewing the results in real time.
-- An expanding set of [glyphs][playground] that will hopefully cover our basic
+- A hot-reloadable playground powered by Axum and Vue for editing the design
+  and previewing the results in real time.
+- An expanding set of glyphs that will hopefully cover our basic
   programming needs soon™.
+
+Please feel free to check out our [Web playground][playground] :]
 
 [playground]: https://pangpang-studio.github.io/monoxide/
 
