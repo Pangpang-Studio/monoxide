@@ -12,9 +12,7 @@ use crate::{
 
 pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Result<Vec<CubicBezier<Point2D>>> {
     let mut ctx = BezierContext::new(false);
-    if !ctx.run_spiro(spiro) {
-        return Err(Error::SpiroInconvertible);
-    }
+    ctx.run_spiro(spiro)?;
     let None = ctx.active_builder else {
         return Err(Error::internal(
             "`active_builder` should be None after spiro conversion",
@@ -36,9 +34,7 @@ pub fn spiro_to_cube_with_indices(
     spiro: &[SpiroCp],
 ) -> Result<(Vec<CubicBezier<Point2D>>, Vec<SpiroPointIndex>)> {
     let mut ctx = BezierContext::new(true);
-    if !ctx.run_spiro(spiro) {
-        return Err(Error::SpiroInconvertible);
-    }
+    ctx.run_spiro(spiro)?;
     let None = ctx.active_builder else {
         return Err(Error::internal(
             "`active_builder` should be None after spiro conversion",
@@ -76,6 +72,8 @@ impl BezierContext {
 }
 
 impl BezCtx for BezierContext {
+    type Error = Error;
+
     fn end(&mut self) {
         let old_builder = self.active_builder.take();
         if let Some(old_builder) = old_builder {

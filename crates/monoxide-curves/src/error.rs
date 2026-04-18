@@ -2,8 +2,8 @@ use std::borrow::Cow;
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum Error {
-    #[error("spiro curve could not be converted to cubic bezier curves")]
-    SpiroInconvertible,
+    #[error("spiro curve could not be converted to cubic bezier curves: {0}")]
+    SpiroInconvertible(#[from] monoxide_spiro::Error),
 
     #[error("spiro curve is not a single piece")]
     SpiroBroken,

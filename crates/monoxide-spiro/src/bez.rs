@@ -1,6 +1,8 @@
 use crate::{SpiroCp, SpiroCpTy};
 
 pub trait BezCtx {
+    type Error: From<sirop::Error>;
+
     fn move_to(&mut self, x: f64, y: f64, is_open: bool);
     fn line_to(&mut self, x: f64, y: f64);
     fn curve_to(&mut self, x1: f64, y1: f64, x2: f64, y2: f64, x3: f64, y3: f64);
@@ -9,8 +11,7 @@ pub trait BezCtx {
     fn start(&mut self) {}
     fn end(&mut self) {}
 
-    #[must_use]
-    fn run_spiro(&mut self, ps: &[SpiroCp]) -> bool
+    fn run_spiro(&mut self, ps: &[SpiroCp]) -> Result<(), Self::Error>
     where
         Self: Sized,
     {
@@ -24,7 +25,8 @@ pub trait BezCtx {
             is_closed,
         };
         let ps = ps.iter().copied().map(sirop::Cp::from);
-        sirop::bezier(ps, &mut ctx, is_closed, None).is_ok()
+        sirop::bezier(ps, &mut ctx, is_closed, None)?;
+        Ok(())
     }
 }
 

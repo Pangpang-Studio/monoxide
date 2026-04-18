@@ -11,7 +11,11 @@ impl TestBezCtx {
     const PRECISION: usize = 11;
 }
 
+type TestResult<T = ()> = Result<T, <TestBezCtx as BezCtx>::Error>;
+
 impl BezCtx for TestBezCtx {
+    type Error = sirop::Error;
+
     fn move_to(&mut self, x: f64, y: f64, _is_open: bool) {
         let p = Self::PRECISION;
         _ = writeln!(self.buf, "M {x:.p$} {y:.p$}");
@@ -46,7 +50,7 @@ macro_rules! spiro_cp {
 }
 
 #[test]
-fn spiro_to_beziers_ring() {
+fn spiro_to_beziers_ring() -> TestResult {
     use monoxide_spiro::SpiroCpTy::*;
 
     let path = [
@@ -57,13 +61,14 @@ fn spiro_to_beziers_ring() {
     ];
 
     let mut ctx = TestBezCtx::default();
-    assert!(ctx.run_spiro(&path));
+    ctx.run_spiro(&path)?;
 
     insta::assert_snapshot!("spiro_to_beziers_ring", &ctx.buf);
+    Ok(())
 }
 
 #[test]
-fn spiro_to_beziers() {
+fn spiro_to_beziers() -> TestResult {
     use monoxide_spiro::SpiroCpTy::*;
 
     // Path from
@@ -84,8 +89,9 @@ fn spiro_to_beziers() {
     ];
 
     let mut ctx = TestBezCtx::default();
-    assert!(ctx.run_spiro(&path5));
+    ctx.run_spiro(&path5)?;
 
     // You may verify the output at <https://svg-path-visualizer.netlify.app>.
     insta::assert_snapshot!("spiro_to_beziers", &ctx.buf);
+    Ok(())
 }
