@@ -18,5 +18,7 @@ monoxide-spiro.workspace = true
 [dev-dependencies]
 anyhow.workspace = true
 dioxus-devtools.workspace = true
+itertools.workspace = true
 monoxide-playground.workspace = true
+snapbox = { workspace = true }
 tokio.workspace = true
