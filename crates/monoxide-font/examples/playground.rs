@@ -1,6 +1,5 @@
 use anyhow::Result;
 use dioxus_devtools::subsecond;
-
 use monoxide_font::make_font;
 
 #[tokio::main]

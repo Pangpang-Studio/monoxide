@@ -1,10 +1,12 @@
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::{
-    dir::{Alignment, Dir},
-    glyph::c::CShape,
-    shape::Rect,
+use crate::{
+    InputContext,
+    font::{
+        dir::{Alignment, Dir},
+        glyph::c::CShape,
+        shape::Rect,
+    },
 };
 
 pub fn z(cx: &InputContext) -> Glyph {

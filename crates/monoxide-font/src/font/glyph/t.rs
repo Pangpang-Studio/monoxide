@@ -2,9 +2,9 @@ use std::{f64::consts::PI, sync::Arc};
 
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::{
-    dir::Alignment, glyph::j::JShape, math::mix, settings::FontParamSettings, shape::Rect,
+use crate::{
+    InputContext,
+    font::{dir::Alignment, glyph::j::JShape, math::mix, settings::FontParamSettings, shape::Rect},
 };
 
 pub fn t(cx: &InputContext) -> Glyph {

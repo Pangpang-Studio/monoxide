@@ -2,11 +2,13 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::{
-    dir::{Alignment, Dir},
-    glyph::{d::Bowl, j::JShape, o::OShape},
-    settings::FontParamSettings,
+use crate::{
+    InputContext,
+    font::{
+        dir::{Alignment, Dir},
+        glyph::{d::Bowl, j::JShape, o::OShape},
+        settings::FontParamSettings,
+    },
 };
 
 pub fn g(cx: &InputContext) -> Glyph {

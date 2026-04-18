@@ -2,13 +2,15 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::{
-    dir::Alignment,
-    glyph::{i::dot, l::LShape, n::Hook},
-    math::mix,
-    settings::FontParamSettings,
-    shape::{Rect, Ring},
+use crate::{
+    InputContext,
+    font::{
+        dir::Alignment,
+        glyph::{i::dot, l::LShape, n::Hook},
+        math::mix,
+        settings::FontParamSettings,
+        shape::{Rect, Ring},
+    },
 };
 
 pub fn j(cx: &InputContext) -> Glyph {
@@ -48,8 +50,9 @@ impl JShape {
         }
     }
 
-    /// Returns a stroked `j` hook without transformation and the hook's reference height. The
-    /// `y_hi` parameter can be used to override the highest point of the hook.
+    /// Returns a stroked `j` hook without transformation and the hook's
+    /// reference height. The `y_hi` parameter can be used to override the
+    /// highest point of the hook.
     pub fn hook_raw(
         settings: &FontParamSettings,
         y_hi: impl Into<Option<f64>>,

@@ -2,10 +2,12 @@ use std::{ops::Range, sync::Arc};
 
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::{
-    dir::{Alignment, Dir},
-    math::mix,
+use crate::{
+    InputContext,
+    font::{
+        dir::{Alignment, Dir},
+        math::mix,
+    },
 };
 
 pub fn w(cx: &InputContext) -> Glyph {

@@ -33,9 +33,9 @@ pub struct FontParamSettings {
     pub stroke_width: f64,
 
     /// Overshoot factor for arcs.
-    /// For vertical overshoot, this is the ratio between the overshoot and the x-height; for
-    /// horizontal overshoot, this is the ratio between the overshoot and the width between the left
-    /// and right side bearings.
+    /// For vertical overshoot, this is the ratio between the overshoot and the
+    /// x-height; for horizontal overshoot, this is the ratio between the
+    /// overshoot and the width between the left and right side bearings.
     /// See: <http://designwithfontforge.com/en-US/Creating_o_and_n.html>
     pub overshoot: f64,
 

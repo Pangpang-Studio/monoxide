@@ -1,7 +1,9 @@
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::dir::{Alignment, Dir};
+use crate::{
+    InputContext,
+    font::dir::{Alignment, Dir},
+};
 
 pub fn v(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, mid, sbr, stw, xh } = cx.settings(); }

@@ -1,7 +1,9 @@
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::{glyph::l::LShape, math::mix, settings::FontParamSettings, shape::Ring};
+use crate::{
+    InputContext,
+    font::{glyph::l::LShape, math::mix, settings::FontParamSettings, shape::Ring},
+};
 
 pub fn i(cx: &InputContext) -> Glyph {
     let settings = cx.settings();

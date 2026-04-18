@@ -1,9 +1,11 @@
 use monoxide_script::prelude::*;
 
-use crate::InputContext;
-use crate::font::{
-    dir::{Alignment, Dir},
-    math::mix,
+use crate::{
+    InputContext,
+    font::{
+        dir::{Alignment, Dir},
+        math::mix,
+    },
 };
 
 pub fn y(cx: &InputContext) -> Glyph {
