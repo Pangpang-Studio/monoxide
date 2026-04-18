@@ -71,8 +71,7 @@ fn calc_curve_lengths(
 ) -> Result<Vec<f64>> {
     let max_error = 0.001;
     let mut lengths = Vec::with_capacity(curve.len());
-    for window in indices.windows(2) {
-        let &[from, to] = window else { unreachable!() };
+    for &[from, to] in indices.array_windows() {
         let mut acc = 0.0;
         for seg in from..to {
             let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
