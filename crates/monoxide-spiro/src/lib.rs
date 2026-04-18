@@ -1,5 +1,7 @@
 mod bez;
 
+pub use sirop::Error;
+
 pub use self::bez::BezCtx;
 
 /// A Spiro control point.
