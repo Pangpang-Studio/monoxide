@@ -189,9 +189,17 @@ fn stroke_spiro_raw(
 
     // There will be only one curve, since we know the spiro curve is a single
     // piece.
-    let cubic = curves.into_iter().next().ok_or_else(|| {
-        Error::internal("spiro-to-cube conversion should return at least one curve")
-    })?;
+    let [cubic] = &curves[..] else {
+        return Err(Error::internal(
+            "`spiro_to_cube_with_indices()` should return a single contour for one spiro piece",
+        ));
+    };
+    if indices.iter().any(|idx| idx.curve_index != 0) {
+        return Err(Error::internal(
+            "spiro knot markers unexpectedly referenced multiple cubic contours",
+        ));
+    }
+
     // And we can transform the indices into a vector of raw indices too
     //
     // Semantics: each index means the point corresponds to the **start** of the
@@ -310,3 +318,95 @@ fn reverse_spiro_point(cp: SpiroCp) -> SpiroCp {
 
 mod tangents;
 mod widths;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn closed_stroke_spiro_indices_are_single_curve_and_in_range() {
+        let curve = SpiroCurve::from_points(
+            vec![
+                SpiroCp {
+                    x: 0.70,
+                    y: 1.10,
+                    ty: SpiroCpTy::G4,
+                },
+                SpiroCp {
+                    x: 0.50,
+                    y: 1.20,
+                    ty: SpiroCpTy::G4,
+                },
+                SpiroCp {
+                    x: 0.30,
+                    y: 1.10,
+                    ty: SpiroCpTy::G4,
+                },
+                SpiroCp {
+                    x: 0.10,
+                    y: 0.80,
+                    ty: SpiroCpTy::Left,
+                },
+                SpiroCp {
+                    x: 0.10,
+                    y: 0.20,
+                    ty: SpiroCpTy::Right,
+                },
+                SpiroCp {
+                    x: 0.30,
+                    y: -0.10,
+                    ty: SpiroCpTy::G4,
+                },
+                SpiroCp {
+                    x: 0.50,
+                    y: -0.20,
+                    ty: SpiroCpTy::G4,
+                },
+                SpiroCp {
+                    x: 0.70,
+                    y: -0.10,
+                    ty: SpiroCpTy::G4,
+                },
+                SpiroCp {
+                    x: 0.90,
+                    y: 0.20,
+                    ty: SpiroCpTy::Left,
+                },
+                SpiroCp {
+                    x: 0.90,
+                    y: 0.80,
+                    ty: SpiroCpTy::Right,
+                },
+            ],
+            true,
+        );
+
+        let stroked = stroke_spiro(&curve, 0.08, &mut ()).expect("stroke should succeed");
+        let StrokedSpiroCurve::Two(left, right) = stroked else {
+            panic!("closed stroke should produce two closed contours");
+        };
+
+        for outline in [&left, &right] {
+            let (cubics, indices) = crate::convert::spiro_to_cube_with_indices(&outline.points)
+                .expect("spiro to cubic conversion should succeed");
+            assert_eq!(
+                cubics.len(),
+                1,
+                "expected one cubic contour for closed stroked outline"
+            );
+            let nsegs = cubics[0].segment_count();
+            assert_eq!(
+                indices.len(),
+                outline.points.len(),
+                "one knot index expected per spiro control point"
+            );
+            for idx in indices {
+                assert_eq!(idx.curve_index, 0, "expected single contour index");
+                assert!(
+                    idx.segment_index <= nsegs,
+                    "segment index should fit within contour"
+                );
+            }
+        }
+    }
+}
