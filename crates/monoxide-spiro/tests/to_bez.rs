@@ -1,6 +1,7 @@
 use std::fmt::Write as _;
 
 use monoxide_spiro::{BezCtx, SpiroCp};
+use snapbox::assert_data_eq;
 
 #[derive(Debug, Default, Clone)]
 struct TestBezCtx {
@@ -63,7 +64,10 @@ fn spiro_to_beziers_ring() -> TestResult {
     let mut ctx = TestBezCtx::default();
     ctx.run_spiro(&path)?;
 
-    insta::assert_snapshot!("spiro_to_beziers_ring", &ctx.buf);
+    assert_data_eq!(
+        &ctx.buf,
+        snapbox::file!["snapshots/to_bez__spiro_to_beziers_ring.snap"]
+    );
     Ok(())
 }
 
@@ -92,6 +96,9 @@ fn spiro_to_beziers() -> TestResult {
     ctx.run_spiro(&path5)?;
 
     // You may verify the output at <https://svg-path-visualizer.netlify.app>.
-    insta::assert_snapshot!("spiro_to_beziers", &ctx.buf);
+    assert_data_eq!(
+        &ctx.buf,
+        snapbox::file!["snapshots/to_bez__spiro_to_beziers.snap"]
+    );
     Ok(())
 }

@@ -1,6 +1,7 @@
 use std::fmt::Write as _;
 
 use sirop::{Point, bez};
+use snapbox::assert_data_eq;
 
 macro_rules! spiro_cp {
     ({ $x:literal, $y:literal, $ty:literal }) => {
@@ -66,7 +67,7 @@ fn bezier() -> sirop::Result<()> {
     sirop::bezier(path5, ctx, false, None)?;
 
     // You may verify the output at <https://svg-path-visualizer.netlify.app>.
-    insta::assert_snapshot!(&ctx.buf);
+    assert_data_eq!(&ctx.buf, snapbox::file!["snapshots/to_bez__bezier.snap"]);
 
     Ok(())
 }
