@@ -1,6 +1,14 @@
 # monoxide
 
-[<p><img src="tools/playground/public/icon.svg" width="120" title="Monoxide Banner"></p>][playground]
+<a href="https://pangpang-studio.github.io/monoxide/">
+  <p>
+    <img
+      src="tools/playground/public/icon.svg"
+      width="120"
+      title="Monoxide Playground"
+    />
+  </p>
+</a>
 
 > A love letter to _[Iosevka]_.
 
