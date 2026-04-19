@@ -11,6 +11,7 @@ version.workspace = true
 playground = []
 
 [dependencies]
+itertools.workspace = true
 monoxide-curves.workspace = true
 monoxide-script.workspace = true
 monoxide-spiro.workspace = true
