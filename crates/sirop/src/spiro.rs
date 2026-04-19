@@ -154,8 +154,8 @@ impl Segs {
 
     fn count(&self, n_seg: usize) -> usize {
         self.0[..=n_seg]
-            .windows(2)
-            .map(|w| w[0].ty().jinc(w[1].ty()))
+            .array_windows()
+            .map(|[w0, w1]| w0.ty().jinc(w1.ty()))
             .sum()
     }
 
@@ -382,10 +382,7 @@ impl Segs {
         let s = &self.0;
         let n_seg = n_seg - usize::from(s[0].ty() == CpTy::Open);
 
-        for (i, w) in s.windows(2).enumerate().take(n_seg) {
-            let [p0, p1, ..] = w else {
-                unreachable!();
-            };
+        for (i, [p0, p1]) in s.array_windows().enumerate().take(n_seg) {
             let (p0, p1) = (p0.pt(), p1.pt());
 
             if i == 0 {
