@@ -1277,7 +1277,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dioxus-devtools",
- "itertools 0.14.0",
  "monoxide-curves",
  "monoxide-playground",
  "monoxide-script",

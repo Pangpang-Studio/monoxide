@@ -96,4 +96,5 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('x', x),
     ('y', y),
     ('z', z),
+    (char::REPLACEMENT_CHARACTER, tofu),
 ];

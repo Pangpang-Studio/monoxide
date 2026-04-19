@@ -6,7 +6,6 @@ mod math;
 mod settings;
 mod shape;
 
-use itertools::Itertools;
 use monoxide_script::ast::FontContext;
 use settings::FontParamSettings;
 
@@ -25,15 +24,11 @@ pub fn make_font() -> Result<FontContext, ()> {
         settings: make_font_params(),
     };
 
-    let tofu = glyph::tofu(&cx);
-    let glyphs = GLYPH_FNS.iter().map(|(_, gl)| gl(&cx)).collect_vec();
-
-    // This is the state
-    let mut fcx = FontContext::new(cx.settings);
-    fcx.set_tofu(tofu);
-    for (&(ch, _), gl) in glyph::GLYPH_FNS.iter().zip(glyphs) {
-        fcx.set_mapping(ch, gl);
+    let mut fcx = FontContext::new(cx.settings.clone());
+    for &(ch, gl) in glyph::GLYPH_FNS {
+        fcx.set_mapping(ch, gl(&cx));
     }
+    fcx.set_tofu();
     Ok(fcx)
 }
 
