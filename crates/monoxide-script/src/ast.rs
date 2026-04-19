@@ -36,10 +36,11 @@ impl FontContext {
         }
     }
 
-    /// Set the default glyph for the font. Also sets the tofu glyph to U+FFFD.
-    pub fn set_tofu(&mut self, tofu: Glyph) {
-        self.tofu = Some(tofu.clone());
-        self.cmap.insert('\u{FFFD}', tofu);
+    /// Set the default glyph for the font. The tofu glyph must be added to this
+    /// `FontContext`'s character mapping with the key
+    /// [`char::REPLACEMENT_CHARACTER`] before this call.
+    pub fn set_tofu(&mut self) {
+        self.tofu = self.cmap.get(&char::REPLACEMENT_CHARACTER).cloned();
     }
 
     /// Set the glyph of the given character. Returns the previous glyph

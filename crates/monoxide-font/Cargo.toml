@@ -11,7 +11,6 @@ version.workspace = true
 playground = []
 
 [dependencies]
-itertools.workspace = true
 monoxide-curves.workspace = true
 monoxide-script.workspace = true
 monoxide-spiro.workspace = true
@@ -19,5 +18,5 @@ monoxide-spiro.workspace = true
 [dev-dependencies]
 anyhow.workspace = true
 dioxus-devtools.workspace = true
-tokio.workspace = true
 monoxide-playground.workspace = true
+tokio.workspace = true
