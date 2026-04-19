@@ -293,12 +293,11 @@ impl Segs {
                     return;
                 }
                 let jj = jj % nmat;
-                let mut joff = (j + 5 + nmat - jj) % nmat;
-                if nmat < 6 {
-                    joff = j + 5 - jj;
-                } else if nmat == 6 {
-                    joff = 2 + ((j + 3 + nmat - jj) % nmat);
-                }
+                let joff = match nmat {
+                    ..6 => j + 5 - jj,
+                    6 => 2 + ((j + 3 + nmat - jj) % nmat),
+                    7.. => (j + 5 + nmat - jj) % nmat,
+                };
                 v[jj] += x;
                 for (k, &deriv) in derivs[..jinc].iter().enumerate() {
                     m[jj].a[joff + k] += y * deriv;
