@@ -202,16 +202,16 @@ impl Segs {
                     _ => {
                         let inc = ty0.jinc(ty1);
                         scanned_j += inc;
-                        scanned_jj += inc as isize;
+                        scanned_jj += inc.cast_signed();
                         scanned_i += 1;
                         continue;
                     }
                 }
                 scanned_j %= nmat;
-                scanned_jj = scanned_jj.rem_euclid(nmat as isize);
+                scanned_jj = scanned_jj.rem_euclid(nmat.cast_signed());
                 i = scanned_i;
                 j = scanned_j;
-                jj = scanned_jj as usize;
+                jj = scanned_jj.cast_unsigned();
                 break;
             }
             if !found {
