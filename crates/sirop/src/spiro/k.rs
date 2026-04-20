@@ -9,13 +9,13 @@ impl K {
     #[must_use]
     pub fn integrate_spiro(&self) -> Point {
         let [k0, k1, k2, k3] = self.0;
-        let iterations = 4;
+        let iters = 4;
 
         let th1 = k0;
-        let th2 = 0.5 * k1;
-        let th3 = (1. / 6.) * k2;
-        let th4 = (1. / 24.) * k3;
-        let ds = 1. / f64::from(iterations);
+        let th2 = k1 / 2.;
+        let th3 = k2 / 6.;
+        let th4 = k3 / 24.;
+        let ds = f64::from(iters).recip();
         let ds2 = ds * ds;
         let ds3 = ds2 * ds;
         let k0 = k0 * ds;
@@ -27,25 +27,22 @@ impl K {
 
         let mut x = 0.;
         let mut y = 0.;
-        for _ in 0..iterations {
-            let km0 = (1. / 6. * k3)
-                .mul_add(s, 0.5 * k2)
-                .mul_add(s, k1)
-                .mul_add(s, k0);
+        for _ in 0..iters {
+            let km0 = (k3 / 6.).mul_add(s, k2 / 2.).mul_add(s, k1).mul_add(s, k0);
             let km1 = (0.5 * k3).mul_add(s, k2).mul_add(s, k1) * ds;
             let km2 = k3.mul_add(s, k2) * ds2;
             let km3 = k3 * ds3;
 
             // Order 12 implementation
             let t1_1 = km0;
-            let t1_2 = 0.5 * km1;
-            let t1_3 = 1. / 6. * km2;
-            let t1_4 = 1. / 24. * km3;
+            let t1_2 = km1 / 2.;
+            let t1_3 = km2 / 6.;
+            let t1_4 = km3 / 24.;
             let t2_2 = t1_1 * t1_1;
             let t2_3 = 2. * (t1_1 * t1_2);
-            let t2_4 = 2_f64.mul_add(t1_1 * t1_3, t1_2 * t1_2);
+            let t2_4 = (t1_1 * t1_3).mul_add(2., t1_2 * t1_2);
             let t2_5 = 2. * (t1_1 * t1_4 + t1_2 * t1_3);
-            let t2_6 = 2_f64.mul_add(t1_2 * t1_4, t1_3 * t1_3);
+            let t2_6 = (t1_2 * t1_4).mul_add(2., t1_3 * t1_3);
             let t2_7 = 2. * (t1_3 * t1_4);
             let t2_8 = t1_4 * t1_4;
             let t3_4 = t2_2 * t1_2 + t2_3 * t1_1;
@@ -54,11 +51,11 @@ impl K {
             let t3_10 = t2_6 * t1_4 + t2_7 * t1_3 + t2_8 * t1_2;
             let t4_4 = t2_2 * t2_2;
             let t4_5 = 2. * (t2_2 * t2_3);
-            let t4_6 = 2_f64.mul_add(t2_2 * t2_4, t2_3 * t2_3);
+            let t4_6 = (t2_2 * t2_4).mul_add(2., t2_3 * t2_3);
             let t4_7 = 2. * (t2_2 * t2_5 + t2_3 * t2_4);
-            let t4_8 = 2_f64.mul_add(t2_2 * t2_6 + t2_3 * t2_5, t2_4 * t2_4);
+            let t4_8 = (t2_2 * t2_6 + t2_3 * t2_5).mul_add(2., t2_4 * t2_4);
             let t4_9 = 2. * (t2_2 * t2_7 + t2_3 * t2_6 + t2_4 * t2_5);
-            let t4_10 = 2_f64.mul_add(t2_2 * t2_8 + t2_3 * t2_7 + t2_4 * t2_6, t2_5 * t2_5);
+            let t4_10 = (t2_2 * t2_8 + t2_3 * t2_7 + t2_4 * t2_6).mul_add(2., t2_5 * t2_5);
             let t5_6 = t4_4 * t1_2 + t4_5 * t1_1;
             let t5_8 = t4_4 * t1_4 + t4_5 * t1_3 + t4_6 * t1_2 + t4_7 * t1_1;
             let t5_10 = t4_6 * t1_4 + t4_7 * t1_3 + t4_8 * t1_2 + t4_9 * t1_1;
@@ -78,36 +75,35 @@ impl K {
             let mut u = 1.;
             let mut v = 0.;
 
-            v += (1_f64 / 12.).mul_add(t1_2, 1. / 80. * t1_4);
-            u -= (1_f64 / 24.).mul_add(
-                t2_2,
-                (1_f64 / 160.).mul_add(t2_4, (1_f64 / 896.).mul_add(t2_6, 1_f64 / 4608. * t2_8)),
+            v += t1_2.mul_add(1. / 12., t1_4 / 80.);
+            u -= t2_2.mul_add(
+                1. / 24.,
+                t2_4.mul_add(1. / 160., t2_6.mul_add(1. / 896., t2_8 / 4608.)),
             );
 
-            v -= (1_f64 / 480.).mul_add(
-                t3_4,
-                (1_f64 / 2688.).mul_add(t3_6, (1_f64 / 13824.).mul_add(t3_8, 1. / 67584. * t3_10)),
+            v -= t3_4.mul_add(
+                1. / 480.,
+                t3_6.mul_add(1. / 2688., t3_8.mul_add(1. / 13824., t3_10 / 67584.)),
             );
-            u += (1_f64 / 1920.).mul_add(
-                t4_4,
-                (1_f64 / 10752.)
-                    .mul_add(t4_6, (1_f64 / 55296.).mul_add(t4_8, 1. / 270_336. * t4_10)),
-            );
-
-            v += (1_f64 / 53760.).mul_add(
-                t5_6,
-                (1_f64 / 276_480.).mul_add(t5_8, 1. / 1.35168e+06 * t5_10),
-            );
-            u -= (1_f64 / 322_560.).mul_add(
-                t6_6,
-                (1_f64 / 1.65888e+06).mul_add(t6_8, 1. / 8.11008e+06 * t6_10),
+            u += t4_4.mul_add(
+                1. / 1920.,
+                t4_6.mul_add(1. / 10752., t4_8.mul_add(1. / 55296., t4_10 / 270_336.)),
             );
 
-            v -= (1_f64 / 1.16122e+07).mul_add(t7_8, 1. / 5.67706e+07 * t7_10);
-            u += (1_f64 / 9.28973e+07).mul_add(t8_8, 1. / 4.54164e+08 * t8_10);
+            v += t5_6.mul_add(
+                1. / 53760.,
+                t5_8.mul_add(1. / 276_480., t5_10 / 1.35168e+06),
+            );
+            u -= t6_6.mul_add(
+                1. / 322_560.,
+                t6_8.mul_add(1. / 1.65888e+06, t6_10 / 8.11008e+06),
+            );
 
-            v += 1. / 4.08748e+09 * t9_10;
-            u -= 1. / 4.08748e+10 * t10_10;
+            v -= t7_8.mul_add(1. / 1.16122e+07, t7_10 / 5.67706e+07);
+            u += t8_8.mul_add(1. / 9.28973e+07, t8_10 / 4.54164e+08);
+
+            v += t9_10 / 4.08748e+09;
+            u -= t10_10 / 4.08748e+10;
 
             let th = th4.mul_add(s, th3).mul_add(s, th2).mul_add(s, th1) * s;
             let cth = th.cos();
@@ -124,7 +120,7 @@ impl K {
     #[must_use]
     pub fn bend(&self) -> f64 {
         let [k0, k1, k2, k3] = self.0;
-        k0.abs() + (0.5 * k1).abs() + (0.125 * k2).abs() + (1. / 48. * k3).abs()
+        k0.abs() + (k1 / 2.).abs() + (k2 / 8.).abs() + (k3 / 48.).abs()
     }
 
     #[must_use]
@@ -132,9 +128,9 @@ impl K {
         let [k0, k1, k2, k3] = self.0;
         let s = s0.midpoint(s1);
 
-        (1. / 24. * k3)
-            .mul_add(s, 1. / 6. * k2)
-            .mul_add(s, 1. / 2. * k1)
+        (k3 / 24.)
+            .mul_add(s, k2 / 6.)
+            .mul_add(s, k1 / 2.)
             .mul_add(s, k0)
             * s
     }
@@ -146,11 +142,8 @@ impl K {
         let t = s1 - s0;
 
         Self([
-            t * (1. / 6. * k3)
-                .mul_add(s, 1. / 2. * k2)
-                .mul_add(s, k1)
-                .mul_add(s, k0),
-            t * t * (1. / 2. * k3).mul_add(s, k2).mul_add(s, k1),
+            t * (k3 / 6.).mul_add(s, k2 / 2.).mul_add(s, k1).mul_add(s, k0),
+            t * t * (k3 / 2.).mul_add(s, k2).mul_add(s, k1),
             t * t * t * k3.mul_add(s, k2),
             t * t * t * t * k3,
         ])
