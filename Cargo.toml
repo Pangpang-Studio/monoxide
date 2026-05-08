@@ -70,12 +70,12 @@ sirop = { path = "crates/sirop" }
 anyhow = "1.0.102"
 bytes = "1.11.1"
 clap = { version = "4.6.0", features = ["derive"] }
-dioxus-devtools = "0.7.7"
+dioxus-devtools = "0.7.9"
 flo_curves = { git = "https://github.com/Pangpang-Studio/flo_curves.git", branch = "dev" }
 indexmap = "2.14.0"
 num-traits = "0.2.19"
 serde = { version = "1", features = ["derive"] }
-tokio = { version = "1.50.0" }
+tokio = { version = "1.52.3" }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 thiserror = "2.0"
