@@ -9,7 +9,7 @@ use monoxide_script::{ast::Glyph, eval::eval_outline, let_settings};
 
 use crate::make_font_params;
 
-const PRECISION: usize = 5;
+const PRECISION: usize = 4;
 
 pub struct SvgPen<W> {
     buf: W,
