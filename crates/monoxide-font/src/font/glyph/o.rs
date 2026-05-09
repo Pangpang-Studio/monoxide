@@ -17,7 +17,7 @@ pub fn o_cap(cx: &InputContext) -> Glyph {
 
     Glyph::builder()
         .outline(
-            OShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs)
+            OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs)
                 .with_ovh(ovh)
                 .stroked(stw),
         )
@@ -75,6 +75,82 @@ impl IntoOutline for OShape {
             ovs,
             ..
         } = self;
+
+        let mid_curve_w = self.mid_curve_w();
+        let mid_curve_h = self.mid_curve_h();
+        let end_curve_h = self.end_curve_h();
+
+        let left = self.left();
+        let right = self.right();
+        let y_hi = y + ry;
+        let y_lo = y - ry;
+
+        SpiroBuilder::closed()
+            .insts([
+                // Top arc
+                g4!(x + mid_curve_w, y_hi - mid_curve_h),
+                g4!(x, y_hi + ovs),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h),
+                // Left side
+                flat!(left, y_hi - end_curve_h),
+                curl!(left, y_lo + end_curve_h),
+                // Bottom arc
+                g4!(x - mid_curve_w, y_lo + mid_curve_h).aligned(Alignment::Right),
+                g4!(x, y_lo - ovs),
+                g4!(x + mid_curve_w, y_lo + mid_curve_h),
+                // Right side
+                flat!(right, y_lo + end_curve_h),
+                curl!(right, y_hi - end_curve_h),
+            ])
+            .into_outline()
+    }
+}
+
+pub struct OCapShape {
+    pub o_shape: OShape,
+}
+
+impl OCapShape {
+    pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
+        Self {
+            o_shape: OShape::new(center, radii, ovs),
+        }
+    }
+
+    pub const fn left(&self) -> f64 {
+        self.o_shape.left()
+    }
+
+    pub const fn right(&self) -> f64 {
+        self.o_shape.right()
+    }
+
+    pub const fn mid_curve_h(&self) -> f64 {
+        (3.75 / 16.) * self.o_shape.radii.y
+    }
+
+    pub const fn mid_curve_w(&self) -> f64 {
+        self.o_shape.mid_curve_w()
+    }
+
+    pub const fn end_curve_h(&self) -> f64 {
+        (13. / 16.) * self.o_shape.radii.y
+    }
+
+    pub fn with_ovh(mut self, ovh: impl Into<Option<f64>>) -> Self {
+        self.o_shape = self.o_shape.with_ovh(ovh);
+        self
+    }
+}
+
+impl IntoOutline for OCapShape {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        let OShape {
+            center: Point2D { x, y },
+            radii: Point2D { y: ry, .. },
+            ovs,
+            ..
+        } = self.o_shape;
 
         let mid_curve_w = self.mid_curve_w();
         let mid_curve_h = self.mid_curve_h();
