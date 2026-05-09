@@ -1,0 +1,16 @@
+[package]
+name = "mini-font"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[features]
+playground = []
+
+[dependencies]
+
+[dev-dependencies]
+anyhow.workspace = true
+dioxus-devtools.workspace = true
+mini-playground.workspace = true
+tokio.workspace = true

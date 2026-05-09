@@ -1,0 +1,25 @@
+[package]
+name = "mini-monoxide"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+mini-font.workspace = true
+
+[workspace]
+members = [
+    ".",
+    "crates/mini-font",
+    "crates/mini-playground",
+]
+
+[workspace.dependencies]
+mini-monoxide = { path = "." }
+mini-font = { path = "crates/mini-font" }
+mini-playground = { path = "crates/mini-playground" }
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+dioxus-devtools = "0.7.9"
+tokio = { version = "1.48", features = ["macros", "rt-multi-thread", "sync"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
