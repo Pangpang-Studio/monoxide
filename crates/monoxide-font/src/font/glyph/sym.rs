@@ -4,7 +4,7 @@ mod tofu;
 use monoxide_script::prelude::*;
 
 pub use self::{
-    slash::{SlashShape, backslash, slash},
+    slash::{SlashAlignment, SlashShape, backslash, slash},
     tofu::tofu,
 };
 use crate::InputContext;
