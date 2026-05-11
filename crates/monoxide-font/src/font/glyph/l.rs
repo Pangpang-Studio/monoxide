@@ -18,11 +18,11 @@ pub fn l(cx: &InputContext) -> Glyph {
 pub struct LShape {
     pub x_range: Range<f64>,
     pub y_range: Range<f64>,
-    pub top_bar_scale: f64,
+    pub top_bar_scale: Range<f64>,
 }
 
 impl LShape {
-    pub const DEFAULT_TOP_BAR_SCALE: f64 = 0.85;
+    pub const DEFAULT_TOP_BAR_SCALE: Range<f64> = -0.85..0.;
 
     pub fn new(x_range: Range<f64>, y_range: Range<f64>) -> Self {
         Self {
@@ -54,8 +54,11 @@ impl IntoOutlines for LShape {
 
         let pipe = Rect::new((mid, y_min), (mid, y_max));
 
-        let top_serif =
-            Rect::new((mid, y_max), (mid - top_bar_scale * hw, y_max)).aligned(Alignment::Right);
+        let top_serif = Rect::new(
+            (mid + top_bar_scale.start * hw, y_max),
+            (mid + top_bar_scale.end * hw, y_max),
+        )
+        .aligned(Alignment::Left);
 
         let bottom_serif =
             Rect::new((mid - hw, y_min), (mid + hw, y_min)).aligned(Alignment::Right);

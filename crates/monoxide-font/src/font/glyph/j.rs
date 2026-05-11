@@ -37,7 +37,7 @@ impl JShape {
 
         let top_serif = Rect::new(
             (mid, xh),
-            (mid - LShape::DEFAULT_TOP_BAR_SCALE * (mih - sbl), xh),
+            (mid + LShape::DEFAULT_TOP_BAR_SCALE.start * (mih - sbl), xh),
         )
         .aligned(Alignment::Right)
         .stroked(stw);
