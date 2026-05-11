@@ -31,6 +31,11 @@ impl LShape {
             top_bar_scale: Self::DEFAULT_TOP_BAR_SCALE,
         }
     }
+
+    pub fn with_top_bar_scale(mut self, top_bar_scale: impl Into<Option<Range<f64>>>) -> Self {
+        self.top_bar_scale = top_bar_scale.into().unwrap_or(Self::DEFAULT_TOP_BAR_SCALE);
+        self
+    }
 }
 
 impl IntoOutlines for LShape {
