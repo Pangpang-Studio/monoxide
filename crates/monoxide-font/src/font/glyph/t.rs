@@ -13,6 +13,18 @@ pub fn t(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn t_cap(cx: &InputContext) -> Glyph {
+    let_settings! { { stw, lower_mid, upper_left, upper_mid, upper_right } = cx.settings(); }
+
+    let bar = Rect::new(upper_left, upper_right).aligned(Alignment::Left);
+    let pipe = Rect::new(upper_mid, lower_mid);
+
+    Glyph::builder()
+        .outline(bar.stroked(stw))
+        .outline(pipe.stroked(stw))
+        .build()
+}
+
 pub struct TShape {
     pub hook: Arc<OutlineExpr>,
     pub crossbar: Rect,
