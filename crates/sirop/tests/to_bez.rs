@@ -103,6 +103,7 @@ fn bezier_closed_flat_start_regression() -> sirop::Result<()> {
     Ok(())
 }
 
+#[allow(clippy::unreadable_literal)]
 #[test]
 fn bezier_closed_flat_start_from_stroke_regression() -> sirop::Result<()> {
     // Closed contour copied from glyph `o` stroke output where the first point
