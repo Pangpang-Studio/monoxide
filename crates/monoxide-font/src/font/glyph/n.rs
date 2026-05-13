@@ -8,13 +8,27 @@ use crate::{
         dir::{Alignment, Dir},
         glyph::o::OShape,
         settings::FontParamSettings,
-        shape::Rect,
+        shape::{Rect, Slash},
     },
 };
 
 pub fn n(cx: &InputContext) -> Glyph {
     Glyph::builder()
         .outlines(NShape::from_settings(&cx.settings))
+        .build()
+}
+
+pub fn n_cap(cx: &InputContext) -> Glyph {
+    let_settings! { { sbl, sbr, cap, stw } = cx.settings(); }
+
+    let left = Rect::new((sbl, 0.), (sbl, cap)).aligned(Alignment::Left);
+    let right = Rect::new((sbr, 0.), (sbr, cap)).aligned(Alignment::Right);
+    let diag = Slash::new(sbl..sbr, 0.0..cap).back();
+
+    Glyph::builder()
+        .outline(left.stroked(stw))
+        .outline(diag.stroked(stw))
+        .outline(right.stroked(stw))
         .build()
 }
 
