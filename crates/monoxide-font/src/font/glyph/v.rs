@@ -15,6 +15,14 @@ pub fn v(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn v_cap(cx: &InputContext) -> Glyph {
+    let_settings! { { sbl, sbr, stw, cap } = cx.settings(); }
+
+    Glyph::builder()
+        .outlines(VShape::new(sbl..sbr, 0.0..cap).stroked(stw))
+        .build()
+}
+
 struct VShape {
     xr: Range<f64>,
     yr: Range<f64>,
