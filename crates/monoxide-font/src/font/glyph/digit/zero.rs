@@ -3,8 +3,9 @@ use monoxide_script::prelude::*;
 use crate::{
     InputContext,
     font::{
-        dir::{Alignment, Dir},
+        dir::Dir,
         glyph::o::{OCapShape, OShape},
+        shape::Slash,
     },
 };
 
@@ -22,14 +23,11 @@ pub fn zero(cx: &InputContext) -> Glyph {
 
     let end_curve_h = o_cap_shape.end_curve_h();
 
-    let slash = SpiroBuilder::open().insts([
-        g4!(o_cap_shape.left() + stw, y - ry + end_curve_h)
-            .heading(Dir::L)
-            .aligned(Alignment::Left),
-        g4!(o_cap_shape.right() - stw, y + ry - end_curve_h)
-            .heading(Dir::R)
-            .aligned(Alignment::Right),
-    ]);
+    let slash = Slash::new(
+        (o_cap_shape.left() + stw)..(o_cap_shape.right() - stw),
+        (y - ry + end_curve_h)..(y + ry - end_curve_h),
+    )
+    .with_heading(Dir::L);
 
     Glyph::builder()
         .outline(o_cap_shape.stroked(stw))
