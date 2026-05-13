@@ -5,14 +5,10 @@ use monoxide_script::{g2, prelude::*};
 use crate::font::{
     InputContext,
     dir::{Alignment, Dir},
-    glyph::{
-        j::JShape,
-        n::Hook,
-        sym::{SlashAlignment, SlashShape},
-    },
+    glyph::{j::JShape, n::Hook},
     math::mix,
     settings::FontParamSettings,
-    shape::Rect,
+    shape::{Rect, Slash, SlashAlignment},
 };
 
 pub fn a(cx: &InputContext) -> Glyph {
@@ -72,8 +68,8 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
 
     let bar_height = 0.65;
 
-    let left = SlashShape::new(sbl..mid, 0.0..cap).with_aln(SlashAlignment::symm(0.5));
-    let right = SlashShape {
+    let left = Slash::new(sbl..mid, 0.0..cap).with_aln(SlashAlignment::symm(0.5));
+    let right = Slash {
         x_range: mid..sbr,
         ..left.clone()
     }
@@ -85,8 +81,8 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
     );
 
     Glyph::builder()
-        .outlines(left.stroked(stw))
-        .outlines(right.stroked(stw))
+        .outline(left.stroked(stw))
+        .outline(right.stroked(stw))
         .outline(bar.stroked(stw))
         .build()
 }
