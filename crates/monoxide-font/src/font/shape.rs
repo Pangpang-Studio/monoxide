@@ -96,17 +96,21 @@ impl IntoOutline for Ring {
 /// from the bottom-left corner to the top-right one.
 #[derive(Clone, Debug)]
 pub struct Slash {
-    pub x_range: Range<f64>,
-    pub y_range: Range<f64>,
+    pub xr: Range<f64>,
+    pub yr: Range<f64>,
     pub aln: SlashAlignment,
+    pub heading: Dir,
 }
 
 impl Slash {
-    pub fn new(x_range: Range<f64>, y_range: Range<f64>) -> Self {
+    pub const DEFAULT_HEADING: Dir = Dir::U;
+
+    pub fn new(xr: Range<f64>, yr: Range<f64>) -> Self {
         Self {
-            x_range,
-            y_range,
+            xr,
+            yr,
             aln: SlashAlignment::default(),
+            heading: Self::DEFAULT_HEADING,
         }
     }
 
@@ -115,9 +119,15 @@ impl Slash {
         self
     }
 
+    pub fn with_heading(mut self, tip_dir: impl Into<Option<Dir>>) -> Self {
+        self.heading = tip_dir.into().unwrap_or(Self::DEFAULT_HEADING);
+        self
+    }
+
+    /// Turns the slash around, e.g. from the regular slash to a backslash.
     pub fn back(mut self) -> Self {
-        let Range { start: x0, end: x1 } = self.x_range;
-        self.x_range = x1..x0;
+        let Range { start: x0, end: x1 } = self.xr;
+        self.xr = x1..x0;
         self.aln = self.aln.back();
         self
     }
@@ -126,21 +136,22 @@ impl Slash {
 impl IntoOutline for Slash {
     fn into_outline(self) -> Arc<OutlineExpr> {
         let Self {
-            x_range: Range {
+            xr: Range {
                 start: left,
                 end: right,
             },
-            y_range: Range {
+            yr: Range {
                 start: bot,
                 end: top,
             },
             aln,
+            heading: tip_dir,
         } = self;
 
         SpiroBuilder::open()
             .insts([
-                g4!(left, bot).heading(Dir::D).aligned(aln.bot),
-                g4!(right, top).heading(Dir::U).aligned(aln.top),
+                g4!(left, bot).heading(tip_dir).aligned(aln.bot),
+                g4!(right, top).heading(tip_dir).aligned(aln.top),
             ])
             .into_outline()
     }
@@ -163,10 +174,8 @@ impl SlashAlignment {
         Self::new(bot, 1. - bot)
     }
 
-    pub const fn back(mut self) -> Self {
-        self.bot = 1. - self.bot;
-        self.top = 1. - self.top;
-        self
+    pub const fn back(self) -> Self {
+        Self::new(1. - self.bot, 1. - self.top)
     }
 }
 

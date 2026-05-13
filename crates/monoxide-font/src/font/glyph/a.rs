@@ -70,7 +70,7 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
 
     let left = Slash::new(sbl..mid, 0.0..cap).with_aln(SlashAlignment::symm(0.5));
     let right = Slash {
-        x_range: mid..sbr,
+        xr: mid..sbr,
         ..left.clone()
     }
     .back();
