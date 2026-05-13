@@ -125,11 +125,13 @@ impl Slash {
     }
 
     /// Turns the slash around, e.g. from the regular slash to a backslash.
-    pub fn back(mut self) -> Self {
+    pub fn back(self) -> Self {
         let Range { start: x0, end: x1 } = self.xr;
-        self.xr = x1..x0;
-        self.aln = self.aln.back();
-        self
+        Self {
+            xr: x1..x0,
+            aln: self.aln.back(),
+            ..self
+        }
     }
 }
 
@@ -145,13 +147,13 @@ impl IntoOutline for Slash {
                 end: top,
             },
             aln,
-            heading: tip_dir,
+            heading,
         } = self;
 
         SpiroBuilder::open()
             .insts([
-                g4!(left, bot).heading(tip_dir).aligned(aln.bot),
-                g4!(right, top).heading(tip_dir).aligned(aln.top),
+                g4!(left, bot).heading(heading).aligned(aln.bot),
+                g4!(right, top).heading(heading).aligned(aln.top),
             ])
             .into_outline()
     }
