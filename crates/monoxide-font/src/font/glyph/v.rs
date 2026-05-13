@@ -12,7 +12,7 @@ pub fn v(cx: &InputContext) -> Glyph {
     let slash = Slash::new(mid..sbr, 0.0..xh).with_aln(SlashAlignment::new(0.5, 1. - aln));
 
     let backslash = Slash {
-        x_range: sbl..mid,
+        xr: sbl..mid,
         ..slash.clone()
     }
     .back();
