@@ -2,17 +2,17 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::glyph::sym::{SlashAlignment, SlashShape},
+    font::shape::{Slash, SlashAlignment},
 };
 
 pub fn x(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, sbr, stw, xh } = cx.settings(); }
 
-    let slash = SlashShape::new(sbl..sbr, (0.)..xh).with_aln(SlashAlignment::symm(0.2));
+    let slash = Slash::new(sbl..sbr, (0.)..xh).with_aln(SlashAlignment::symm(0.2));
     let backslash = slash.clone().back();
 
     Glyph::builder()
-        .outlines(slash.stroked(stw))
-        .outlines(backslash.stroked(stw))
+        .outline(slash.stroked(stw))
+        .outline(backslash.stroked(stw))
         .build()
 }
