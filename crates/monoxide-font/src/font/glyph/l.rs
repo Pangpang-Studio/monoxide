@@ -4,7 +4,7 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::{dir::Alignment, shape::Rect},
+    font::{dir::Alignment, glyph::c::CShape, shape::Rect},
 };
 
 pub fn l(cx: &InputContext) -> Glyph {
@@ -16,14 +16,16 @@ pub fn l(cx: &InputContext) -> Glyph {
 }
 
 pub fn l_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { stw, lower_left, lower_right, upper_left } = cx.settings(); }
+    let_settings! { { sbl, sbr, stw, xh, cap, mid, mih, ovs } = cx.settings(); }
 
-    let pipe = Rect::new(lower_left, upper_left).aligned(Alignment::Left);
-    let bar = Rect::new(lower_left, lower_right).aligned(Alignment::Right);
+    let serif_l = CShape::new((mid, mih), (mid - sbl, mih), ovs).aperture_curve_h_lo();
+    let serif = Rect::new((sbr, stw), (sbr, stw + serif_l)).aligned(Alignment::Right);
+
+    let pipe = Rect::new((sbl, 0.), (sbl, cap)).aligned(Alignment::Left);
+    let bar = Rect::new((sbl, 0.), (sbr, 0.)).aligned(Alignment::Right);
 
     Glyph::builder()
-        .outline(pipe.stroked(stw))
-        .outline(bar.stroked(stw))
+        .outlines([serif, pipe, bar].map(|it| it.stroked(stw).into_outline()))
         .build()
 }
 
