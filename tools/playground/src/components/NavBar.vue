@@ -1,6 +1,11 @@
 <template>
   <div class="flex flex-row px-1">
-    <div aria-label="logo" class="px-3 py-2 font-bold">monoxide</div>
+    <a
+      aria-label="logo"
+      class="px-3 py-2 font-bold"
+      href="https://github.com/Pangpang-Studio/monoxide"
+      >monoxide</a
+    >
     <template v-for="r in computedRoutes" :key="r.name">
       <RouterLink
         v-if="r.path"
