@@ -23,13 +23,13 @@ pub fn v_cap(cx: &InputContext) -> Glyph {
         .build()
 }
 
-struct VShape {
+pub struct VShape {
     xr: Range<f64>,
     yr: Range<f64>,
 }
 
 impl VShape {
-    fn new(xr: Range<f64>, yr: Range<f64>) -> Self {
+    pub fn new(xr: Range<f64>, yr: Range<f64>) -> Self {
         Self { xr, yr }
     }
 }

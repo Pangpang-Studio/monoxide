@@ -56,7 +56,7 @@ pub use self::{
     v::{v, v_cap},
     w::{w, w_cap},
     x::{x, x_cap},
-    y::y,
+    y::{y, y_cap},
     z::z,
 };
 use crate::{InputContext, font::glyph::z::z_cap};
@@ -80,6 +80,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('V', v_cap),
     ('W', w_cap),
     ('X', x_cap),
+    ('Y', y_cap),
     ('Z', z_cap),
     ('\\', backslash),
     ('a', a),
