@@ -15,6 +15,18 @@ pub fn l(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn l_cap(cx: &InputContext) -> Glyph {
+    let_settings! { { stw, lower_left, lower_right, upper_left } = cx.settings(); }
+
+    let pipe = Rect::new(lower_left, upper_left).aligned(Alignment::Left);
+    let bar = Rect::new(lower_left, lower_right).aligned(Alignment::Right);
+
+    Glyph::builder()
+        .outline(pipe.stroked(stw))
+        .outline(bar.stroked(stw))
+        .build()
+}
+
 pub struct LShape {
     pub x_range: Range<f64>,
     pub y_range: Range<f64>,
