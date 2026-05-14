@@ -55,7 +55,7 @@ pub use self::{
     u::u,
     v::{v, v_cap},
     w::w,
-    x::x,
+    x::{x, x_cap},
     y::y,
     z::z,
 };
@@ -76,6 +76,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('O', o_cap),
     ('T', t_cap),
     ('V', v_cap),
+    ('X', x_cap),
     ('\\', backslash),
     ('a', a),
     ('b', b),
