@@ -4,12 +4,37 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::{dir::Alignment, glyph::o::OShape, math::mix, settings::FontParamSettings, shape::Rect},
+    font::{
+        dir::Alignment,
+        glyph::{
+            o::OShape,
+            w::{Chevron, WShape},
+        },
+        math::mix,
+        settings::FontParamSettings,
+        shape::Rect,
+    },
 };
 
 pub fn m(cx: &InputContext) -> Glyph {
     Glyph::builder()
         .outlines(MShape::from_settings(&cx.settings))
+        .build()
+}
+
+pub fn m_cap(cx: &InputContext) -> Glyph {
+    let_settings! { { sbl, mid, sbr, stw, xh, cap } = cx.settings(); }
+
+    let chevron = Chevron::new(sbl..mid, 0.0..cap, 0.2, xh / cap)
+        .with_mid_scale(0.)
+        .with_bot_width_scale(1.);
+
+    Glyph::builder()
+        .outlines(
+            WShape::from(chevron)
+                .stroked(stw)
+                .transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.))),
+        )
         .build()
 }
 
