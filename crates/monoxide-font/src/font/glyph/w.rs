@@ -14,28 +14,77 @@ pub fn w(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, mid, sbr, stw, xh } = cx.settings(); }
 
     let chevron = Chevron {
-        x_range: sbl..mid,
-        y_range: 0.0..xh,
+        xr: sbl..mid,
+        yr: 0.0..xh,
         aln: 0.5,
         mih_scale: 0.75,
     };
 
     Glyph::builder()
-        .outlines(
-            chevron
-                .clone()
-                .stroked(stw)
-                .transformed(Affine2D::mirrored_along((mid, 0.), (0., 1.))),
-        )
-        .outlines(chevron.stroked(stw))
+        .outlines(WShape::from(chevron).stroked(stw))
         .build()
+}
+
+pub fn w_cap(cx: &InputContext) -> Glyph {
+    let_settings! { { sbl, mid, sbr, stw, xh, cap } = cx.settings(); }
+
+    let chevron = Chevron {
+        xr: sbl..mid,
+        yr: 0.0..cap,
+        aln: 0.5,
+        mih_scale: xh / cap,
+    };
+
+    Glyph::builder()
+        .outlines(WShape::from(chevron).stroked(stw))
+        .build()
+}
+
+struct WShape {
+    pub chevron: Chevron,
+    pub stw: Option<f64>,
+}
+
+impl WShape {
+    fn stroked(mut self, stw: impl Into<Option<f64>>) -> Self {
+        self.stw = stw.into();
+        self
+    }
+}
+
+impl From<Chevron> for WShape {
+    fn from(chevron: Chevron) -> Self {
+        Self { chevron, stw: None }
+    }
+}
+
+impl IntoOutlines for WShape {
+    type Outlines = [Arc<OutlineExpr>; 4];
+
+    fn into_outlines(self) -> Self::Outlines {
+        let mid = self.chevron.xr.end;
+
+        let mut chevron = self.chevron.into_outlines();
+        if let Some(stw) = self.stw {
+            chevron = chevron.map(|it| it.stroked(stw));
+        }
+
+        let [c0, c1] = chevron;
+        let xform = Affine2D::mirrored_along((mid, 0.), (0., 1.));
+        [
+            c0.clone().transformed(xform),
+            c1.clone().transformed(xform),
+            c0,
+            c1,
+        ]
+    }
 }
 
 /// A left-biased chevron shape to be used by the left part of w.
 #[derive(Clone)]
 struct Chevron {
-    pub x_range: Range<f64>,
-    pub y_range: Range<f64>,
+    pub xr: Range<f64>,
+    pub yr: Range<f64>,
     pub aln: f64,
     /// The relative height of the middle peak compared to the overall height.
     pub mih_scale: f64,
@@ -46,11 +95,11 @@ impl IntoOutlines for Chevron {
 
     fn into_outlines(self) -> Self::Outlines {
         let Self {
-            x_range: Range {
+            xr: Range {
                 start: sbl,
                 end: sbr,
             },
-            y_range: Range {
+            yr: Range {
                 start: bse,
                 end: xh,
             },
