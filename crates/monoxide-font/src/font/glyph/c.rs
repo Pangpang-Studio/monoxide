@@ -42,6 +42,14 @@ impl CShape {
     pub fn aperture_curve_h_lo(&self) -> f64 {
         self.aperture_curve_h_hi() / 5.
     }
+
+    pub const fn left(&self) -> f64 {
+        self.o_shape.left()
+    }
+
+    pub const fn right(&self) -> f64 {
+        self.o_shape.right()
+    }
 }
 
 impl IntoOutline for CShape {
