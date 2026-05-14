@@ -13,13 +13,7 @@ use crate::{
 pub fn w(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, mid, sbr, stw, xh } = cx.settings(); }
 
-    let chevron = Chevron {
-        xr: sbl..mid,
-        yr: 0.0..xh,
-        aln: 0.5,
-        mih_scale: 0.75,
-    };
-
+    let chevron = Chevron::new(sbl..mid, 0.0..xh, 0.5, 0.75);
     Glyph::builder()
         .outlines(WShape::from(chevron).stroked(stw))
         .build()
@@ -28,25 +22,19 @@ pub fn w(cx: &InputContext) -> Glyph {
 pub fn w_cap(cx: &InputContext) -> Glyph {
     let_settings! { { sbl, mid, sbr, stw, xh, cap } = cx.settings(); }
 
-    let chevron = Chevron {
-        xr: sbl..mid,
-        yr: 0.0..cap,
-        aln: 0.5,
-        mih_scale: xh / cap,
-    };
-
+    let chevron = Chevron::new(sbl..mid, 0.0..cap, 0.5, xh / cap);
     Glyph::builder()
         .outlines(WShape::from(chevron).stroked(stw))
         .build()
 }
 
-struct WShape {
+pub struct WShape {
     pub chevron: Chevron,
     pub stw: Option<f64>,
 }
 
 impl WShape {
-    fn stroked(mut self, stw: impl Into<Option<f64>>) -> Self {
+    pub fn stroked(mut self, stw: impl Into<Option<f64>>) -> Self {
         self.stw = stw.into();
         self
     }
@@ -82,12 +70,46 @@ impl IntoOutlines for WShape {
 
 /// A left-biased chevron shape to be used by the left part of w.
 #[derive(Clone)]
-struct Chevron {
+pub struct Chevron {
     pub xr: Range<f64>,
     pub yr: Range<f64>,
     pub aln: f64,
+
     /// The relative height of the middle peak compared to the overall height.
     pub mih_scale: f64,
+
+    /// The relative width of the middle peak compared to the overall width.
+    ///
+    /// If `None` is provided, it will fall back on a default value.
+    pub mid_scale: Option<f64>,
+
+    pub bot_width_scale: Option<f64>,
+}
+
+impl Chevron {
+    pub const DEFAULT_MID_SCALE: f64 = 0.4;
+    pub const DEFAULT_BOT_WIDTH_SCALE: f64 = 0.8;
+
+    pub fn new(xr: Range<f64>, yr: Range<f64>, aln: f64, mih_scale: f64) -> Self {
+        Self {
+            xr,
+            yr,
+            aln,
+            mih_scale,
+            mid_scale: None,
+            bot_width_scale: None,
+        }
+    }
+
+    pub fn with_mid_scale(mut self, mid_scale: impl Into<Option<f64>>) -> Self {
+        self.mid_scale = mid_scale.into();
+        self
+    }
+
+    pub fn with_bot_width_scale(mut self, bot_width_scale: impl Into<Option<f64>>) -> Self {
+        self.bot_width_scale = bot_width_scale.into();
+        self
+    }
 }
 
 impl IntoOutlines for Chevron {
@@ -105,17 +127,26 @@ impl IntoOutlines for Chevron {
             },
             aln,
             mih_scale,
+            mid_scale,
+            bot_width_scale,
         } = self;
 
-        let mid = mix(sbr, sbl, 0.4);
+        let mid = mix(sbr, sbl, mid_scale.unwrap_or(Self::DEFAULT_MID_SCALE));
         let mih = mix(xh, bse, mih_scale);
 
+        let bot_width_scale = bot_width_scale.unwrap_or(Self::DEFAULT_BOT_WIDTH_SCALE);
         let bot = g4!(mid, bse)
             .heading(Dir::D)
-            .aligned(Alignment::Middle)
-            .width(0.8);
+            .aligned(aln)
+            .width(bot_width_scale);
 
-        let slash = SpiroBuilder::open().insts([bot.clone(), g4!(sbr, mih).heading(Dir::U)]);
+        let slash = SpiroBuilder::open().insts([
+            bot.clone(),
+            g4!(sbr, mih)
+                .heading(Dir::U)
+                .aligned(Alignment::Middle)
+                .width(Self::DEFAULT_BOT_WIDTH_SCALE),
+        ]);
 
         let backslash =
             SpiroBuilder::open().insts([bot, g4!(sbl, xh).heading(Dir::U).aligned(aln).width(1.1)]);

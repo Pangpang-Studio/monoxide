@@ -59,7 +59,10 @@ pub use self::{
     y::{y, y_cap},
     z::z,
 };
-use crate::{InputContext, font::glyph::z::z_cap};
+use crate::{
+    InputContext,
+    font::glyph::{m::m_cap, z::z_cap},
+};
 
 pub type GlyphFn = fn(&InputContext) -> Glyph;
 
@@ -73,6 +76,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('I', i_cap),
     ('J', j_cap),
     ('L', l_cap),
+    ('M', m_cap),
     ('N', n_cap),
     ('O', o_cap),
     ('Q', q_cap),
