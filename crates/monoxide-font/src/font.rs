@@ -45,6 +45,6 @@ pub const fn make_font_params() -> FontParamSettings {
         stroke_width: 0.144 * width,
         side_bearing: 0.125 * width,
         overshoot: 1. / 40.,
-        dot_size: 0.25 * width,
+        dot_size: 0.27 * width,
     }
 }

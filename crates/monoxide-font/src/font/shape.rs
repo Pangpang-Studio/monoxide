@@ -8,10 +8,7 @@ use monoxide_script::{
     flat, g4,
 };
 
-use super::{
-    dir::{Alignment, Dir},
-    math::mix,
-};
+use super::dir::{Alignment, Dir};
 
 /// A rectangle formed by drawing a line between points `start` and
 /// `end` and span it in the normal direction according to the given width.
@@ -81,8 +78,8 @@ impl IntoOutline for Ring {
         let Range { start: x0, end: x1 } = self.xr;
         let Range { start: y0, end: y1 } = self.yr;
 
-        let xm = mix(x0, x1, 0.5);
-        let ym = mix(y0, y1, 0.5);
+        let xm = x0.midpoint(x1);
+        let ym = y0.midpoint(y1);
 
         SpiroBuilder::closed()
             .insts([g4!(x0, ym), g4!(xm, y0), g4!(x1, ym), g4!(xm, y1)])
