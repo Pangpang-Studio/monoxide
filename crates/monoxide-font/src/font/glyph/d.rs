@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
+use super::o::{IOShape, OShape};
 use crate::{
     InputContext,
-    font::{dir::Alignment, glyph::o::OShape, settings::FontParamSettings, shape::Rect},
+    font::{dir::Alignment, settings::FontParamSettings, shape::Rect},
 };
 
 pub fn d(cx: &InputContext) -> Glyph {
@@ -72,12 +73,10 @@ impl Bowl {
 
 impl IntoOutline for Bowl {
     fn into_outline(self) -> Arc<OutlineExpr> {
-        let OShape {
-            center: Point2D { x, y },
-            radii: Point2D { x: rx, y: ry },
-            ovs,
-            ..
-        } = self.o_shape;
+        let o_shape = &self.o_shape;
+        let Point2D { x, y } = o_shape.center();
+        let Point2D { x: rx, y: ry } = o_shape.radii();
+        let ovs = o_shape.ovs();
 
         let mid_curve_w = self.mid_curve_w();
         let mid_curve_h = self.mid_curve_h();
