@@ -43,7 +43,7 @@ pub use self::{
     j::{j, j_cap},
     k::k,
     l::{l, l_cap},
-    m::m,
+    m::{m, m_cap},
     n::{n, n_cap},
     o::{o, o_cap},
     p::p,
@@ -57,12 +57,9 @@ pub use self::{
     w::{w, w_cap},
     x::{x, x_cap},
     y::{y, y_cap},
-    z::z,
+    z::{z, z_cap},
 };
-use crate::{
-    InputContext,
-    font::glyph::{m::m_cap, z::z_cap},
-};
+use crate::InputContext;
 
 pub type GlyphFn = fn(&InputContext) -> Glyph;
 
