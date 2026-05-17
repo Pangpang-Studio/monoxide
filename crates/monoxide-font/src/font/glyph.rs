@@ -32,7 +32,7 @@ use monoxide_script::ast::Glyph;
 pub use self::{
     a::{a, a_cap},
     b::b,
-    c::c,
+    c::{c, c_cap},
     d::d,
     digit::{one, zero},
     e::e,
@@ -69,6 +69,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('0', zero),
     ('1', one),
     ('A', a_cap),
+    ('C', c_cap),
     ('H', h_cap),
     ('I', i_cap),
     ('J', j_cap),

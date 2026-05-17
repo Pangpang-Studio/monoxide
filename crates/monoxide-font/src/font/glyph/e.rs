@@ -2,11 +2,7 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use super::{
-    InputContext,
-    c::CShape,
-    o::{IOShape, OShape},
-};
+use super::{InputContext, c::CShape, o::IOShape};
 use crate::font::{
     dir::{Alignment, Dir},
     settings::FontParamSettings,
