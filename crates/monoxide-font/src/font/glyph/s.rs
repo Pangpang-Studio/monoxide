@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
+use super::o::IOShape;
 use crate::{
     InputContext,
     font::{
@@ -32,12 +33,10 @@ impl Hook {
 
 impl IntoOutline for Hook {
     fn into_outline(self) -> Arc<OutlineExpr> {
-        let o_shape @ OShape {
-            center: Point2D { x, y },
-            radii: Point2D { x: rx, y: ry },
-            ovs,
-            ..
-        } = self.o_shape;
+        let o_shape = self.o_shape;
+        let Point2D { x, y } = o_shape.center();
+        let Point2D { x: rx, y: ry } = o_shape.radii();
+        let ovs = o_shape.ovs();
 
         let mid_curve_w = o_shape.mid_curve_w();
         let mid_curve_h = o_shape.mid_curve_h();

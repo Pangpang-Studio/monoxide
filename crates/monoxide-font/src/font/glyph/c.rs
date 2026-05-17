@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use super::{InputContext, o::OShape};
+use super::{
+    InputContext,
+    o::{IOShape, OShape},
+};
 use crate::font::{dir::Alignment, math::mix};
 
 pub fn c(cx: &InputContext) -> Glyph {
@@ -43,23 +46,21 @@ impl CShape {
         self.aperture_curve_h_hi() / 5.
     }
 
-    pub const fn left(&self) -> f64 {
+    pub fn left(&self) -> f64 {
         self.o_shape.left()
     }
 
-    pub const fn right(&self) -> f64 {
+    pub fn right(&self) -> f64 {
         self.o_shape.right()
     }
 }
 
 impl IntoOutline for CShape {
     fn into_outline(self) -> Arc<OutlineExpr> {
-        let OShape {
-            center: Point2D { x, y },
-            radii: Point2D { x: rx, y: ry },
-            ovs,
-            ..
-        } = self.o_shape;
+        let o_shape = &self.o_shape;
+        let Point2D { x, y } = o_shape.center();
+        let Point2D { x: rx, y: ry } = o_shape.radii();
+        let ovs = o_shape.ovs();
 
         let mid_curve_w = self.mid_curve_w();
         let mid_curve_h = self.mid_curve_h();

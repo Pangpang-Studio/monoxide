@@ -87,8 +87,8 @@ pub struct Chevron {
 }
 
 impl Chevron {
-    pub const DEFAULT_MID_SCALE: f64 = 0.4;
     pub const DEFAULT_BOT_WIDTH_SCALE: f64 = 0.8;
+    pub const DEFAULT_MID_SCALE: f64 = 0.4;
 
     pub fn new(xr: Range<f64>, yr: Range<f64>, aln: f64, mih_scale: f64) -> Self {
         Self {

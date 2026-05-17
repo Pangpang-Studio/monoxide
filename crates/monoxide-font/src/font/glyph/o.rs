@@ -31,6 +31,25 @@ pub struct OShape {
     pub ovh: f64,
 }
 
+pub trait IOShape {
+    fn center(&self) -> Point2D;
+    fn radii(&self) -> Point2D;
+    fn ovs(&self) -> f64;
+    fn ovh(&self) -> f64;
+
+    fn mid_curve_w(&self) -> f64;
+    fn mid_curve_h(&self) -> f64;
+    fn end_curve_h(&self) -> f64;
+
+    fn left(&self) -> f64 {
+        self.center().x - self.radii().x - self.ovh()
+    }
+
+    fn right(&self) -> f64 {
+        self.center().x + self.radii().x + self.ovh()
+    }
+}
+
 impl OShape {
     pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
         Self {
@@ -45,25 +64,35 @@ impl OShape {
         self.ovh = ovh.into().unwrap_or_default();
         self
     }
+}
 
-    pub const fn mid_curve_w(&self) -> f64 {
+impl IOShape for OShape {
+    fn center(&self) -> Point2D {
+        self.center
+    }
+
+    fn radii(&self) -> Point2D {
+        self.radii
+    }
+
+    fn ovs(&self) -> f64 {
+        self.ovs
+    }
+
+    fn ovh(&self) -> f64 {
+        self.ovh
+    }
+
+    fn mid_curve_w(&self) -> f64 {
         0.85 * self.radii.x
     }
 
-    pub const fn mid_curve_h(&self) -> f64 {
+    fn mid_curve_h(&self) -> f64 {
         (5. / 16.) * self.radii.y
     }
 
-    pub const fn end_curve_h(&self) -> f64 {
+    fn end_curve_h(&self) -> f64 {
         (15. / 16.) * self.radii.y
-    }
-
-    pub const fn left(&self) -> f64 {
-        self.center.x - self.radii.x - self.ovh
-    }
-
-    pub const fn right(&self) -> f64 {
-        self.center.x + self.radii.x + self.ovh
     }
 }
 
@@ -117,40 +146,47 @@ impl OCapShape {
         }
     }
 
-    pub const fn left(&self) -> f64 {
-        self.o_shape.left()
-    }
-
-    pub const fn right(&self) -> f64 {
-        self.o_shape.right()
-    }
-
-    pub const fn mid_curve_h(&self) -> f64 {
-        (3.75 / 16.) * self.o_shape.radii.y
-    }
-
-    pub const fn mid_curve_w(&self) -> f64 {
-        self.o_shape.mid_curve_w()
-    }
-
-    pub const fn end_curve_h(&self) -> f64 {
-        (13. / 16.) * self.o_shape.radii.y
-    }
-
     pub fn with_ovh(mut self, ovh: impl Into<Option<f64>>) -> Self {
         self.o_shape = self.o_shape.with_ovh(ovh);
         self
     }
 }
 
+impl IOShape for OCapShape {
+    fn center(&self) -> Point2D {
+        self.o_shape.center()
+    }
+
+    fn radii(&self) -> Point2D {
+        self.o_shape.radii()
+    }
+
+    fn ovs(&self) -> f64 {
+        self.o_shape.ovs()
+    }
+
+    fn ovh(&self) -> f64 {
+        self.o_shape.ovh()
+    }
+
+    fn mid_curve_h(&self) -> f64 {
+        (3.75 / 16.) * self.radii().y
+    }
+
+    fn mid_curve_w(&self) -> f64 {
+        self.o_shape.mid_curve_w()
+    }
+
+    fn end_curve_h(&self) -> f64 {
+        (13. / 16.) * self.radii().y
+    }
+}
+
 impl IntoOutline for OCapShape {
     fn into_outline(self) -> Arc<OutlineExpr> {
-        let OShape {
-            center: Point2D { x, y },
-            radii: Point2D { y: ry, .. },
-            ovs,
-            ..
-        } = self.o_shape;
+        let Point2D { x, y } = self.center();
+        let Point2D { y: ry, .. } = self.radii();
+        let ovs = self.ovs();
 
         let mid_curve_w = self.mid_curve_w();
         let mid_curve_h = self.mid_curve_h();

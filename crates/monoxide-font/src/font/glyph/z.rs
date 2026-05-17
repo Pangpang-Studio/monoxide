@@ -42,11 +42,11 @@ impl ZShape {
         }
     }
 
-    pub const fn left(&self) -> f64 {
+    pub fn left(&self) -> f64 {
         self.c_shape.left()
     }
 
-    pub const fn right(&self) -> f64 {
+    pub fn right(&self) -> f64 {
         self.c_shape.right()
     }
 }

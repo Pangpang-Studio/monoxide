@@ -4,7 +4,7 @@ use crate::{
     InputContext,
     font::{
         dir::Dir,
-        glyph::o::{OCapShape, OShape},
+        glyph::o::{IOShape, OCapShape},
         shape::Slash,
     },
 };
@@ -12,14 +12,10 @@ use crate::{
 pub fn zero(cx: &InputContext) -> Glyph {
     let_settings! { { mid, cap, ovs, ovh, sbl, stw } = cx.settings(); }
 
-    let o_cap_shape @ OCapShape {
-        o_shape:
-            OShape {
-                center: Point2D { y, .. },
-                radii: Point2D { y: ry, .. },
-                ..
-            },
-    } = OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).with_ovh(ovh);
+    let o_cap_shape = OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).with_ovh(ovh);
+    let o_shape = &o_cap_shape.o_shape;
+    let Point2D { y, .. } = o_shape.center();
+    let Point2D { y: ry, .. } = o_shape.radii();
 
     let end_curve_h = o_cap_shape.end_curve_h();
 
