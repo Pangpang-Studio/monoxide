@@ -10,7 +10,7 @@ pub fn k(cx: &InputContext) -> Glyph {
     let_settings! {
         {
             sbl, sbr, xh, mih, stw,
-            lower_left,
+            cap,
             lower_right,
             upper_left,
         } = cx.settings();
@@ -18,7 +18,7 @@ pub fn k(cx: &InputContext) -> Glyph {
 
     let k_mid_offset = Point2D::new(sbr - sbl, 0.) * 0.1;
 
-    let pipe = Rect::new(lower_left, upper_left)
+    let pipe = Rect::new((sbl + stw / 4., 0.), (sbl + stw / 4., cap))
         .aligned(Alignment::Left)
         .stroked(stw)
         .into_outline();
@@ -37,8 +37,8 @@ pub fn k(cx: &InputContext) -> Glyph {
         // TODO: Find out how the scaling factor is determined.
         .stroked(stw * 0.8);
 
-    let bar = Rect::new(mid.with_x(sbl), mid + (stw, 0.).into())
-        .stroked(stw)
+    let bar = Rect::new(mid.with_x(sbl + stw / 4.), mid + (stw, 0.).into())
+        .stroked(0.9 * stw)
         .into_outline();
 
     Glyph::builder().outlines([pipe, chevron, bar]).build()
