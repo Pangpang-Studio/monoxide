@@ -27,7 +27,7 @@ impl GShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, xh, dsc } = settings; }
 
-        let bowl = Bowl::new((mid, mih), (mid - sbl, mih), ovs)
+        let bowl = Bowl::new((mid - stw / 4., mih), (mid - sbl - stw / 4., mih), ovs)
             .stroked(stw)
             .into_outline();
         let hook = Hook::new((mid, mih - dsc), (mid - sbl, mih), ovs)
