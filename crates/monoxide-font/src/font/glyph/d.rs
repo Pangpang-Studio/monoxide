@@ -2,10 +2,17 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use super::o::{IOShape, OShape};
 use crate::{
     InputContext,
-    font::{dir::Alignment, glyph::o::OCapShape, settings::FontParamSettings, shape::Rect},
+    font::{
+        dir::Alignment,
+        glyph::{
+            o::{IOShape, OShape},
+            p::{CapBowl, PCapShape},
+        },
+        settings::FontParamSettings,
+        shape::Rect,
+    },
 };
 
 pub fn d(cx: &InputContext) -> Glyph {
@@ -15,9 +22,15 @@ pub fn d(cx: &InputContext) -> Glyph {
 }
 
 pub fn d_cap(cx: &InputContext) -> Glyph {
-    Glyph::builder()
-        .outlines(DCapShape::from_settings(&cx.settings))
-        .build()
+    let settings = &cx.settings;
+    let_settings! { { sbl, mid, cap } = settings; }
+
+    let mut p_cap_shape = PCapShape::from_settings(settings);
+    p_cap_shape.bowl = CapBowl::new((mid, cap / 2.), (mid - sbl, cap / 2.))
+        .with_mid_curve_h_factor(1.2)
+        .with_end_curve_h_factor(1.0);
+
+    Glyph::builder().outlines(p_cap_shape).build()
 }
 
 pub struct DShape {
@@ -106,91 +119,6 @@ impl IntoOutline for Bowl {
                     .width(1.),
                 g4!(x, y_lo - ovs).width(0.9),
                 g4!(x + rx, y_lo + mid_curve_h * 2.).width(0.4),
-            ])
-            .into_outline()
-    }
-}
-
-pub struct DCapShape {
-    bowl: Arc<OutlineExpr>,
-    pipe: Rect,
-}
-
-impl DCapShape {
-    pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw } = settings; }
-
-        let bowl = CapBowl::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs)
-            .stroked(stw)
-            .into_outline();
-        let pipe = Rect::new((sbl, 0.), (sbl, cap))
-            .aligned(Alignment::Left)
-            .stroked(stw);
-
-        Self { bowl, pipe }
-    }
-}
-
-impl IntoOutlines for DCapShape {
-    type Outlines = [Arc<OutlineExpr>; 2];
-
-    fn into_outlines(self) -> Self::Outlines {
-        [self.bowl, self.pipe.into_outline()]
-    }
-}
-
-pub struct CapBowl {
-    pub o_shape: OCapShape,
-}
-
-impl CapBowl {
-    pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
-        Self {
-            o_shape: OCapShape::new(center, radii, ovs),
-        }
-    }
-
-    pub fn mid_curve_h(&self) -> f64 {
-        self.o_shape.mid_curve_h() * 1.2
-    }
-
-    pub fn mid_curve_w(&self) -> f64 {
-        self.o_shape.mid_curve_w()
-    }
-
-    pub fn end_curve_h(&self) -> f64 {
-        self.o_shape.end_curve_h()
-    }
-}
-
-impl IntoOutline for CapBowl {
-    fn into_outline(self) -> Arc<OutlineExpr> {
-        let o_shape = &self.o_shape;
-        let Point2D { x, y } = o_shape.center();
-        let Point2D { x: rx, y: ry } = o_shape.radii();
-
-        let mid_curve_w = self.mid_curve_w();
-        let mid_curve_h = self.mid_curve_h();
-        let end_curve_h = self.end_curve_h();
-
-        let y_hi = y + ry;
-        let y_lo = y - ry;
-
-        SpiroBuilder::open()
-            .insts([
-                // Top arc
-                flat!(x - rx, y_hi),
-                curl!(x - rx / 3., y_hi),
-                g4!(x + mid_curve_w, y_hi - mid_curve_h).width(1.),
-                // Right side
-                flat!(x + rx, y_hi - end_curve_h),
-                curl!(x + rx, y_lo + end_curve_h),
-                // Bottom arc
-                g4!(x + mid_curve_w, y_lo + mid_curve_h)
-                    .aligned(Alignment::Left)
-                    .width(1.),
-                flat!(x - rx / 3., y_lo),
-                curl!(x - rx, y_lo),
             ])
             .into_outline()
     }
