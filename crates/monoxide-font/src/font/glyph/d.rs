@@ -181,7 +181,6 @@ impl IntoOutline for CapBowl {
                 // Top arc
                 flat!(x - rx, y_hi),
                 curl!(x - rx / 3., y_hi),
-                g4!(x, y_hi),
                 g4!(x + mid_curve_w, y_hi - mid_curve_h).width(1.),
                 // Right side
                 flat!(x + rx, y_hi - end_curve_h),
