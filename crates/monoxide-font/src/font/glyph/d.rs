@@ -23,7 +23,7 @@ impl DShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw } = settings; }
 
-        let bowl = Bowl::new((mid, mih), (mid - sbl, mih), ovs)
+        let bowl = Bowl::new((mid - stw / 4., mih), (mid - sbl - stw / 4., mih), ovs)
             .stroked(stw)
             .into_outline();
         let pipe = Rect::new((sbr, 0.), (sbr, cap))
@@ -85,8 +85,12 @@ impl IntoOutline for Bowl {
         let y_hi = y + ry;
         let y_lo = y - ry;
 
-        SpiroBuilder::closed()
+        SpiroBuilder::open()
             .insts([
+                // Top arc
+                g4!(x + rx, y_hi - mid_curve_h * 2.).width(0.4),
+                g4!(x, y_hi + ovs).width(0.9),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h).width(1.),
                 // Left side
                 flat!(x - rx, y_hi - end_curve_h),
                 curl!(x - rx, y_lo + end_curve_h),
@@ -94,14 +98,8 @@ impl IntoOutline for Bowl {
                 g4!(x - mid_curve_w, y_lo + mid_curve_h)
                     .aligned(Alignment::Right)
                     .width(1.),
-                g4!(x, y_lo - ovs),
-                g4!(x + mid_curve_w, y_lo + mid_curve_h * 1.25).width(0.9),
-                // Right side
-                g4!(x + rx, y_hi - end_curve_h).width(0.9),
-                // Top arc
-                g4!(x + mid_curve_w, y_hi - mid_curve_h).width(1.),
-                g4!(x, y_hi + ovs),
-                g4!(x - mid_curve_w, y_hi - mid_curve_h),
+                g4!(x, y_lo - ovs).width(0.9),
+                g4!(x + rx, y_lo + mid_curve_h * 2.).width(0.4),
             ])
             .into_outline()
     }
