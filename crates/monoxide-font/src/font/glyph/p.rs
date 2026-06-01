@@ -36,7 +36,7 @@ pub struct PCapShape {
 }
 
 impl PCapShape {
-    pub const DEFAULT_BOWL_H_FACTOR: f64 = 0.6;
+    pub const DEFAULT_BOWL_H_FACTOR: f64 = 0.575;
 
     pub fn from_settings(settings: &FontParamSettings) -> Self {
         let_settings! { { sbl, mid, sbr, stw, cap } = settings; }
@@ -69,7 +69,7 @@ pub struct CapBowl {
 }
 
 impl CapBowl {
-    pub const DEFAULT_END_CURVE_H_FACTOR: f64 = 1.1;
+    pub const DEFAULT_END_CURVE_H_FACTOR: f64 = 1.2;
     pub const DEFAULT_MID_CURVE_H_FACTOR: f64 = 1.7;
 
     pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>) -> Self {
