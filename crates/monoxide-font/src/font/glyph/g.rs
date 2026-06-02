@@ -8,7 +8,7 @@ use crate::{
     font::{
         dir::{Alignment, Dir},
         glyph::{d::Bowl, j::JShape, o::OShape},
-        settings::FontParamSettings,
+        prelude::*,
     },
 };
 
@@ -25,7 +25,16 @@ pub struct GShape {
 
 impl GShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, xh, dsc } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            stw,
+            xh,
+            dsc,
+            ..
+        } = settings.view();
 
         let bowl = Bowl::new((mid - stw / 4., mih), (mid - sbl - stw / 4., mih), ovs)
             .stroked(stw)

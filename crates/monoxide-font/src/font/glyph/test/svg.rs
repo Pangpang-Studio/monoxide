@@ -5,9 +5,9 @@ use std::{
 };
 
 use monoxide_curves::{CubicBezier, CubicSegment, point::Point2D};
-use monoxide_script::{ast::Glyph, eval::eval_outline, let_settings};
+use monoxide_script::{ast::Glyph, eval::eval_outline};
 
-use crate::make_font_params;
+use crate::{font::prelude::*, make_font_params};
 
 const PRECISION: usize = 4;
 
@@ -95,7 +95,7 @@ pub struct ViewBox {
 
 impl ViewBox {
     pub fn new(scale: Scale) -> Self {
-        let_settings! { { dsc, asc } = make_font_params(); }
+        let FontParamSettingsView { dsc, asc, .. } = make_font_params().view();
 
         Self {
             xs: (0.)..1.,

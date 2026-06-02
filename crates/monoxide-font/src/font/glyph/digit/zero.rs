@@ -5,12 +5,21 @@ use crate::{
     font::{
         dir::Dir,
         glyph::o::{IOShape, OCapShape},
+        prelude::*,
         shape::Slash,
     },
 };
 
 pub fn zero(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, cap, ovs, ovh, sbl, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        mid,
+        cap,
+        ovs,
+        ovh,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
 
     let o_cap_shape = OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).with_ovh(ovh);
     let o_shape = &o_cap_shape.o_shape;

@@ -3,18 +3,21 @@ use monoxide_script::prelude::*;
 use crate::font::{
     InputContext,
     dir::{Alignment, Dir},
+    prelude::*,
     shape::Rect,
 };
 
 pub fn k(cx: &InputContext) -> Glyph {
-    let_settings! {
-        {
-            sbl, sbr, xh, mih, stw,
-            cap,
-            lower_right,
-            upper_left,
-        } = cx.settings();
-    }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        xh,
+        mih,
+        stw,
+        cap,
+        lower_right,
+        ..
+    } = cx.settings().view();
 
     let k_mid_offset = Point2D::new(sbr - sbl, 0.) * 0.1;
 

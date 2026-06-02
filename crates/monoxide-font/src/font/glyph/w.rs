@@ -7,11 +7,14 @@ use crate::{
     font::{
         dir::{Alignment, Dir},
         math::mix,
+        prelude::*,
     },
 };
 
 pub fn w(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, mid, sbr, stw, xh } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl, mid, stw, xh, ..
+    } = cx.settings().view();
 
     let chevron = Chevron::new(sbl..mid, 0.0..xh, 0.5, 0.75);
     Glyph::builder()
@@ -20,7 +23,14 @@ pub fn w(cx: &InputContext) -> Glyph {
 }
 
 pub fn w_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, mid, sbr, stw, xh, cap } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        mid,
+        stw,
+        xh,
+        cap,
+        ..
+    } = cx.settings().view();
 
     let chevron = Chevron::new(sbl..mid, 0.0..cap, 0.5, xh / cap);
     Glyph::builder()

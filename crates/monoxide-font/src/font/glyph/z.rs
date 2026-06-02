@@ -7,12 +7,20 @@ use crate::{
     font::{
         dir::Alignment,
         glyph::c::CShape,
+        prelude::*,
         shape::{Rect, Slash},
     },
 };
 
 pub fn z(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, xh, ovs, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        xh,
+        ovs,
+        stw,
+        ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outlines(ZShape::new(sbl..sbr, 0.0..xh, ovs, stw))
@@ -20,7 +28,14 @@ pub fn z(cx: &InputContext) -> Glyph {
 }
 
 pub fn z_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, cap, ovs, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        cap,
+        ovs,
+        stw,
+        ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outlines(ZShape::new(sbl..sbr, 0.0..cap, ovs, stw))

@@ -8,7 +8,7 @@ use crate::{
     font::{
         dir::{Alignment, Dir},
         glyph::o::OShape,
-        settings::FontParamSettings,
+        prelude::*,
         shape::{Rect, Slash},
     },
 };
@@ -20,7 +20,9 @@ pub fn n(cx: &InputContext) -> Glyph {
 }
 
 pub fn n_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, cap, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl, sbr, cap, stw, ..
+    } = cx.settings().view();
 
     let left = Rect::new((sbl, 0.), (sbl, cap)).aligned(Alignment::Left);
     let right = Rect::new((sbr, 0.), (sbr, cap)).aligned(Alignment::Right);
@@ -40,7 +42,15 @@ pub struct NShape {
 
 impl NShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { mid, mih, ovs, sbl, stw, xh } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            stw,
+            xh,
+            ..
+        } = settings.view();
 
         let hook = {
             let rx = mid - sbl;

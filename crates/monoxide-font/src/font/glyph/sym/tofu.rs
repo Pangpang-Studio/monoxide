@@ -1,9 +1,14 @@
 use monoxide_script::prelude::*;
 
-use crate::{InputContext, font::dir::Alignment};
+use crate::{
+    InputContext,
+    font::{dir::Alignment, prelude::*},
+};
 
 pub fn tofu(cx: &InputContext) -> Glyph {
-    let_settings! { { cap, sbl, sbr, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        cap, sbl, sbr, stw, ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outline(

@@ -3,11 +3,13 @@
 mod dir;
 mod glyph;
 mod math;
+pub mod prelude;
 mod settings;
 mod shape;
 
 use monoxide_script::ast::FontContext;
-use settings::FontParamSettings;
+
+pub use crate::prelude::*;
 
 pub struct InputContext {
     pub settings: FontParamSettings,

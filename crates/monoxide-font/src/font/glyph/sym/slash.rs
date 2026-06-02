@@ -1,9 +1,19 @@
 use monoxide_script::prelude::*;
 
-use crate::{InputContext, font::shape::Slash};
+use crate::{
+    InputContext,
+    font::{prelude::*, shape::Slash},
+};
 
 pub fn slash(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, cap, dsc } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        stw,
+        cap,
+        dsc,
+        ..
+    } = cx.settings().view();
 
     let ovs = -dsc / 2.;
     let slash = Slash::new(sbl..sbr, (-ovs)..(cap + ovs));
@@ -12,7 +22,14 @@ pub fn slash(cx: &InputContext) -> Glyph {
 }
 
 pub fn backslash(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, cap, dsc } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        stw,
+        cap,
+        dsc,
+        ..
+    } = cx.settings().view();
 
     let ovs = -dsc / 2.;
     let slash = Slash::new(sbl..sbr, (-ovs)..(cap + ovs)).back();

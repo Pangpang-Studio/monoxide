@@ -1,10 +1,13 @@
 use monoxide_script::prelude::*;
 
 use super::{InputContext, d::DShape, o::OCapShape};
-use crate::font::shape::{Slash, SlashAlignment};
+use crate::font::{
+    prelude::*,
+    shape::{Slash, SlashAlignment},
+};
 
 pub fn q(cx: &InputContext) -> Glyph {
-    let_settings! { { xh, mih, dsc } = cx.settings; }
+    let FontParamSettingsView { xh, mih, dsc, .. } = cx.settings.view();
     Glyph::builder()
         .outlines(
             DShape::from_settings(&cx.settings)
@@ -15,7 +18,17 @@ pub fn q(cx: &InputContext) -> Glyph {
 }
 
 pub fn q_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, cap, ovs, ovh, sbl, sbr, stw, dsc } = cx.settings(); }
+    let FontParamSettingsView {
+        mid,
+        cap,
+        ovs,
+        ovh,
+        sbl,
+        sbr,
+        stw,
+        dsc,
+        ..
+    } = cx.settings().view();
 
     let o_cap = OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).with_ovh(ovh);
     let tail = Slash::new(mid..mid.midpoint(sbr), (dsc * 0.75)..0.)

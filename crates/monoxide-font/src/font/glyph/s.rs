@@ -8,11 +8,19 @@ use crate::{
     font::{
         dir::{Alignment, Dir},
         glyph::{c::CShape, o::OShape},
+        prelude::*,
     },
 };
 
 pub fn s(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, mih, ovs, sbl, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        mid,
+        mih,
+        ovs,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outline(Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))

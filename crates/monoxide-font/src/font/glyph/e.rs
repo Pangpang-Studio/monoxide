@@ -5,7 +5,7 @@ use monoxide_script::prelude::*;
 use super::{InputContext, c::CShape, o::IOShape};
 use crate::font::{
     dir::{Alignment, Dir},
-    settings::FontParamSettings,
+    prelude::*,
     shape::Rect,
 };
 
@@ -22,7 +22,15 @@ struct EShape {
 
 impl EShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { mid, mih, ovs, sbl, sbr, stw } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            sbr,
+            stw,
+            ..
+        } = settings.view();
 
         let bowl = Bowl::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw);
         let bar = Rect::new((sbl, mih), (sbr, mih)).stroked(stw);

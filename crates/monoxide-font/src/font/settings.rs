@@ -46,7 +46,60 @@ pub struct FontParamSettings {
     pub dot_size: f64,
 }
 
+/// Snapshot of the original and derived font parameters used by glyph builders.
+#[derive(Clone, Copy, Debug)]
+pub struct FontParamSettingsView {
+    pub wth: f64,
+    pub xh: f64,
+    pub cap: f64,
+    pub dsc: f64,
+    pub stw: f64,
+    pub ovf: f64,
+    pub sbl: f64,
+    pub dot: f64,
+    pub ovs: f64,
+    pub ovh: f64,
+    pub mid: f64,
+    pub mih: f64,
+    pub asc: f64,
+    pub sbr: f64,
+    pub dtr: f64,
+    pub lower_left: Point2D,
+    pub lower_right: Point2D,
+    pub lower_mid: Point2D,
+    pub upper_left: Point2D,
+    pub upper_right: Point2D,
+    pub upper_mid: Point2D,
+}
+
 impl FontParamSettings {
+    #[must_use]
+    pub const fn view(&self) -> FontParamSettingsView {
+        FontParamSettingsView {
+            wth: self.wth(),
+            xh: self.xh(),
+            cap: self.cap(),
+            dsc: self.dsc(),
+            stw: self.stw(),
+            ovf: self.ovf(),
+            sbl: self.sbl(),
+            dot: self.dot(),
+            ovs: self.ovs(),
+            ovh: self.ovh(),
+            mid: self.mid(),
+            mih: self.mih(),
+            asc: self.asc(),
+            sbr: self.sbr(),
+            dtr: self.dtr(),
+            lower_left: self.lower_left(),
+            lower_right: self.lower_right(),
+            lower_mid: self.lower_mid(),
+            upper_left: self.upper_left(),
+            upper_right: self.upper_right(),
+            upper_mid: self.upper_mid(),
+        }
+    }
+
     /// The full width of a half-width character.
     pub const fn wth(&self) -> f64 {
         self.width
@@ -125,32 +178,32 @@ impl FontParamSettings {
     }
 
     /// The lower left corner of the em square.
-    pub fn lower_left(&self) -> Point2D {
+    pub const fn lower_left(&self) -> Point2D {
         Point2D::new(self.sbl(), 0.0)
     }
 
     /// The lower right corner of the em square.
-    pub fn lower_right(&self) -> Point2D {
+    pub const fn lower_right(&self) -> Point2D {
         Point2D::new(self.sbr(), 0.0)
     }
 
     /// The lower mid point of the em square.
-    pub fn lower_mid(&self) -> Point2D {
+    pub const fn lower_mid(&self) -> Point2D {
         Point2D::new(self.mid(), 0.0)
     }
 
     /// The upper left corner of the em square.
-    pub fn upper_left(&self) -> Point2D {
+    pub const fn upper_left(&self) -> Point2D {
         Point2D::new(self.sbl(), self.cap())
     }
 
     /// The upper right corner of the em square.
-    pub fn upper_right(&self) -> Point2D {
+    pub const fn upper_right(&self) -> Point2D {
         Point2D::new(self.sbr(), self.cap())
     }
 
     /// The upper mid point of the em square.
-    pub fn upper_mid(&self) -> Point2D {
+    pub const fn upper_mid(&self) -> Point2D {
         Point2D::new(self.mid(), self.cap())
     }
 }

@@ -2,12 +2,14 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::{glyph::l::LShape, math::mix, settings::FontParamSettings, shape::Ring},
+    font::{glyph::l::LShape, math::mix, prelude::*, shape::Ring},
 };
 
 pub fn i(cx: &InputContext) -> Glyph {
     let settings = cx.settings();
-    let_settings! { { sbl, sbr, stw, xh } = settings; }
+    let FontParamSettingsView {
+        sbl, sbr, stw, xh, ..
+    } = settings.view();
 
     Glyph::builder()
         .outlines(LShape::new(sbl..sbr, 0.0..xh).stroked(stw))
@@ -16,7 +18,9 @@ pub fn i(cx: &InputContext) -> Glyph {
 }
 
 pub fn i_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, cap } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl, sbr, stw, cap, ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outlines(
@@ -28,6 +32,8 @@ pub fn i_cap(cx: &InputContext) -> Glyph {
 }
 
 pub fn dot(settings: &FontParamSettings) -> Ring {
-    let_settings! { { cap, dtr, mid, sbl } = settings; }
+    let FontParamSettingsView {
+        cap, dtr, mid, sbl, ..
+    } = settings.view();
     Ring::at((mix(mid, sbl, 0.97), 0.97 * cap), (dtr, dtr))
 }

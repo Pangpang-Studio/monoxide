@@ -5,12 +5,21 @@ use crate::{
     font::{
         dir::{Alignment, Dir},
         math::mix,
+        prelude::*,
         shape::{Rect, Slash, SlashAlignment},
     },
 };
 
 pub fn y(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, mid, sbr, stw, xh, dsc } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        mid,
+        sbr,
+        stw,
+        xh,
+        dsc,
+        ..
+    } = cx.settings().view();
 
     let aln = SlashAlignment::new(0.5, 0.8);
 
@@ -28,7 +37,14 @@ pub fn y(cx: &InputContext) -> Glyph {
 }
 
 pub fn y_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, mid, xh, cap, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        mid,
+        cap,
+        stw,
+        ..
+    } = cx.settings().view();
 
     let y_mih = cap / 2.;
     let stem = Rect::new((mid, y_mih), (mid, 0.));

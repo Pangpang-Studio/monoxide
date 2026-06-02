@@ -2,10 +2,20 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use crate::{InputContext, font::dir::Alignment};
+use crate::{
+    InputContext,
+    font::{dir::Alignment, prelude::*},
+};
 
 pub fn o(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, mih, ovs, sbl, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        mid,
+        mih,
+        ovs,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outline(OShape::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
@@ -13,7 +23,15 @@ pub fn o(cx: &InputContext) -> Glyph {
 }
 
 pub fn o_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, cap, ovs, ovh, sbl, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        mid,
+        cap,
+        ovs,
+        ovh,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outline(

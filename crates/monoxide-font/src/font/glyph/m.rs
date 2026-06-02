@@ -12,7 +12,7 @@ use crate::{
             w::{Chevron, WShape},
         },
         math::mix,
-        settings::FontParamSettings,
+        prelude::*,
         shape::Rect,
     },
 };
@@ -24,7 +24,14 @@ pub fn m(cx: &InputContext) -> Glyph {
 }
 
 pub fn m_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, mid, sbr, stw, xh, cap } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        mid,
+        stw,
+        xh,
+        cap,
+        ..
+    } = cx.settings().view();
 
     let chevron = Chevron::new(sbl..mid, 0.0..cap, 0.2, xh / cap)
         .with_mid_scale(0.)
@@ -50,7 +57,16 @@ impl MShape {
             side_bearing: settings.side_bearing / 1.5,
             ..*settings
         };
-        let_settings! { { mid, mih, ovs, sbl, sbr, stw, xh } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            sbr,
+            stw,
+            xh,
+            ..
+        } = settings.view();
 
         let hook = Hook::new((mix(mid, sbr, 0.5), mih), ((mid - sbl) / 2., mih), ovs).stroked(stw);
         let hooks = [

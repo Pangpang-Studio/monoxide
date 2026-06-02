@@ -4,12 +4,20 @@ use crate::{
     InputContext,
     font::{
         dir::{Alignment, Dir},
+        prelude::*,
         shape::Rect,
     },
 };
 
 pub fn one(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, cap, mid, xh } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        stw,
+        cap,
+        mid,
+        xh,
+        ..
+    } = cx.settings().view();
 
     let pipe = Rect::new((mid, 0.), (mid, cap))
         .stroked(stw)

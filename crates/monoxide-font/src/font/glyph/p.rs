@@ -9,12 +9,14 @@ use crate::font::{
         d::DShape,
         o::{IOShape, OCapShape},
     },
-    settings::FontParamSettings,
+    prelude::*,
     shape::Rect,
 };
 
 pub fn p(cx: &InputContext) -> Glyph {
-    let_settings! { { xh, mid, mih, dsc } = cx.settings; }
+    let FontParamSettingsView {
+        xh, mid, mih, dsc, ..
+    } = cx.settings.view();
     Glyph::builder()
         .outlines(
             DShape::from_settings(&cx.settings)
@@ -39,7 +41,9 @@ impl PCapShape {
     pub const DEFAULT_BOWL_H_FACTOR: f64 = 0.575;
 
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { sbl, mid, sbr, stw, cap } = settings; }
+        let FontParamSettingsView {
+            sbl, mid, stw, cap, ..
+        } = settings.view();
 
         let bowl_h = cap * Self::DEFAULT_BOWL_H_FACTOR;
         let bowl = CapBowl::new((mid, cap - bowl_h / 2.), (mid - sbl, bowl_h / 2.));
