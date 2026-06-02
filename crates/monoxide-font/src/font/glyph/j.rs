@@ -8,7 +8,7 @@ use crate::{
         dir::Alignment,
         glyph::{i::dot, l::LShape, n::Hook},
         math::mix,
-        settings::FontParamSettings,
+        prelude::*,
         shape::{Rect, Ring},
     },
 };
@@ -30,7 +30,14 @@ impl JShape {
     pub const HOOK_TIP_HEADING: Point2D = Point2D::new(-1., -2.);
 
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { mid, mih, sbl, stw, xh } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            sbl,
+            stw,
+            xh,
+            ..
+        } = settings.view();
 
         let hook = Self::hook_raw(settings, None)
             .transformed(Affine2D::mirrored_along((0., xh / 2.), (1., 0.)));
@@ -57,7 +64,16 @@ impl JShape {
         settings: &FontParamSettings,
         y_hi: impl Into<Option<f64>>,
     ) -> Arc<OutlineExpr> {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, dsc, xh } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            stw,
+            dsc,
+            xh,
+            ..
+        } = settings.view();
 
         let rx = (mid - sbl) * 0.9;
         let ry = mih;
@@ -97,7 +113,16 @@ pub struct JCapShape {
 
 impl JCapShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw, xh } = settings; }
+        let FontParamSettingsView {
+            cap,
+            mid,
+            mih,
+            ovs,
+            sbl,
+            sbr,
+            stw,
+            ..
+        } = settings.view();
 
         let hook = Hook::new((mid, cap - mih), (1.05 * (mid - sbl), mih), ovs)
             .with_hook_tip_heading(JShape::HOOK_TIP_HEADING)

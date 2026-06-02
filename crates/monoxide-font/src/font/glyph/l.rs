@@ -4,11 +4,13 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::{dir::Alignment, glyph::c::CShape, shape::Rect},
+    font::{dir::Alignment, glyph::c::CShape, prelude::*, shape::Rect},
 };
 
 pub fn l(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, cap } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl, sbr, stw, cap, ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outlines(LShape::new(sbl..sbr, 0.0..cap).stroked(stw))
@@ -16,7 +18,16 @@ pub fn l(cx: &InputContext) -> Glyph {
 }
 
 pub fn l_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, xh, cap, mid, mih, ovs } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        stw,
+        cap,
+        mid,
+        mih,
+        ovs,
+        ..
+    } = cx.settings().view();
 
     let serif_l = CShape::new((mid, mih), (mid - sbl, mih), ovs).aperture_curve_h_lo();
     let serif = Rect::new((sbr, stw), (sbr, stw + serif_l)).aligned(Alignment::Right);

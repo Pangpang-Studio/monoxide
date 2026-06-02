@@ -1,9 +1,10 @@
 use monoxide_script::prelude::*;
 
 use super::{InputContext, n::NShape};
+use crate::font::prelude::*;
 
 pub fn u(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, mih } = cx.settings(); }
+    let FontParamSettingsView { mid, mih, .. } = cx.settings().view();
 
     // TODO: Redesign `u` to use a different hook.
     Glyph::builder()

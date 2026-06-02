@@ -4,7 +4,7 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::{dir::Alignment, glyph::j::JShape, math::mix, settings::FontParamSettings, shape::Rect},
+    font::{dir::Alignment, glyph::j::JShape, math::mix, prelude::*, shape::Rect},
 };
 
 pub fn t(cx: &InputContext) -> Glyph {
@@ -14,7 +14,14 @@ pub fn t(cx: &InputContext) -> Glyph {
 }
 
 pub fn t_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { stw, lower_mid, upper_left, upper_mid, upper_right } = cx.settings(); }
+    let FontParamSettingsView {
+        stw,
+        lower_mid,
+        upper_left,
+        upper_mid,
+        upper_right,
+        ..
+    } = cx.settings().view();
 
     let bar = Rect::new(upper_left, upper_right).aligned(Alignment::Left);
     let pipe = Rect::new(upper_mid, lower_mid);
@@ -33,7 +40,14 @@ pub struct TShape {
 
 impl TShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { mid, mih, sbl, sbr, stw, xh, cap } = settings; }
+        let FontParamSettingsView {
+            mid,
+            sbl,
+            stw,
+            xh,
+            cap,
+            ..
+        } = settings.view();
 
         let hook = JShape::hook_raw(settings, cap)
             .transformed(Affine2D::rotated_around((mid, cap / 2.), PI));

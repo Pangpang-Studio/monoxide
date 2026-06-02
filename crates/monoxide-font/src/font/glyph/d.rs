@@ -10,7 +10,7 @@ use crate::{
             o::{IOShape, OShape},
             p::{CapBowl, PCapShape},
         },
-        settings::FontParamSettings,
+        prelude::*,
         shape::Rect,
     },
 };
@@ -23,7 +23,7 @@ pub fn d(cx: &InputContext) -> Glyph {
 
 pub fn d_cap(cx: &InputContext) -> Glyph {
     let settings = &cx.settings;
-    let_settings! { { sbl, mid, cap } = settings; }
+    let FontParamSettingsView { sbl, mid, cap, .. } = settings.view();
 
     let mut p_cap_shape = PCapShape::from_settings(settings);
     p_cap_shape.bowl = CapBowl::new((mid, cap / 2.), (mid - sbl, cap / 2.))
@@ -40,7 +40,16 @@ pub struct DShape {
 
 impl DShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { cap, mid, mih, ovs, sbl, sbr, stw } = settings; }
+        let FontParamSettingsView {
+            cap,
+            mid,
+            mih,
+            ovs,
+            sbl,
+            sbr,
+            stw,
+            ..
+        } = settings.view();
 
         let bowl = Bowl::new((mid - stw / 4., mih), (mid - sbl - stw / 4., mih), ovs)
             .stroked(stw)

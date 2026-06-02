@@ -2,9 +2,12 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::glyph::{
-        d::DShape,
-        p::{CapBowl, PCapShape},
+    font::{
+        glyph::{
+            d::DShape,
+            p::{CapBowl, PCapShape},
+        },
+        prelude::*,
     },
 };
 
@@ -21,7 +24,9 @@ pub fn b(cx: &InputContext) -> Glyph {
 
 pub fn b_cap(cx: &InputContext) -> Glyph {
     let settings = &cx.settings;
-    let_settings! { { sbl, mid, sbr, stw, cap } = settings; }
+    let FontParamSettingsView {
+        sbl, mid, stw, cap, ..
+    } = settings.view();
 
     let p_cap_shape = PCapShape::from_settings(settings);
 

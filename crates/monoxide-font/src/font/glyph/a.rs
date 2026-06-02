@@ -7,7 +7,7 @@ use crate::font::{
     dir::{Alignment, Dir},
     glyph::{j::JShape, n::Hook},
     math::mix,
-    settings::FontParamSettings,
+    prelude::*,
     shape::{Rect, Slash, SlashAlignment},
 };
 
@@ -24,7 +24,15 @@ pub struct AShape {
 
 impl AShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { mid, mih, ovs, sbl, sbr, stw, xh } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            sbr,
+            stw,
+            ..
+        } = settings.view();
 
         let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs)
             .with_hook_tip_heading(JShape::HOOK_TIP_HEADING)
@@ -53,18 +61,17 @@ impl IntoOutlines for AShape {
 }
 
 pub fn a_cap(cx: &InputContext) -> Glyph {
-    let_settings! {
-        {
-            sbl,
-            sbr,
-            mid,
-            cap,
-            lower_left,
-            lower_right,
-            upper_mid,
-            stw,
-        } = cx.settings();
-    }
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        mid,
+        cap,
+        lower_left,
+        lower_right,
+        upper_mid,
+        stw,
+        ..
+    } = cx.settings().view();
 
     let bar_height = 0.65;
 

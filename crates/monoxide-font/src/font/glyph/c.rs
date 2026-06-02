@@ -9,10 +9,18 @@ use super::{
 use crate::font::{
     dir::{Alignment, Dir},
     math::mix,
+    prelude::*,
 };
 
 pub fn c(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, mih, ovs, sbl, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        mid,
+        mih,
+        ovs,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outline(CShape::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
@@ -20,7 +28,14 @@ pub fn c(cx: &InputContext) -> Glyph {
 }
 
 pub fn c_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { mid, cap, ovs, sbl, stw } = cx.settings(); }
+    let FontParamSettingsView {
+        mid,
+        cap,
+        ovs,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outline(

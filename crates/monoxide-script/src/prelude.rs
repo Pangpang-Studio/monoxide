@@ -6,5 +6,5 @@ pub use crate::{
     dsl::{
         BezierBuilder, IntoOutline, IntoOutlineExt, IntoOutlines, IntoOutlinesExt, SpiroBuilder,
     },
-    flat, g4, let_settings, line as bline,
+    flat, g4, line as bline,
 };

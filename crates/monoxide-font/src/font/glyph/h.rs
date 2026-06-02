@@ -2,11 +2,11 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::{dir::Alignment, glyph::n::NShape, shape::Rect},
+    font::{dir::Alignment, glyph::n::NShape, prelude::*, shape::Rect},
 };
 
 pub fn h(cx: &InputContext) -> Glyph {
-    let_settings! { { cap } = cx.settings(); }
+    let FontParamSettingsView { cap, .. } = cx.settings().view();
 
     Glyph::builder()
         .outlines(NShape::from_settings(cx.settings()).with_pipe_height(cap))
@@ -14,7 +14,15 @@ pub fn h(cx: &InputContext) -> Glyph {
 }
 
 pub fn h_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { lower_left, lower_right, upper_left, upper_right, stw, cap } = cx.settings(); }
+    let FontParamSettingsView {
+        lower_left,
+        lower_right,
+        upper_left,
+        upper_right,
+        stw,
+        cap,
+        ..
+    } = cx.settings().view();
 
     let left = Rect::new(lower_left, upper_left).aligned(Alignment::Left);
     let right = Rect::new(lower_right, upper_right).aligned(Alignment::Right);

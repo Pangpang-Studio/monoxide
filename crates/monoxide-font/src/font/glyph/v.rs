@@ -4,11 +4,16 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::shape::{Slash, SlashAlignment},
+    font::{
+        prelude::*,
+        shape::{Slash, SlashAlignment},
+    },
 };
 
 pub fn v(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, xh } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl, sbr, stw, xh, ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outlines(VShape::new(sbl..sbr, 0.0..xh).stroked(stw))
@@ -16,7 +21,9 @@ pub fn v(cx: &InputContext) -> Glyph {
 }
 
 pub fn v_cap(cx: &InputContext) -> Glyph {
-    let_settings! { { sbl, sbr, stw, cap } = cx.settings(); }
+    let FontParamSettingsView {
+        sbl, sbr, stw, cap, ..
+    } = cx.settings().view();
 
     Glyph::builder()
         .outlines(VShape::new(sbl..sbr, 0.0..cap).stroked(stw))

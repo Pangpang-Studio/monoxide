@@ -4,7 +4,7 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    font::{dir::Alignment, glyph::j::JShape, math::mix, settings::FontParamSettings, shape::Rect},
+    font::{dir::Alignment, glyph::j::JShape, math::mix, prelude::*, shape::Rect},
 };
 
 pub fn f(cx: &InputContext) -> Glyph {
@@ -21,7 +21,15 @@ pub struct FShape {
 
 impl FShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { mid, mih, sbl, sbr, stw, xh, cap } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            sbl,
+            stw,
+            xh,
+            cap,
+            ..
+        } = settings.view();
 
         let hook = JShape::hook_raw(settings, cap)
             .transformed(Affine2D::mirrored_along((mid, mih), (0., 1.)));

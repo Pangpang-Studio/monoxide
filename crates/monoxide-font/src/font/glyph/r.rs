@@ -8,7 +8,7 @@ use crate::{
     font::{
         dir::{Alignment, Dir},
         glyph::o::OShape,
-        settings::FontParamSettings,
+        prelude::*,
         shape::Rect,
     },
 };
@@ -27,7 +27,15 @@ pub struct RShape {
 
 impl RShape {
     pub fn from_settings(settings: &FontParamSettings) -> Self {
-        let_settings! { { mid, mih, ovs, sbl, stw, xh } = settings; }
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            stw,
+            xh,
+            ..
+        } = settings.view();
 
         let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw);
 
