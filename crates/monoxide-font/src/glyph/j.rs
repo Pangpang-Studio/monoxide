@@ -1,0 +1,149 @@
+use std::sync::Arc;
+
+use monoxide_script::prelude::*;
+
+use crate::{
+    InputContext,
+    dir::Alignment,
+    glyph::{i::dot, l::LShape, n::Hook},
+    math::mix,
+    prelude::*,
+    shape::{Rect, Ring},
+};
+
+pub fn j(cx: &InputContext) -> Glyph {
+    Glyph::builder()
+        .outlines(JShape::from_settings(&cx.settings))
+        .build()
+}
+
+pub struct JShape {
+    pub hook: Arc<OutlineExpr>,
+    pub top_serif: Rect,
+    pub dot: Ring,
+    pub offset: Point2D,
+}
+
+impl JShape {
+    pub const HOOK_TIP_HEADING: Point2D = Point2D::new(-1., -2.);
+
+    pub fn from_settings(settings: &FontParamSettings) -> Self {
+        let FontParamSettingsView {
+            mid,
+            mih,
+            sbl,
+            stw,
+            xh,
+            ..
+        } = settings.view();
+
+        let hook = Self::hook_raw(settings, None)
+            .transformed(Affine2D::mirrored_along((0., xh / 2.), (1., 0.)));
+
+        let top_serif = Rect::new(
+            (mid, xh),
+            (mid + LShape::DEFAULT_TOP_BAR_SCALE.start * (mih - sbl), xh),
+        )
+        .aligned(Alignment::Right)
+        .stroked(stw);
+
+        Self {
+            hook,
+            top_serif,
+            dot: dot(settings),
+            offset: (stw, 0.).into(),
+        }
+    }
+
+    /// Returns a stroked `j` hook without transformation and the hook's
+    /// reference height. The `y_hi` parameter can be used to override the
+    /// highest point of the hook.
+    pub fn hook_raw(
+        settings: &FontParamSettings,
+        y_hi: impl Into<Option<f64>>,
+    ) -> Arc<OutlineExpr> {
+        let FontParamSettingsView {
+            mid,
+            mih,
+            ovs,
+            sbl,
+            stw,
+            dsc,
+            xh,
+            ..
+        } = settings.view();
+
+        let rx = (mid - sbl) * 0.9;
+        let ry = mih;
+        let y_hi = y_hi.into().unwrap_or(xh - dsc);
+
+        Hook::new((mid, y_hi - ry), (rx, ry), ovs)
+            .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
+            .stroked(1.05 * stw)
+            .transformed(Affine2D::translated((-rx + stw / 2., 0.)))
+    }
+}
+
+impl IntoOutlines for JShape {
+    type Outlines = [Arc<OutlineExpr>; 3];
+
+    fn into_outlines(self) -> Self::Outlines {
+        [
+            self.hook.into_outline(),
+            self.top_serif.into_outline(),
+            self.dot.into_outline(),
+        ]
+        .map(move |it| it.transformed(Affine2D::translated(self.offset)))
+    }
+}
+
+pub fn j_cap(cx: &InputContext) -> Glyph {
+    Glyph::builder()
+        .outlines(JCapShape::from_settings(&cx.settings))
+        .build()
+}
+
+pub struct JCapShape {
+    pub hook: Arc<OutlineExpr>,
+    pub pipe: Rect,
+    pub offset: Point2D,
+}
+
+impl JCapShape {
+    pub fn from_settings(settings: &FontParamSettings) -> Self {
+        let FontParamSettingsView {
+            cap,
+            mid,
+            mih,
+            ovs,
+            sbl,
+            sbr,
+            stw,
+            ..
+        } = settings.view();
+
+        let hook = Hook::new((mid, cap - mih), (1.05 * (mid - sbl), mih), ovs)
+            .with_hook_tip_heading(JShape::HOOK_TIP_HEADING)
+            .stroked(1.1 * stw)
+            .transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.)));
+
+        let pipe = Rect::new((mix(sbl, mid, 0.3), cap), (sbr, cap))
+            .aligned(Alignment::Left)
+            .stroked(stw);
+
+        Self {
+            hook,
+            pipe,
+            offset: (-stw / 2., 0.).into(),
+        }
+    }
+}
+
+impl IntoOutlines for JCapShape {
+    type Outlines = [Arc<OutlineExpr>; 2];
+
+    fn into_outlines(self) -> Self::Outlines {
+        [self.hook.into_outline(), self.pipe.into_outline()]
+            .map(move |it| it.transformed(Affine2D::translated(self.offset)))
+    }
+}
