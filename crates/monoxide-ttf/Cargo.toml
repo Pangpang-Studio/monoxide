@@ -9,7 +9,7 @@ license.workspace = true
 
 [dependencies]
 monoxide-curves.workspace = true
-bitflags = "2.11.0"
+bitflags = "2.12.1"
 bytes = "1.11.1"
 fixed = "1.31.0"
 indexmap = "2.14.0"
