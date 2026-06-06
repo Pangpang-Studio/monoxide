@@ -192,7 +192,6 @@ impl IntoOutline for CapBowl {
         let mid_curve_h = o_shape.mid_curve_h();
         let end_curve_h = o_shape.end_curve_h();
 
-        // TODO: Find out why the ovh is not applied (compared to `C`)
         let left = o_shape.left();
         let right = x + rx;
         let aperture_curve_h = CShape::from(o_shape).aperture_curve_h();

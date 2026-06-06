@@ -32,6 +32,7 @@ pub fn c_cap(cx: &InputContext) -> Glyph {
         mid,
         cap,
         ovs,
+        ovh,
         sbl,
         stw,
         ..
@@ -39,7 +40,9 @@ pub fn c_cap(cx: &InputContext) -> Glyph {
 
     Glyph::builder()
         .outline(
-            CShape::from(OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs)).stroked(stw),
+            CShape::from(OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs))
+                .with_ovh(ovh)
+                .stroked(stw),
         )
         .build()
 }
@@ -130,6 +133,11 @@ impl CShape<OCapShape> {
     pub fn aperture_curve_h(&self) -> f64 {
         mix(self.mid_curve_h(), self.end_curve_h(), 0.55)
     }
+
+    pub fn with_ovh(mut self, ovh: impl Into<Option<f64>>) -> Self {
+        self.o_shape = self.o_shape.with_ovh(ovh);
+        self
+    }
 }
 
 impl IntoOutline for CShape<OCapShape> {
@@ -143,25 +151,27 @@ impl IntoOutline for CShape<OCapShape> {
         let mid_curve_h = self.mid_curve_h();
         let end_curve_h = self.end_curve_h();
 
+        let left = o_shape.left();
+        let right = x + rx;
         let y_hi = y + ry;
         let y_lo = y - ry;
 
         SpiroBuilder::open()
             .insts([
                 // Right side (upper)
-                curl!(x + rx, y_hi - self.aperture_curve_h()).heading(Dir::D),
+                curl!(right, y_hi - self.aperture_curve_h()).heading(Dir::D),
                 // Top arc
                 g4!(x, y_hi + ovs),
                 g4!(x - mid_curve_w, y_hi - mid_curve_h),
                 // Left side
-                flat!(x - rx, y_hi - end_curve_h),
-                curl!(x - rx, y_lo + end_curve_h),
+                flat!(left, y_hi - end_curve_h),
+                curl!(left, y_lo + end_curve_h),
                 // Bottom arc
                 g4!(x - mid_curve_w, y_lo + mid_curve_h).aligned(Alignment::Right),
                 g4!(x, y_lo - ovs),
                 // One control point omitted.
                 // Right side (lower)
-                flat!(x + rx, y_lo + self.aperture_curve_h()).heading(Dir::U),
+                flat!(right, y_lo + self.aperture_curve_h()).heading(Dir::U),
             ])
             .into_outline()
     }
