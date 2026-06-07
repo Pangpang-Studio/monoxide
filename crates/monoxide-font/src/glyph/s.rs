@@ -2,11 +2,13 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use super::o::IOShape;
 use crate::{
     InputContext,
     dir::{Alignment, Dir},
-    glyph::{c::CShape, o::OShape},
+    glyph::{
+        c::CShape,
+        o::{IOShape, OShape},
+    },
     prelude::*,
 };
 
@@ -21,15 +23,15 @@ pub fn s(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outline(Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
+        .outline(HookedSShape::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
         .build()
 }
 
-struct Hook {
+struct HookedSShape {
     pub o_shape: OShape,
 }
 
-impl Hook {
+impl HookedSShape {
     pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
         Self {
             o_shape: OShape::new(center, radii, ovs),
@@ -37,7 +39,7 @@ impl Hook {
     }
 }
 
-impl IntoOutline for Hook {
+impl IntoOutline for HookedSShape {
     fn into_outline(self) -> Arc<OutlineExpr> {
         let o_shape = self.o_shape;
         let Point2D { x, y } = o_shape.center();
