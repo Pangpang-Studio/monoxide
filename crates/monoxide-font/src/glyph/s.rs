@@ -101,22 +101,22 @@ impl SShape {
     }
 }
 
-impl<O: IOShape> IntoOutline for SShape<O> {
+impl IntoOutline for SShape<OCapShape> {
     fn into_outline(self) -> Arc<OutlineExpr> {
-        let o_shape = &self.o_shape;
+        let o_shape = self.o_shape;
         let Point2D { x, y } = o_shape.center();
         let Point2D { x: rx, y: ry } = o_shape.radii();
         let ovs = o_shape.ovs();
 
-        let hook_h = o_shape.mid_curve_h() * 1.9;
-        let tip_aln = 0.85;
-
         let left = o_shape.left();
-        let left1 = x - rx;
         let right = o_shape.right();
+        let left1 = x - rx;
         let right1 = x + rx;
         let y_hi = y + ry;
         let y_lo = y - ry;
+
+        let hook_h = CShape::from(o_shape).aperture_curve_h();
+        let tip_aln = 0.9;
 
         SpiroBuilder::open()
             .insts([
