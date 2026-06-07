@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::{ops::Range, sync::Arc};
 
 use monoxide_script::prelude::*;
 
 use super::{InputContext, c::CShape, o::IOShape};
 use crate::{
     dir::{Alignment, Dir},
+    glyph::f::FCapShape,
     prelude::*,
     shape::Rect,
 };
@@ -12,6 +13,16 @@ use crate::{
 pub fn e(cx: &InputContext) -> Glyph {
     Glyph::builder()
         .outlines(EShape::from_settings(cx.settings()))
+        .build()
+}
+
+pub fn e_cap(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        stw, sbl, sbr, cap, ..
+    } = cx.settings().view();
+
+    Glyph::builder()
+        .outlines(ECapShape::new(sbl + stw / 2.0..sbr, 0.0..cap).stroked(stw))
         .build()
 }
 
@@ -111,5 +122,34 @@ impl IntoOutline for Bowl {
                 flat!(x + rx, y_lo + self.aperture_curve_h_lo()),
             ])
             .into_outline()
+    }
+}
+
+pub struct ECapShape {
+    pub f_shape: FCapShape,
+}
+
+impl ECapShape {
+    pub fn new(xr: Range<f64>, yr: Range<f64>) -> Self {
+        Self {
+            f_shape: FCapShape::new(xr, yr),
+        }
+    }
+}
+
+impl IntoOutlines for ECapShape {
+    type Outlines = [Arc<OutlineExpr>; 4];
+
+    fn into_outlines(self) -> Self::Outlines {
+        let top = &self.f_shape.top;
+        let x0 = top.start.x;
+        let x1 = top.end.x;
+
+        let bot = Rect::new((x0, 0.), (x1, 0.))
+            .aligned(Alignment::Right)
+            .into_outline();
+
+        let [pipe, top, crossbar] = self.f_shape.into_outlines();
+        [pipe, top, crossbar, bot]
     }
 }
