@@ -82,14 +82,12 @@ impl IntoOutlines for RShape {
 
 pub struct Hook {
     pub o_shape: OShape,
-    pub hook_tip_heading: Point2D,
 }
 
 impl Hook {
     pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
         Self {
             o_shape: OShape::new(center, radii, ovs),
-            hook_tip_heading: Dir::L.into(),
         }
     }
 }
@@ -110,12 +108,12 @@ impl IntoOutline for Hook {
             .insts([
                 g4!(x + mid_curve_w + ovs, y_hi)
                     .aligned(Alignment::Right)
-                    .heading(self.hook_tip_heading)
+                    // .heading(self.hook_tip_heading)
                     .width(1.1),
                 g4!(x + mid_curve_w / 1.5, y_hi + ovs),
                 g4!(x - mid_curve_w / 2., y_hi - mid_curve_h * 0.75),
                 g4!(x - mid_curve_w, y_hi - mid_curve_h * 2.)
-                    .heading(self.hook_tip_heading)
+                    .heading(Dir::L)
                     .width(1.),
             ])
             .into_outline()
