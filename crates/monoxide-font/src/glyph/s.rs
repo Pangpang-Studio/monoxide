@@ -7,7 +7,7 @@ use crate::{
     dir::{Alignment, Dir},
     glyph::{
         c::CShape,
-        o::{IOShape, OShape},
+        o::{IOShape, OCapShape, OShape},
     },
     prelude::*,
 };
@@ -24,6 +24,21 @@ pub fn s(cx: &InputContext) -> Glyph {
 
     Glyph::builder()
         .outline(HookedSShape::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw))
+        .build()
+}
+
+pub fn s_cap(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid,
+        ovs,
+        sbl,
+        stw,
+        cap,
+        ..
+    } = cx.settings().view();
+
+    Glyph::builder()
+        .outline(SShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).stroked(stw))
         .build()
 }
 
@@ -69,6 +84,54 @@ impl IntoOutline for HookedSShape {
                 g4!(x, y_lo - ovs),
                 g4!(x - mid_curve_w, y_lo + mid_curve_h * 0.75),
                 g4!(x - rx, y_lo + mid_curve_h * 1.75).heading(Dir::U),
+            ])
+            .into_outline()
+    }
+}
+
+struct SShape<O = OCapShape> {
+    pub o_shape: O,
+}
+
+impl SShape {
+    pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
+        Self {
+            o_shape: OCapShape::new(center, radii, ovs),
+        }
+    }
+}
+
+impl<O: IOShape> IntoOutline for SShape<O> {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        let o_shape = &self.o_shape;
+        let Point2D { x, y } = o_shape.center();
+        let Point2D { x: rx, y: ry } = o_shape.radii();
+        let ovs = o_shape.ovs();
+
+        let hook_h = o_shape.mid_curve_h() * 1.9;
+        let tip_aln = 0.85;
+
+        let left = o_shape.left();
+        let left1 = x - rx;
+        let right = o_shape.right();
+        let right1 = x + rx;
+        let y_hi = y + ry;
+        let y_lo = y - ry;
+
+        SpiroBuilder::open()
+            .insts([
+                // Top arc
+                g4!(right, y_hi - hook_h).heading(Dir::D).aligned(tip_aln),
+                g4!(x, y_hi + ovs).aligned(Alignment::Right),
+                g4!(left1, y_hi - hook_h).aligned(Alignment::Right),
+                // Midpoint
+                g4!(x, y).aligned(Alignment::Middle),
+                // Bottom arc
+                g4!(right1, y_lo + hook_h).aligned(Alignment::Left),
+                g4!(x, y_lo - ovs).aligned(Alignment::Left),
+                g4!(left, y_lo + hook_h)
+                    .heading(Dir::U)
+                    .aligned(1. - tip_aln),
             ])
             .into_outline()
     }
