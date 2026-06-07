@@ -2,19 +2,41 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use super::o::IOShape;
 use crate::{
     InputContext,
     dir::{Alignment, Dir},
-    glyph::o::OShape,
+    glyph::{
+        o::{IOShape, OShape},
+        p::PCapShape,
+    },
     prelude::*,
-    shape::Rect,
+    shape::{Rect, Slash, SlashAlignment},
 };
 
 pub fn r(cx: &InputContext) -> Glyph {
     Glyph::builder()
         .outlines(RShape::from_settings(&cx.settings))
         .build()
+}
+
+pub fn r_cap(cx: &InputContext) -> Glyph {
+    let p_shape = PCapShape::from_settings(cx.settings());
+
+    let tail = {
+        let bowl = &p_shape.bowl;
+
+        let o_shape = &bowl.o_shape;
+        let Point2D { x, y } = o_shape.center();
+        let Point2D { x: rx, y: ry } = o_shape.radii();
+        let stw = p_shape.pipe.width.unwrap_or_default();
+
+        Slash::new(x - bowl.end_curve_w()..x + rx, 0.0..y - ry + stw / 2.)
+            .with_aln(SlashAlignment::new(0.3, 1.))
+            .back()
+            .stroked(stw)
+    };
+
+    Glyph::builder().outlines(p_shape).outline(tail).build()
 }
 
 pub struct RShape {
