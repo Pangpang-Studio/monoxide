@@ -29,7 +29,7 @@ pub fn k(cx: &InputContext) -> Glyph {
         .outlines([
             pipe.stroked(stw).into_outline(),
             // TODO: Find out how the scaling factors are determined.
-            chevron.stroked(stw * 0.8),
+            chevron.stroked(stw * 0.9),
             bar.stroked(stw * 0.9).into_outline(),
         ])
         .build()
