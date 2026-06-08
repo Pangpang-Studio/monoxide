@@ -35,6 +35,28 @@ pub fn k(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn k_cap(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        sbl, sbr, stw, cap, ..
+    } = cx.settings().view();
+
+    let pipe = Rect::new((sbl + stw / 4., 0.), (sbl + stw / 4., cap)).aligned(Alignment::Left);
+    let chevron = Chevron::new(mix(sbr, sbl, 0.1) + stw..sbr, 0.0..cap);
+    let bar = Rect::new(
+        (sbl + stw / 4., cap / 2.),
+        chevron.corner() + (stw, 0.).into(),
+    );
+
+    Glyph::builder()
+        .outlines([
+            pipe.stroked(stw).into_outline(),
+            // TODO: Find out how the scaling factors are determined.
+            chevron.stroked(stw * 0.9),
+            bar.stroked(stw * 0.9).into_outline(),
+        ])
+        .build()
+}
+
 #[derive(Clone, Debug)]
 pub struct Chevron {
     pub xr: Range<f64>,
