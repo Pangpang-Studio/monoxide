@@ -75,13 +75,17 @@ impl IntoOutline for HookedSShape {
                 // Top arc
                 g4!(x + rx * 0.9, y_hi - aperture_curve_h_hi * 0.75),
                 corner!(x + rx * 0.9, y_hi - mid_curve_h * 0.75),
-                g4!(x, y_hi + ovs),
-                g4!(x - mid_curve_w, y_hi - mid_curve_h * 0.8).aligned(Alignment::Right),
+                g4!(x, y_hi + ovs).width(1.).heading(Dir::L),
+                g4!(x - mid_curve_w, y_hi - mid_curve_h * 0.8)
+                    .width(0.98)
+                    .aligned(Alignment::Right),
                 // Midpoint
-                g4!(x, y).aligned(Alignment::Middle),
+                g4!(x, y).width(0.95).aligned(Alignment::Middle),
                 // Bottom arc
-                g4!(x + mid_curve_w, y_lo + mid_curve_h * 0.8).aligned(Alignment::Left),
-                g4!(x, y_lo - ovs),
+                g4!(x + mid_curve_w, y_lo + mid_curve_h * 0.8)
+                    .width(0.98)
+                    .aligned(Alignment::Left),
+                g4!(x, y_lo - ovs).width(1.).heading(Dir::L),
                 g4!(x - mid_curve_w, y_lo + mid_curve_h * 0.75),
                 g4!(x - rx, y_lo + mid_curve_h * 1.75).heading(Dir::U),
             ])
@@ -121,14 +125,20 @@ impl IntoOutline for SShape<OCapShape> {
         SpiroBuilder::open()
             .insts([
                 // Top arc
-                g4!(right, y_hi - hook_h).heading(Dir::D).aligned(tip_aln),
-                g4!(x, y_hi + ovs).aligned(Alignment::Right),
-                g4!(left1, y_hi - hook_h).aligned(Alignment::Right),
+                g4!(right, y_hi - hook_h).heading(Dir::U).aligned(tip_aln),
+                g4!(x, y_hi + ovs).heading(Dir::L).aligned(Alignment::Right),
+                g4!(left1, y_hi - hook_h)
+                    .heading(Dir::D)
+                    .width(1.)
+                    .aligned(Alignment::Right),
                 // Midpoint
-                g4!(x, y).aligned(Alignment::Middle),
+                g4!(x, y).width(1.1).aligned(Alignment::Middle),
                 // Bottom arc
-                g4!(right1, y_lo + hook_h).aligned(Alignment::Left),
-                g4!(x, y_lo - ovs).aligned(Alignment::Left),
+                g4!(right1, y_lo + hook_h)
+                    .heading(Dir::D)
+                    .width(1.)
+                    .aligned(Alignment::Left),
+                g4!(x, y_lo - ovs).heading(Dir::L).aligned(Alignment::Left),
                 g4!(left, y_lo + hook_h)
                     .heading(Dir::U)
                     .aligned(1. - tip_aln),
