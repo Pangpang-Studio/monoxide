@@ -95,19 +95,21 @@ where
     for n_segments in 1..=MAX_SEGMENTS_ALLOWED {
         let mut max_tdiv = S::zero();
         // Parameters for the remaining curve segment.
-        let (mut p1, mut c1, mut c2) = (p1, c1, c2);
+        let (mut rem_p1, mut rem_c1, mut rem_c2) = (p1, c1, c2);
         #[allow(clippy::needless_range_loop)] // False positive
         for i in 0..n_segments {
             // The segment we're working with
             let (dp1, dc1, dc2, dp2) = if i == n_segments - 1 {
                 // Last segment, save one calculation
-                (p1, c1, c2, p2)
+                (rem_p1, rem_c1, rem_c2, p2)
             } else {
                 // 1 / remaining segments. i.e. (1/n) / ((n - i) / n)
                 let t_in_remain = S::one() / S::from(n_segments - i).unwrap();
-                let (c11, c12, p12, c21, c22) = divide_cube(p1, c1, c2, p2, t_in_remain);
-                (p1, c1, c2) = (p12, c21, c22);
-                (p1, c11, c12, p12)
+                let (c11, c12, p12, c21, c22) =
+                    divide_cube(rem_p1, rem_c1, rem_c2, p2, t_in_remain);
+                let segment_start = rem_p1;
+                (rem_p1, rem_c1, rem_c2) = (p12, c21, c22);
+                (segment_start, c11, c12, p12)
             };
 
             let tdiv = tdiv(dp1, dc1, dc2, dp2, prec);
