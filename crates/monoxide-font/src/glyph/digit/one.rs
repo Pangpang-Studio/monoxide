@@ -22,8 +22,8 @@ pub fn one(cx: &InputContext) -> Glyph {
         .transformed(Affine2D::translated((stw / 2., 0.)));
 
     let slash = SpiroBuilder::open().insts([
-        g4!(sbl, xh).aligned(Alignment::Middle),
-        g4!(mid, cap).heading(Dir::R).aligned(Alignment::Left),
+        g4!(sbl, xh).aligned(Alignment::Left),
+        g4!(mid, cap).heading(Dir::R),
     ]);
 
     Glyph::builder()
