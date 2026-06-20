@@ -2,11 +2,10 @@ use std::sync::Arc;
 
 use monoxide_script::{g2, prelude::*};
 
-use super::o::IOShape;
 use crate::{
     InputContext,
     dir::{Alignment, Dir},
-    glyph::o::OShape,
+    glyph::o::{IOShape, OShape},
     prelude::*,
     shape::{Rect, Slash},
 };

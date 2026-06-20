@@ -2,12 +2,11 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use super::o::IOShape;
 use crate::{
     InputContext,
     dir::Alignment,
     glyph::{
-        o::OShape,
+        o::{IOShape, OShape},
         w::{Chevron, WShape},
     },
     math::mix,
