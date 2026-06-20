@@ -2,10 +2,10 @@ use std::{ops::Range, sync::Arc};
 
 use monoxide_script::prelude::*;
 
-use super::{InputContext, c::CShape, o::IOShape};
 use crate::{
+    InputContext,
     dir::{Alignment, Dir},
-    glyph::f::FCapShape,
+    glyph::{c::CShape, f::FCapShape, o::IOShape},
     prelude::*,
     shape::Rect,
 };

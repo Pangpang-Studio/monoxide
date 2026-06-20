@@ -1,7 +1,8 @@
 use monoxide_script::prelude::*;
 
-use super::{InputContext, d::DShape, o::OCapShape};
 use crate::{
+    InputContext,
+    glyph::{d::DShape, o::OCapShape},
     prelude::*,
     shape::{Slash, SlashAlignment},
 };
