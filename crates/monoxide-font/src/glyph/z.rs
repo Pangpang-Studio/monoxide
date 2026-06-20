@@ -62,6 +62,10 @@ impl ZShape {
     pub fn right(&self) -> f64 {
         self.c_shape.right()
     }
+
+    pub fn serif_len(&self) -> f64 {
+        self.c_shape.aperture_curve_h_lo()
+    }
 }
 
 impl IntoOutlines for ZShape {
@@ -70,10 +74,7 @@ impl IntoOutlines for ZShape {
     fn into_outlines(self) -> Self::Outlines {
         let (sbl, sbr) = (self.left(), self.right());
 
-        let c_shape = &self.c_shape;
-        let serif_l = c_shape.aperture_curve_h_lo();
-
-        let o_shape = &c_shape.o_shape;
+        let o_shape = &self.c_shape.o_shape;
         let (bot, top) = (
             o_shape.center.y - o_shape.radii.y,
             o_shape.center.y + o_shape.radii.y,
@@ -81,7 +82,8 @@ impl IntoOutlines for ZShape {
 
         let stw = self.stw.unwrap_or_default();
 
-        let serif = Rect::new((sbl, top - serif_l - stw), (sbl, top)).aligned(Alignment::Left);
+        let serif =
+            Rect::new((sbl, top - self.serif_len() - stw), (sbl, top)).aligned(Alignment::Left);
         let slash = Slash::new(sbl..sbr, (bot + stw)..(top - stw));
         let top_bar = Rect::new((sbl, top), (sbr, top)).aligned(Alignment::Left);
         let bottom_bar = Rect::new((sbl, bot), (sbr, bot)).aligned(Alignment::Right);
