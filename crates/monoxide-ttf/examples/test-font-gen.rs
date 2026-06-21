@@ -228,5 +228,5 @@ fn main() {
 
     let out_path = std::env::args().nth(1).unwrap();
     let mut file = std::fs::File::create(out_path).unwrap();
-    f.write(&mut file).unwrap();
+    f.writer().write(&mut file).unwrap();
 }
