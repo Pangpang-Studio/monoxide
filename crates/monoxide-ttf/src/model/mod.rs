@@ -6,6 +6,9 @@
 
 use bytes::{BufMut, BytesMut};
 use indexmap::IndexMap;
+use tempfile::NamedTempFile;
+use tilvisan::{Args as AutohintArgs, AutohintError, autohint};
+
 pub mod cff2;
 pub mod cmap;
 pub mod dsig;
@@ -125,16 +128,54 @@ impl FontFile {
 
 pub struct FontWriter<'a> {
     font: &'a FontFile,
+    autohint: bool,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum FontWriterError {
+    #[error("{0}")]
+    Io(#[from] std::io::Error),
+    #[error("{0}")]
+    Autohint(#[from] AutohintError),
 }
 
 impl<'a> FontWriter<'a> {
     fn new(font: &'a FontFile) -> Self {
-        Self { font }
+        Self {
+            font,
+            autohint: false,
+        }
+    }
+
+    pub fn autohint(mut self, autohint: bool) -> Self {
+        self.autohint = autohint;
+        self
     }
 }
 
 impl FontWriter<'_> {
-    pub fn write(&self, mut w: impl std::io::Write) -> std::io::Result<()> {
+    pub fn write(self, mut w: impl std::io::Write) -> Result<(), FontWriterError> {
+        if !self.autohint {
+            return Ok(self.write_raw(w)?);
+        }
+
+        let autohinted = {
+            // FIXME: I wish `autohint` could take a reader instead of a path, so we don't
+            // have to write to a temp file first...
+            let mut tmp = NamedTempFile::new()?;
+            self.write_raw(&mut tmp)?;
+
+            autohint(&AutohintArgs {
+                input: tmp.path().to_string_lossy().into(),
+                ..AutohintArgs::default()
+            })?
+        };
+
+        w.write_all(&autohinted)?;
+        Ok(())
+    }
+
+    fn write_raw(&self, mut w: impl std::io::Write) -> std::io::Result<()> {
         let font = self.font;
 
         let version = match font.outline {
