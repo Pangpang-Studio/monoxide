@@ -6,6 +6,8 @@
 
 use bytes::{BufMut, BytesMut};
 use indexmap::IndexMap;
+use tilvisan::{AutohintError, autohint_from_bufs};
+
 pub mod cff2;
 pub mod cmap;
 pub mod dsig;
@@ -124,16 +126,48 @@ impl FontFile {
 
 pub struct FontWriter<'a> {
     font: &'a FontFile,
+    autohint: bool,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum FontWriterError {
+    #[error("{0}")]
+    Io(#[from] std::io::Error),
+    #[error("{0}")]
+    Autohint(#[from] AutohintError),
 }
 
 impl<'a> FontWriter<'a> {
     fn new(font: &'a FontFile) -> Self {
-        Self { font }
+        Self {
+            font,
+            autohint: false,
+        }
+    }
+
+    pub fn autohint(mut self, autohint: bool) -> Self {
+        self.autohint = autohint;
+        self
     }
 }
 
 impl FontWriter<'_> {
-    pub fn write(&self, mut w: impl std::io::Write) -> std::io::Result<()> {
+    pub fn write(self, mut w: impl std::io::Write) -> Result<(), FontWriterError> {
+        if !self.autohint {
+            return Ok(self.write_raw(w)?);
+        }
+
+        let autohinted = {
+            let mut in_buf = Vec::new();
+            self.write_raw(&mut in_buf)?;
+            autohint_from_bufs(&Default::default(), &in_buf, None, None)?
+        };
+
+        w.write_all(&autohinted)?;
+        Ok(())
+    }
+
+    fn write_raw(&self, mut w: impl std::io::Write) -> std::io::Result<()> {
         let font = self.font;
 
         let version = match font.outline {

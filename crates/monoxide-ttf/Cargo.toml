@@ -16,4 +16,5 @@ indexmap = "2.14.0"
 num-traits.workspace = true
 rust_decimal = { version = "1.42.0", default-features = false }
 thiserror.workspace = true
+tilvisan = { git = "https://github.com/Pangpang-Studio/tilvisan.git", branch = "dev" }
 widestring = "1.2.1"
