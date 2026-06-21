@@ -121,7 +121,9 @@ impl CompiledFont {
         let ttf = file
             .map(|f| {
                 let mut out_ttf = BytesMut::new().writer();
-                f.write(&mut out_ttf).expect("Writing to memory can't fail");
+                f.writer()
+                    .write(&mut out_ttf)
+                    .expect("Writing to memory can't fail");
                 out_ttf.into_inner().freeze()
             })
             .map_err(Into::into);
