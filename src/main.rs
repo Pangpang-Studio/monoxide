@@ -19,7 +19,7 @@ fn main() -> anyhow::Result<()> {
     )?;
 
     let fout = "out.ttf";
-    res.writer().write(File::create(fout)?)?;
+    res.writer().autohint(true).write(File::create(fout)?)?;
     eprintln!("Successfully generated '{fout}'");
 
     Ok(())
