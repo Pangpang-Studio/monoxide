@@ -9,6 +9,7 @@ version.workspace = true
 readme = "README.md"
 
 [dependencies]
+anyhow.workspace = true
 monoxide-font.workspace = true
 monoxide-script.workspace = true
 tracing-subscriber.workspace = true
