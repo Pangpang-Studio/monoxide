@@ -84,7 +84,9 @@ impl<Id: Copy> EvalValue<Id> {
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum EvalError<Id> {
-    #[error("stroking a bezier is not supported yet; at {0}")]
+    #[error(
+        "bezier stroking unimplemented at {0}: try putting `.transformed()` before `.stroked()`"
+    )]
     StrokingABezier(Id),
 
     #[error("curve evaluation error at {0}: {1}")]
