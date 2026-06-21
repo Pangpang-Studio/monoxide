@@ -489,7 +489,8 @@ pub struct Table {
     pub us_weight_class: u16,
     pub us_width_class: u16,
 
-    // The following two fields should be bitwise ORed together forming a single 16-bit value
+    // The following two fields should be bitwise ORed together forming a single
+    // 16-bit value
     pub usage_permission: UsagePermissionKind,
     pub fs_type: FsTypeUpper,
 
