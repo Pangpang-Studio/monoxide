@@ -9,9 +9,9 @@ fn main() {
         )
         .init();
     eprintln!("Hello from Monoxide!");
-    let fcx = make_font().expect("Unable to create font");
+
     let res = monoxide_script::eval::eval(
-        &fcx,
+        &make_font(),
         &AuxiliarySettings {
             point_per_em: 2048,
             font_name: "Monoxide".into(),

@@ -21,7 +21,7 @@ impl InputContext {
     }
 }
 
-pub fn make_font() -> Result<FontContext, ()> {
+pub fn make_font() -> FontContext {
     let cx = InputContext {
         settings: make_font_params(),
     };
@@ -31,7 +31,7 @@ pub fn make_font() -> Result<FontContext, ()> {
         fcx.set_mapping(ch, gl(&cx));
     }
     fcx.set_tofu();
-    Ok(fcx)
+    fcx
 }
 
 pub const fn make_font_params() -> FontParamSettings {

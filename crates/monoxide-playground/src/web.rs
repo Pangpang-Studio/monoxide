@@ -9,7 +9,7 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, bail};
 use axum::{
     Router,
     extract::State,
@@ -106,8 +106,8 @@ pub struct CompiledFont {
 }
 
 impl CompiledFont {
-    pub fn new<E: Debug>(make_font: &mut impl FnMut() -> Result<FontContext, E>) -> Result<Self> {
-        let fcx = make_font().map_err(|e| anyhow!("{e:?}"))?;
+    pub fn new(make_font: &mut impl FnMut() -> FontContext) -> Result<Self> {
+        let fcx = make_font();
         let ser_fcx = layout_glyphs(&fcx)?;
         let metadata = FontMetadata::new(&fcx, ser_fcx);
 

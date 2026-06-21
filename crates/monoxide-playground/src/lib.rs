@@ -28,9 +28,7 @@ pub enum Subcommand {
 }
 
 impl Playground {
-    pub async fn dispatch<E: Debug>(
-        mut make_font: impl FnMut() -> Result<FontContext, E>,
-    ) -> Result<()> {
+    pub async fn dispatch(mut make_font: impl FnMut() -> FontContext) -> Result<()> {
         tracing_subscriber::fmt()
             .with_env_filter(
                 tracing_subscriber::EnvFilter::from_default_env()
@@ -47,10 +45,7 @@ impl Playground {
 }
 
 impl web::ServerCommand {
-    async fn run<E: Debug>(
-        self,
-        make_font: &mut impl FnMut() -> Result<FontContext, E>,
-    ) -> Result<()> {
+    async fn run(self, make_font: &mut impl FnMut() -> FontContext) -> Result<()> {
         let (tx, rx) = tokio::sync::mpsc::channel::<()>(10);
         let mut rx = std::pin::pin!(tokio_stream::wrappers::ReceiverStream::new(rx));
 
@@ -103,10 +98,7 @@ enum MetaCompressKind {
 }
 
 impl RenderCommand {
-    async fn run<E: Debug>(
-        self,
-        make_font: &mut impl FnMut() -> Result<FontContext, E>,
-    ) -> Result<()> {
+    async fn run(self, make_font: &mut impl FnMut() -> FontContext) -> Result<()> {
         let mut out_dir = self.dir;
         if !out_dir.is_absolute() {
             out_dir = std::env::current_dir()?.join(out_dir);
