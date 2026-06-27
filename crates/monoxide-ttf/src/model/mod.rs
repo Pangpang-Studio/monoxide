@@ -6,6 +6,9 @@
 
 use bytes::{BufMut, BytesMut};
 use indexmap::IndexMap;
+use tempfile::NamedTempFile;
+use tilvisan::{Args as AutohintArgs, AutohintError, autohint};
+
 pub mod cff2;
 pub mod cmap;
 pub mod dsig;
@@ -118,186 +121,238 @@ struct TableRecord {
 }
 
 impl FontFile {
-    pub fn write(&self, w: impl std::io::Write) -> std::io::Result<()> {
-        write_font_file(self, w)
+    pub fn writer(&self) -> FontWriter<'_> {
+        FontWriter::new(self)
     }
 }
 
-fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Result<()> {
-    let version = match font.outline {
-        Outline::TrueType(_) => [0x00, 0x01, 0x00, 0x00],
-        Outline::CFF2(_) => b"OTTO".to_owned(),
-    };
-    // The `head` requires special treatment because it needs to be
-    // rewritten after the checksum is calculated. Anyway, we can first
-    // serialize them as opaque blobs and pay special attention to the
-    // `head` table when calculating offsets and checksums.
-    let mut tables = Vec::<&dyn DynITable>::new();
-    {
-        tables.push(&font.head);
-        tables.push(&font.hhea);
-        tables.push(&font.hmtx);
-        tables.push(&font.cmap);
-        tables.push(&font.name);
-        tables.push(&font.os2);
-        tables.push(&font.post);
-        match &font.outline {
-            Outline::TrueType(tt_tables) => {
-                tables.push(&tt_tables.glyf);
-                tables.push(&tt_tables.loca);
-                tables.push(&tt_tables.maxp);
-            }
-            Outline::CFF2(_) => {
-                todo!("CFF2 tables are not implemented yet");
-                // tables_except_header.push(Box::new(tables.cff2));
-                // tables_except_header.push(Box::new(tables.maxp));
-            }
-        }
-        if let Some(dsig) = &font.dsig {
-            tables.push(dsig);
+pub struct FontWriter<'a> {
+    font: &'a FontFile,
+    autohint: bool,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum FontWriterError {
+    #[error("{0}")]
+    Io(#[from] std::io::Error),
+    #[error("{0}")]
+    Autohint(#[from] AutohintError),
+}
+
+impl<'a> FontWriter<'a> {
+    fn new(font: &'a FontFile) -> Self {
+        Self {
+            font,
+            autohint: false,
         }
     }
-    let n_table_records = tables.len();
-    /*
-    header layout:
-        version: u32
-        n_tables: u16
-        search_range: u16 = ((2**floor(log2(numTables))) * 16 (Maximum power of 2 less than or equal to numTables * 16)
-        entry_selector: u16 = log2(searchRange / 16)
-        range_shift: u16 = numTables * 16 - searchRange
-        ... table records ...
-     */
-    let header_size = 12 + n_table_records * 16;
 
-    let search_range = (1 << (n_table_records as f32).log2().floor() as u32) * 16;
-    let entry_selector = (n_table_records as f32).log2().floor() as u16;
-    let range_shift = (n_table_records as u16 * 16) - search_range as u16;
-
-    // Write the header
-    let mut header_buffer = Vec::new();
-    header_buffer.extend_from_slice(&version);
-    header_buffer.extend_from_slice(&(n_table_records as u16).to_be_bytes());
-    header_buffer.extend_from_slice(&(search_range as u16).to_be_bytes());
-    header_buffer.extend_from_slice(&entry_selector.to_be_bytes());
-    header_buffer.extend_from_slice(&range_shift.to_be_bytes());
-
-    // Calculate the checksum of the whole font file.
-    //
-    // Since the checksum is calculated using wrapping add, it can be calculated
-    // in a different order from the actual writing order. Additionally, we are
-    // padding all tables to 4 bytes, so we can directly add the checksum
-    // calculated from `ttf_checksum`.
-    let mut font_cksum = 0u32;
-    font_cksum = font_cksum.wrapping_add(ttf_checksum(&header_buffer));
-
-    // Serialize all tables
-    let head_ser = {
-        let mut head_buf = BytesMut::new();
-        font.head.write(&mut head_buf);
-        head_buf.freeze()
-    };
-    let mut tables_ser = tables
-        .iter()
-        .map(|table| {
-            let mut buf = BytesMut::new();
-            table.write_dyn(&mut buf);
-            (*table.name_dyn(), buf.freeze())
-        })
-        .collect::<IndexMap<_, _>>();
-    // The tables must be sorted by tag
-    tables_ser.sort_by(|a, _, b, _| a.cmp(b));
-
-    // We first do a virtual allocation of all tables to calculate the offsets,
-    // before we write the actual data.
-    let mut table_records = Vec::with_capacity(n_table_records);
-    let mut offset = header_size; // current write offset
-
-    // To assist debugging, we write "____{tag}" before the beginning of each table
-    let debug_data_len = 8;
-
-    for (tag, ser) in tables_ser.iter() {
-        offset += debug_data_len;
-
-        let cksum = ttf_checksum(ser);
-        table_records.push(TableRecord {
-            tag: *tag,
-            checksum: cksum,
-            offset: offset as u32,
-            length: ser.len() as u32,
-        });
-
-        offset += ser.len();
-        offset = offset.next_multiple_of(4); // pad to 4 bytes
-
-        font_cksum = font_cksum.wrapping_add(cksum);
+    pub fn autohint(mut self, autohint: bool) -> Self {
+        self.autohint = autohint;
+        self
     }
+}
 
-    let mut table_records_ser = Vec::new();
-    for record in &table_records {
-        table_records_ser.extend_from_slice(&record.tag);
-        table_records_ser.extend_from_slice(&record.checksum.to_be_bytes());
-        table_records_ser.extend_from_slice(&record.offset.to_be_bytes());
-        table_records_ser.extend_from_slice(&record.length.to_be_bytes());
-    }
-    font_cksum = font_cksum.wrapping_add(ttf_checksum(&table_records_ser));
+impl FontWriter<'_> {
+    pub fn write(self, mut w: impl std::io::Write) -> Result<(), FontWriterError> {
+        if !self.autohint {
+            return Ok(self.write_raw(w)?);
+        }
 
-    // As we said, the head table needs to be rewritten with the checksum added.
-    let cksum_adjustment = 0xB1B0AFBAu32.wrapping_sub(font_cksum);
-    let new_head = head::Table {
-        checksum_adjustment: cksum_adjustment,
-        ..font.head.clone()
-    };
-    // And re-serialize it
-    drop(head_ser); // We don't need the old head anymore
-    let head_ser = {
-        let mut head_buf = BytesMut::new();
-        new_head.write(&mut head_buf);
-        head_buf.freeze()
-    };
-    tables_ser.insert(*new_head.name(), head_ser);
+        let autohinted = {
+            // FIXME: I wish `autohint` could take a reader instead of a path, so we don't
+            // have to write to a temp file first...
+            let mut tmp = NamedTempFile::new()?;
+            self.write_raw(&mut tmp)?;
 
-    fn write_ser(mut w: impl std::io::Write, name: [u8; 4], ser: &[u8]) -> std::io::Result<()> {
-        write!(w, "____{}", std::str::from_utf8(&name).unwrap())?;
+            autohint(&AutohintArgs {
+                input: tmp.path().to_string_lossy().into(),
+                ..AutohintArgs::default()
+            })?
+        };
 
-        w.write_all(ser)?;
-        pad_to_4_bytes(ser.len(), &mut w)?;
-
+        w.write_all(&autohinted)?;
         Ok(())
     }
 
-    // Noice, we can finally write the font file
-    // Do offset checks for tables and table records
-    let mut actual_offset = 0;
+    fn write_raw(&self, mut w: impl std::io::Write) -> std::io::Result<()> {
+        let font = self.font;
 
-    w.write_all(&header_buffer)?;
-    actual_offset += header_buffer.len();
-    debug_assert_eq!(header_buffer.len(), 12, "header size mismatch");
+        let version = match font.outline {
+            Outline::TrueType(_) => [0x00, 0x01, 0x00, 0x00],
+            Outline::CFF2(_) => b"OTTO".to_owned(),
+        };
+        // The `head` requires special treatment because it needs to be
+        // rewritten after the checksum is calculated. Anyway, we can first
+        // serialize them as opaque blobs and pay special attention to the
+        // `head` table when calculating offsets and checksums.
+        let mut tables = Vec::<&dyn DynITable>::new();
+        {
+            tables.push(&font.head);
+            tables.push(&font.hhea);
+            tables.push(&font.hmtx);
+            tables.push(&font.cmap);
+            tables.push(&font.name);
+            tables.push(&font.os2);
+            tables.push(&font.post);
+            match &font.outline {
+                Outline::TrueType(tt_tables) => {
+                    tables.push(&tt_tables.glyf);
+                    tables.push(&tt_tables.loca);
+                    tables.push(&tt_tables.maxp);
+                }
+                Outline::CFF2(_) => {
+                    todo!("CFF2 tables are not implemented yet");
+                    // tables_except_header.push(Box::new(tables.cff2));
+                    // tables_except_header.push(Box::new(tables.maxp));
+                }
+            }
+            if let Some(dsig) = &font.dsig {
+                tables.push(dsig);
+            }
+        }
+        let n_table_records = tables.len();
+        /*
+        header layout:
+            version: u32
+            n_tables: u16
+            search_range: u16 = ((2**floor(log2(numTables))) * 16 (Maximum power of 2 less than or equal to numTables * 16)
+            entry_selector: u16 = log2(searchRange / 16)
+            range_shift: u16 = numTables * 16 - searchRange
+            ... table records ...
+         */
+        let header_size = 12 + n_table_records * 16;
 
-    w.write_all(&table_records_ser)?;
-    actual_offset += table_records_ser.len();
-    debug_assert_eq!(
-        table_records_ser.len(),
-        n_table_records * 16,
-        "table records size mismatch"
-    );
-    debug_assert_eq!(
-        actual_offset, header_size,
-        "header (including table records) size mismatch"
-    );
+        let search_range = (1 << (n_table_records as f32).log2().floor() as u32) * 16;
+        let entry_selector = (n_table_records as f32).log2().floor() as u16;
+        let range_shift = (n_table_records as u16 * 16) - search_range as u16;
 
-    pad_to_4_bytes(actual_offset, &mut w)?;
+        // Write the header
+        let mut header_buffer = Vec::new();
+        header_buffer.extend_from_slice(&version);
+        header_buffer.extend_from_slice(&(n_table_records as u16).to_be_bytes());
+        header_buffer.extend_from_slice(&(search_range as u16).to_be_bytes());
+        header_buffer.extend_from_slice(&entry_selector.to_be_bytes());
+        header_buffer.extend_from_slice(&range_shift.to_be_bytes());
 
-    for ((_, ser), tbl) in tables_ser.iter().zip(table_records.iter()) {
-        actual_offset += 8; // debug info
-        let table_tag_string = std::str::from_utf8(&tbl.tag).unwrap();
+        // Calculate the checksum of the whole font file.
+        //
+        // Since the checksum is calculated using wrapping add, it can be calculated
+        // in a different order from the actual writing order. Additionally, we are
+        // padding all tables to 4 bytes, so we can directly add the checksum
+        // calculated from `ttf_checksum`.
+        let mut font_cksum = 0u32;
+        font_cksum = font_cksum.wrapping_add(ttf_checksum(&header_buffer));
 
-        assert_table_invariants(actual_offset, tbl, table_tag_string);
+        // Serialize all tables
+        let head_ser = {
+            let mut head_buf = BytesMut::new();
+            font.head.write(&mut head_buf);
+            head_buf.freeze()
+        };
+        let mut tables_ser = tables
+            .iter()
+            .map(|table| {
+                let mut buf = BytesMut::new();
+                table.write_dyn(&mut buf);
+                (*table.name_dyn(), buf.freeze())
+            })
+            .collect::<IndexMap<_, _>>();
+        // The tables must be sorted by tag
+        tables_ser.sort_by(|a, _, b, _| a.cmp(b));
 
-        write_ser(&mut w, tbl.tag, ser)?;
-        actual_offset += ser.len().next_multiple_of(4);
+        // We first do a virtual allocation of all tables to calculate the offsets,
+        // before we write the actual data.
+        let mut table_records = Vec::with_capacity(n_table_records);
+        let mut offset = header_size; // current write offset
+
+        // To assist debugging, we write "____{tag}" before the beginning of each table
+        let debug_data_len = 8;
+
+        for (tag, ser) in tables_ser.iter() {
+            offset += debug_data_len;
+
+            let cksum = ttf_checksum(ser);
+            table_records.push(TableRecord {
+                tag: *tag,
+                checksum: cksum,
+                offset: offset as u32,
+                length: ser.len() as u32,
+            });
+
+            offset += ser.len();
+            offset = offset.next_multiple_of(4); // pad to 4 bytes
+
+            font_cksum = font_cksum.wrapping_add(cksum);
+        }
+
+        let mut table_records_ser = Vec::new();
+        for record in &table_records {
+            table_records_ser.extend_from_slice(&record.tag);
+            table_records_ser.extend_from_slice(&record.checksum.to_be_bytes());
+            table_records_ser.extend_from_slice(&record.offset.to_be_bytes());
+            table_records_ser.extend_from_slice(&record.length.to_be_bytes());
+        }
+        font_cksum = font_cksum.wrapping_add(ttf_checksum(&table_records_ser));
+
+        // As we said, the head table needs to be rewritten with the checksum added.
+        let cksum_adjustment = 0xB1B0AFBAu32.wrapping_sub(font_cksum);
+        let new_head = head::Table {
+            checksum_adjustment: cksum_adjustment,
+            ..font.head.clone()
+        };
+        // And re-serialize it
+        drop(head_ser); // We don't need the old head anymore
+        let head_ser = {
+            let mut head_buf = BytesMut::new();
+            new_head.write(&mut head_buf);
+            head_buf.freeze()
+        };
+        tables_ser.insert(*new_head.name(), head_ser);
+
+        fn write_ser(mut w: impl std::io::Write, name: [u8; 4], ser: &[u8]) -> std::io::Result<()> {
+            write!(w, "____{}", std::str::from_utf8(&name).unwrap())?;
+
+            w.write_all(ser)?;
+            pad_to_4_bytes(ser.len(), &mut w)?;
+
+            Ok(())
+        }
+
+        // Noice, we can finally write the font file
+        // Do offset checks for tables and table records
+        let mut actual_offset = 0;
+
+        w.write_all(&header_buffer)?;
+        actual_offset += header_buffer.len();
+        debug_assert_eq!(header_buffer.len(), 12, "header size mismatch");
+
+        w.write_all(&table_records_ser)?;
+        actual_offset += table_records_ser.len();
+        debug_assert_eq!(
+            table_records_ser.len(),
+            n_table_records * 16,
+            "table records size mismatch"
+        );
+        debug_assert_eq!(
+            actual_offset, header_size,
+            "header (including table records) size mismatch"
+        );
+
+        pad_to_4_bytes(actual_offset, &mut w)?;
+
+        for ((_, ser), tbl) in tables_ser.iter().zip(table_records.iter()) {
+            actual_offset += 8; // debug info
+            let table_tag_string = std::str::from_utf8(&tbl.tag).unwrap();
+
+            assert_table_invariants(actual_offset, tbl, table_tag_string);
+
+            write_ser(&mut w, tbl.tag, ser)?;
+            actual_offset += ser.len().next_multiple_of(4);
+        }
+
+        Ok(())
     }
-
-    Ok(())
 }
 
 fn assert_table_invariants(actual_offset: usize, tbl: &TableRecord, table_tag_string: &str) {
