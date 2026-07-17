@@ -200,6 +200,7 @@ fn start_playground(
         playground_cmd.args(["watch", "-i", "xtask", "-i", "tools", "--", "dx"]);
     } else {
         playground_cmd = Command::new("dx");
+        playground_cmd.env("TELEMETRY", "false");
     }
     playground_cmd.args([
         "serve",
