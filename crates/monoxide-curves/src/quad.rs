@@ -1,7 +1,3 @@
-use num_traits::Num;
-
-use super::Point;
-
 /// A quadratic bezier segment, with `P` as the point type
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuadSegment<P> {
@@ -29,7 +25,7 @@ pub struct QuadBezier<P> {
     pub closed: bool,
 }
 
-impl<P: Point<Scalar = N> + Copy, N: Num + Copy> QuadBezier<P> {
+impl<P: Copy> QuadBezier<P> {
     /// Converts the curve to a curve with a different point type.
     /// Often used to downsample a curve.
     pub fn cast<P1>(&self, cast: impl Fn(P) -> P1) -> QuadBezier<P1> {
@@ -44,29 +40,6 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> QuadBezier<P> {
                 })
                 .collect(),
             closed: self.closed,
-        }
-    }
-
-    pub fn point_at(&self, segment: usize, t: N) -> P {
-        let seg = &self.segments[segment];
-        let start_point = if segment == 0 {
-            self.start
-        } else {
-            self.segments[segment - 1].end
-        };
-
-        let one_minus_t = N::one() - t;
-        let two = N::one() + N::one();
-        if seg.is_line() {
-            (start_point.mul_scalar(one_minus_t)).point_add(&seg.end.mul_scalar(t))
-        } else {
-            let c0 = one_minus_t * one_minus_t;
-            let c1 = two * one_minus_t * t;
-            let c2 = t * t;
-
-            (start_point.mul_scalar(c0))
-                .point_add(&seg.control.mul_scalar(c1))
-                .point_add(&seg.end.mul_scalar(c2))
         }
     }
 

@@ -1,263 +1,60 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
+//! The 2D point type used throughout this crate.
+//!
+//! [`Point2D`] is simply [`kurbo::Point`]. This module only adds a handful of
+//! small convenience helpers (via [`Point2DExt`]) that are used by the
+//! stroking code and by consumers of this crate, but that don't exist on
+//! `kurbo`'s own `Point`/`Vec2` types.
 
-use monoxide_spiro::SpiroCp;
-use serde::{Deserialize, Serialize};
+pub use kurbo::Point as Point2D;
 
-use crate::{IPoint2D, Point, RealPoint};
+/// Small extension methods for [`Point2D`] that are not provided by `kurbo`
+/// itself.
+pub trait Point2DExt: Sized {
+    /// The unit vector on the X axis, i.e. `(1, 0)`.
+    fn unit_x() -> Self;
+    /// The unit vector on the Y axis, i.e. `(0, 1)`.
+    fn unit_y() -> Self;
 
-#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
-pub struct Point2D {
-    pub x: f64,
-    pub y: f64,
+    /// Returns a copy of this point with the X coordinate replaced.
+    fn with_x(self, x: f64) -> Self;
+    /// Returns a copy of this point with the Y coordinate replaced.
+    fn with_y(self, y: f64) -> Self;
+
+    /// Returns a copy of this point with the X coordinate negated.
+    fn neg_x(self) -> Self;
+    /// Returns a copy of this point with the Y coordinate negated.
+    fn neg_y(self) -> Self;
+
+    /// Normalizes the vector from the origin to this point to unit length.
+    fn normalize(self) -> Self;
 }
 
-impl Point2D {
-    pub const fn new(x: f64, y: f64) -> Self {
-        Point2D { x, y }
-    }
-
-    pub fn normalize(self) -> Self {
-        let norm = self.norm();
-        Self::new(self.x / norm, self.y / norm)
-    }
-
-    pub fn dot(self, other: Self) -> f64 {
-        self.x * other.x + self.y * other.y
-    }
-
-    pub fn normal_left(self) -> Self {
-        Self::new(-self.y, self.x)
-    }
-
-    pub fn normal_right(self) -> Self {
-        Self::new(self.y, -self.x)
-    }
-
-    pub fn unit_x() -> Self {
+impl Point2DExt for Point2D {
+    fn unit_x() -> Self {
         Self::new(1.0, 0.0)
     }
 
-    pub fn unit_y() -> Self {
+    fn unit_y() -> Self {
         Self::new(0.0, 1.0)
     }
 
-    pub fn with_x(self, x: f64) -> Self {
+    fn with_x(self, x: f64) -> Self {
         Self::new(x, self.y)
     }
 
-    pub fn with_y(self, y: f64) -> Self {
+    fn with_y(self, y: f64) -> Self {
         Self::new(self.x, y)
     }
 
-    pub fn neg_x(self) -> Self {
+    fn neg_x(self) -> Self {
         Self::new(-self.x, self.y)
     }
 
-    pub fn neg_y(self) -> Self {
+    fn neg_y(self) -> Self {
         Self::new(self.x, -self.y)
     }
-}
 
-impl Point for Point2D {
-    type Scalar = f64;
-
-    fn mul_scalar(&self, scalar: Self::Scalar) -> Self {
-        Self::new(self.x * scalar, self.y * scalar)
-    }
-
-    fn point_add(&self, other: &Self) -> Self {
-        Self::new(self.x + other.x, self.y + other.y)
-    }
-
-    fn point_sub(&self, other: &Self) -> Self {
-        Self::new(self.x - other.x, self.y - other.y)
-    }
-
-    fn zero() -> Self {
-        Self::new(0.0, 0.0)
-    }
-
-    fn unit(axis: usize) -> Self {
-        match axis {
-            0 => Self::new(1.0, 0.0),
-            1 => Self::new(0.0, 1.0),
-            _ => panic!("Invalid axis for Point2D: {axis}"),
-        }
-    }
-
-    fn with_axis(&self, axis: usize, value: Self::Scalar) -> Self {
-        match axis {
-            0 => Self::new(value, self.y),
-            1 => Self::new(self.x, value),
-            _ => panic!("Invalid axis for Point2D: {axis}"),
-        }
-    }
-
-    fn scale(&self, vector: &Self) -> Self {
-        *self * *vector
-    }
-
-    fn dot(&self, other: &Self) -> f64 {
-        Point2D::dot(*self, *other)
-    }
-
-    fn is_zero(&self) -> bool {
-        self.x == 0.0 && self.y == 0.0
-    }
-}
-
-impl RealPoint for Point2D {
-    fn norm(&self) -> Self::Scalar {
-        self.x.hypot(self.y)
-    }
-}
-
-impl Add for Point2D {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
-        Self::new(self.x + other.x, self.y + other.y)
-    }
-}
-
-impl Sub for Point2D {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self {
-        Self::new(self.x - other.x, self.y - other.y)
-    }
-}
-
-impl Mul<f64> for Point2D {
-    type Output = Self;
-
-    fn mul(self, scalar: f64) -> Self {
-        Self::new(self.x * scalar, self.y * scalar)
-    }
-}
-
-impl Mul<Point2D> for f64 {
-    type Output = Point2D;
-
-    fn mul(self, point: Point2D) -> Point2D {
-        Point2D::new(point.x * self, point.y * self)
-    }
-}
-
-/// This is a component-wise multiplication of two points (aka Hadamard
-/// product).
-///
-/// Since we don't have a better operator for this, we will just reuse the
-/// multiplication operator `*` on this.
-impl Mul<Point2D> for Point2D {
-    type Output = Point2D;
-
-    fn mul(self, rhs: Point2D) -> Self::Output {
-        Self::new(self.x * rhs.x, self.y * rhs.y)
-    }
-}
-
-impl Div<f64> for Point2D {
-    type Output = Self;
-
-    fn div(self, scalar: f64) -> Self {
-        Self::new(self.x / scalar, self.y / scalar)
-    }
-}
-
-impl Neg for Point2D {
-    type Output = Self;
-
-    fn neg(self) -> Self {
-        Self::new(-self.x, -self.y)
-    }
-}
-
-impl From<(f64, f64)> for Point2D {
-    fn from((x, y): (f64, f64)) -> Self {
-        Point2D::new(x, y)
-    }
-}
-
-impl From<Point2D> for (f64, f64) {
-    fn from(point: Point2D) -> Self {
-        (point.x, point.y)
-    }
-}
-
-impl From<SpiroCp> for Point2D {
-    fn from(spiro_cp: SpiroCp) -> Self {
-        Point2D::new(spiro_cp.x, spiro_cp.y)
-    }
-}
-impl From<&SpiroCp> for Point2D {
-    fn from(spiro_cp: &SpiroCp) -> Self {
-        Point2D::new(spiro_cp.x, spiro_cp.y)
-    }
-}
-
-impl flo_curves::Coordinate for Point2D {
-    fn from_components(components: &[f64]) -> Self {
-        Point2D::new(components[0], components[1])
-    }
-
-    fn origin() -> Self {
-        Point2D::new(0.0, 0.0)
-    }
-
-    fn len() -> usize {
-        2
-    }
-
-    fn get(&self, index: usize) -> f64 {
-        match index {
-            0 => self.x,
-            1 => self.y,
-            _ => panic!("Invalid index"),
-        }
-    }
-
-    fn from_biggest_components(p1: Self, p2: Self) -> Self {
-        let x = p1.x.max(p2.x);
-        let y = p1.y.max(p2.y);
-        Point2D::new(x, y)
-    }
-
-    fn from_smallest_components(p1: Self, p2: Self) -> Self {
-        let x = p1.x.min(p2.x);
-        let y = p1.y.min(p2.y);
-        Point2D::new(x, y)
-    }
-}
-
-impl flo_curves::Coordinate2D for Point2D {
-    fn x(&self) -> f64 {
-        self.x
-    }
-
-    fn y(&self) -> f64 {
-        self.y
-    }
-}
-
-impl IPoint2D for Point2D {
-    fn make(x: Self::Scalar, y: Self::Scalar) -> Self {
-        Point2D::new(x, y)
-    }
-
-    fn x(&self) -> Self::Scalar {
-        self.x
-    }
-
-    fn y(&self) -> Self::Scalar {
-        self.y
-    }
-
-    fn with_x(&self, x: Self::Scalar) -> Self {
-        Point2D::new(x, self.y)
-    }
-
-    fn with_y(&self, y: Self::Scalar) -> Self {
-        Point2D::new(self.x, y)
+    fn normalize(self) -> Self {
+        self.to_vec2().normalize().to_point()
     }
 }

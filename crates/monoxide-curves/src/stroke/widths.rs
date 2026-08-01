@@ -1,12 +1,11 @@
 use std::{cell::LazyCell, collections::BTreeMap};
 
-use flo_curves::bezier::curve_length;
 use itertools::Itertools;
+use kurbo::{ParamCurveArclen, PathSeg};
 
 use crate::{
     CubicBezier,
     error::{Error, Result},
-    point::Point2D,
     spiro::{SpiroCurve, default_alignment, default_width_factor},
 };
 
@@ -31,7 +30,7 @@ pub struct SolvedStrokeAttrs {
 pub fn solve_stroke_attrs(
     curve: &SpiroCurve,
     is_closed: bool,
-    cubic: &CubicBezier<Point2D>,
+    cubic: &CubicBezier,
     indices: &[usize],
 ) -> Result<SolvedStrokeAttrs> {
     // Lazy-evaluated curve length information.
@@ -66,28 +65,21 @@ pub fn solve_stroke_attrs(
 
 fn calc_curve_lengths(
     curve: &SpiroCurve,
-    cubic: &CubicBezier<Point2D>,
+    cubic: &CubicBezier,
     indices: &[usize],
 ) -> Result<Vec<f64>> {
     let max_error = 0.001;
     let mut lengths = Vec::with_capacity(curve.len());
+    let arclen = |seg| PathSeg::from(cubic.segment(seg).unwrap()).arclen(max_error);
     for &[from, to] in indices.array_windows() {
-        let mut acc = 0.0;
-        for seg in from..to {
-            let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
-            acc += seg_length;
-        }
-        lengths.push(acc);
+        lengths.push((from..to).map(arclen).sum());
     }
     // last segment
-    {
-        let mut acc = 0.0;
-        for seg in indices.last().copied().unwrap_or(0)..curve.len() {
-            let seg_length = curve_length(&cubic.segment(seg).unwrap(), max_error);
-            acc += seg_length;
-        }
-        lengths.push(acc);
-    }
+    lengths.push(
+        (indices.last().copied().unwrap_or(0)..curve.len())
+            .map(arclen)
+            .sum(),
+    );
     if lengths.len() != curve.len() {
         return Err(Error::internal("length calculation mismatch"));
     }

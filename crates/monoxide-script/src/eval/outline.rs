@@ -1,5 +1,5 @@
 use itertools::{Itertools, chain};
-use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D, stroke::StrokedSpiroCurve};
+use monoxide_curves::{CubicBezier, SpiroCurve, stroke::StrokedSpiroCurve, xform::AffineExt};
 
 use crate::{ast::OutlineExpr, trace::EvalTracer};
 
@@ -8,7 +8,7 @@ pub type EvalResult<E, A = EvalValue<<E as EvalTracer>::Id>> =
 
 pub fn eval_outline<E: EvalTracer>(
     expr: &OutlineExpr,
-    out: &mut Vec<CubicBezier<Point2D>>,
+    out: &mut Vec<CubicBezier>,
     dbg: &mut E,
 ) -> EvalResult<E, E::Id> {
     let evaled = eval_outline_internal(expr, dbg)?;
@@ -36,7 +36,7 @@ pub fn eval_outline<E: EvalTracer>(
 /// Represents an intermediate value during the evaluation of a glyph.
 #[derive(Debug, Clone)]
 pub enum EvalValueKind {
-    Beziers(Vec<CubicBezier<Point2D>>),
+    Beziers(Vec<CubicBezier>),
     Spiros(Vec<SpiroCurve>),
 }
 
@@ -47,7 +47,7 @@ pub struct EvalValue<Id> {
 }
 
 impl<Id: Copy> EvalValue<Id> {
-    pub fn bezier(bezier: CubicBezier<Point2D>, id: Id) -> Self {
+    pub fn bezier(bezier: CubicBezier, id: Id) -> Self {
         Self {
             kind: EvalValueKind::Beziers(vec![bezier]),
             id,
@@ -61,7 +61,7 @@ impl<Id: Copy> EvalValue<Id> {
         }
     }
 
-    pub fn force_bezier<E>(self, dbg: &mut E) -> EvalResult<E, (E::Id, Vec<CubicBezier<Point2D>>)>
+    pub fn force_bezier<E>(self, dbg: &mut E) -> EvalResult<E, (E::Id, Vec<CubicBezier>)>
     where
         E: EvalTracer<Id = Id>,
     {

@@ -7,10 +7,9 @@ use crate::{
     CubicBezier,
     cube::CubicBezierBuilder,
     error::{Error, Result},
-    point::Point2D,
 };
 
-pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Result<Vec<CubicBezier<Point2D>>> {
+pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Result<Vec<CubicBezier>> {
     let mut ctx = BezierContext::new(false);
     ctx.run_spiro(spiro)?;
     let None = ctx.active_builder else {
@@ -32,7 +31,7 @@ pub fn spiro_to_cube(spiro: &[SpiroCp]) -> Result<Vec<CubicBezier<Point2D>>> {
 /// starting from 1.
 pub fn spiro_to_cube_with_indices(
     spiro: &[SpiroCp],
-) -> Result<(Vec<CubicBezier<Point2D>>, Vec<SpiroPointIndex>)> {
+) -> Result<(Vec<CubicBezier>, Vec<SpiroPointIndex>)> {
     let mut ctx = BezierContext::new(true);
     ctx.run_spiro(spiro)?;
     let None = ctx.active_builder else {
@@ -51,8 +50,8 @@ pub struct SpiroPointIndex {
 
 #[derive(Default)]
 struct BezierContext {
-    curves: Vec<CubicBezier<Point2D>>,
-    active_builder: Option<CubicBezierBuilder<Point2D>>,
+    curves: Vec<CubicBezier>,
+    active_builder: Option<CubicBezierBuilder>,
 
     /// The indices of the spiro control points within the cubic bezier curve.
     /// Numbered in the order they were emitted, among all curves.

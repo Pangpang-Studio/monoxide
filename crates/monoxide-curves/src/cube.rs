@@ -1,19 +1,23 @@
-mod compat;
+//! A cubic bezier path, implemented as a thin wrapper over `kurbo`'s curve
+//! types.
+
 mod exchange;
 
-use num_traits::{Num, real::Real};
+use kurbo::{Affine, CubicBez, Line, ParamCurve, PathSeg};
 use serde::{Deserialize, Serialize};
 
-use super::Point;
-use crate::{IPoint2D, xform::Affine2D};
+use crate::point::Point2D;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(
     from = "exchange::SerdeForCubicSegment<P>",
     into = "exchange::SerdeForCubicSegment<P>",
-    bound(serialize = "P: Clone + Serialize")
+    bound(
+        serialize = "P: Clone + Serialize",
+        deserialize = "P: Clone + Deserialize<'de>"
+    )
 )]
-pub enum CubicSegment<P> {
+pub enum CubicSegment<P = Point2D> {
     Line(P),
     Curve(P, P, P),
 }
@@ -36,50 +40,52 @@ impl<P: Copy> CubicSegment<P> {
             CubicSegment::Curve(_, _, p) => *p,
         }
     }
+}
 
-    pub fn map<P1>(&self, f: impl Fn(P) -> P1) -> CubicSegment<P1> {
+impl CubicSegment {
+    /// Applies the given affine transformation to every point in the
+    /// segment.
+    pub fn xform(&self, xform: Affine) -> Self {
         match self {
-            CubicSegment::Line(p) => CubicSegment::Line(f(*p)),
-            CubicSegment::Curve(p1, p2, p3) => CubicSegment::Curve(f(*p1), f(*p2), f(*p3)),
+            CubicSegment::Line(p) => CubicSegment::Line(xform * *p),
+            CubicSegment::Curve(p1, p2, p3) => {
+                CubicSegment::Curve(xform * *p1, xform * *p2, xform * *p3)
+            }
         }
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct CubicSegmentFull<P> {
+pub struct CubicSegmentFull<P = Point2D> {
     pub start: P,
     pub rest: CubicSegment<P>,
 }
 
-/// Represents a cubic bezier path. This type implements
-/// [`flo_curves::bezier::path::BezierPath`], so it can be used with the various
-/// functions provided by [flo_curves].
+impl From<CubicSegmentFull> for PathSeg {
+    fn from(seg: CubicSegmentFull) -> Self {
+        match seg.rest {
+            CubicSegment::Line(end) => PathSeg::Line(Line::new(seg.start, end)),
+            CubicSegment::Curve(c1, c2, end) => {
+                PathSeg::Cubic(CubicBez::new(seg.start, c1, c2, end))
+            }
+        }
+    }
+}
+
+/// Represents a cubic bezier path: a single contour made of line and cubic
+/// curve segments.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(bound(serialize = "P: Clone + Serialize"))]
-pub struct CubicBezier<P> {
+#[serde(bound(
+    serialize = "P: Clone + Serialize",
+    deserialize = "P: Clone + Deserialize<'de>"
+))]
+pub struct CubicBezier<P = Point2D> {
     pub start: P,
     pub segments: Vec<CubicSegment<P>>,
     pub closed: bool,
 }
 
-impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
-    pub fn cast<P1>(&self, cast: impl Fn(P) -> P1) -> CubicBezier<P1> {
-        CubicBezier {
-            start: cast(self.start),
-            segments: self
-                .segments
-                .iter()
-                .map(|seg| match seg {
-                    CubicSegment::Line(p) => CubicSegment::Line(cast(*p)),
-                    CubicSegment::Curve(p1, p2, p3) => {
-                        CubicSegment::Curve(cast(*p1), cast(*p2), cast(*p3))
-                    }
-                })
-                .collect(),
-            closed: self.closed,
-        }
-    }
-
+impl<P: Copy> CubicBezier<P> {
     pub fn iter(&self) -> CubicBezierPointIter<'_, P> {
         CubicBezierPointIter {
             curve: self,
@@ -114,23 +120,6 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
         (0..self.segments.len()).filter_map(move |i| self.segment(i))
     }
 
-    pub fn point_at(&self, segment: usize, t: N) -> P {
-        let seg = &self.segments[segment];
-        let start_point = if segment == 0 {
-            self.start
-        } else {
-            self.segments[segment - 1].last_point()
-        };
-
-        match seg {
-            CubicSegment::Line(end) => {
-                let one_minus_t = N::one() - t;
-                (start_point.mul_scalar(one_minus_t)).point_add(&end.mul_scalar(t))
-            }
-            CubicSegment::Curve(p1, p2, p3) => sample(start_point, *p1, *p2, *p3, t),
-        }
-    }
-
     pub fn reversed(&self) -> Self {
         let end_point = if let Some(last_seg) = self.segments.last() {
             last_seg.last_point()
@@ -153,43 +142,27 @@ impl<P: Point<Scalar = N> + Copy, N: Num + Copy> CubicBezier<P> {
     }
 }
 
-impl<P: IPoint2D<Scalar = N> + Copy, N: Real + Copy> CubicBezier<P> {
+impl CubicBezier {
+    /// Evaluates the point at parameter `t` (in `[0, 1]`) on the given
+    /// segment.
+    pub fn point_at(&self, segment: usize, t: f64) -> Point2D {
+        PathSeg::from(self.segment(segment).expect("segment index out of bounds")).eval(t)
+    }
+
     /// Applies the given affine transformation to the cubic bezier curve.
     ///
     /// Applying an affine transformation to a cubic bezier curve is equivalent
     /// to applying the same transformation to each point in the curve.
-    pub fn xform(&self, xform: Affine2D<P>) -> Self {
+    pub fn xform(&self, xform: Affine) -> Self {
         CubicBezier {
-            start: xform.apply(&self.start),
-            segments: self
-                .segments
-                .iter()
-                .map(|seg| seg.map(|p| xform.apply(&p)))
-                .collect(),
+            start: xform * self.start,
+            segments: self.segments.iter().map(|seg| seg.xform(xform)).collect(),
             closed: self.closed,
         }
     }
 }
 
-pub fn sample<P, N>(p1: P, p2: P, p3: P, p4: P, t: N) -> P
-where
-    P: Point<Scalar = N> + Copy,
-    N: Num + Copy,
-{
-    let one_minus_t = N::one() - t;
-    let three = N::one() + N::one() + N::one();
-    let p0 = p1;
-    let c0 = one_minus_t * one_minus_t * one_minus_t;
-    let c1 = three * one_minus_t * one_minus_t * t;
-    let c2 = three * one_minus_t * t * t;
-    let c3 = t * t * t;
-    (p0.mul_scalar(c0))
-        .point_add(&p2.mul_scalar(c1))
-        .point_add(&p3.mul_scalar(c2))
-        .point_add(&p4.mul_scalar(c3))
-}
-
-pub struct CubicBezierBuilder<P> {
+pub struct CubicBezierBuilder<P = Point2D> {
     bezier: CubicBezier<P>,
 }
 
@@ -290,29 +263,35 @@ impl<P: Copy> Iterator for CubicBezierPointIter<'_, P> {
 
 #[test]
 fn test_cubic_bezier_builder() {
-    let mut curve = CubicBezier::builder((0, 0));
-    curve.line_to((1, 1)).curve_to((2, 2), (3, 3), (4, 4));
+    let mut curve = CubicBezier::builder(Point2D::new(0., 0.));
+    curve.line_to(Point2D::new(1., 1.)).curve_to(
+        Point2D::new(2., 2.),
+        Point2D::new(3., 3.),
+        Point2D::new(4., 4.),
+    );
     let curve = curve.build();
 
     let points: Vec<_> = curve.iter().collect();
     assert_eq!(
         points,
         vec![
-            (PointPosition::Start, (0, 0)),
-            (PointPosition::End, (1, 1)),
-            (PointPosition::Control1, (2, 2)),
-            (PointPosition::Control2, (3, 3)),
-            (PointPosition::End, (4, 4)),
+            (PointPosition::Start, Point2D::new(0., 0.)),
+            (PointPosition::End, Point2D::new(1., 1.)),
+            (PointPosition::Control1, Point2D::new(2., 2.)),
+            (PointPosition::Control2, Point2D::new(3., 3.)),
+            (PointPosition::End, Point2D::new(4., 4.)),
         ]
     );
 }
 
 #[test]
 fn test_cubic_bezier_interpolation() {
-    let mut curve = CubicBezier::<(f64, f64)>::builder((0., 0.));
-    curve
-        .line_to((1., 0.))
-        .curve_to((2., 0.), (2., 1.), (2., 2.));
+    let mut curve = CubicBezier::builder(Point2D::new(0., 0.));
+    curve.line_to(Point2D::new(1., 0.)).curve_to(
+        Point2D::new(2., 0.),
+        Point2D::new(2., 1.),
+        Point2D::new(2., 2.),
+    );
     let curve = curve.build();
 
     let points: Vec<_> = (0..2)
@@ -327,8 +306,8 @@ fn test_cubic_bezier_interpolation() {
 
     println!("{points:?}");
     assert_eq!(points.len(), 22);
-    assert_eq!(points[0], (0., 0.));
-    assert_eq!(points[1], (0.1, 0.));
-    assert_eq!(points[11], (1., 0.));
-    assert_eq!(points[21], (2., 2.));
+    assert_eq!(points[0], Point2D::new(0., 0.));
+    assert_eq!(points[1], Point2D::new(0.1, 0.));
+    assert_eq!(points[11], Point2D::new(1., 0.));
+    assert_eq!(points[21], Point2D::new(2., 2.));
 }

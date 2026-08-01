@@ -1,4 +1,4 @@
-use monoxide_curves::{point::Point2D, xform::Affine2D};
+use monoxide_curves::xform::{Affine2D, AffineExt};
 
 use crate::ast::Glyph;
 
@@ -9,7 +9,7 @@ pub struct GlyphComponent {
     /// The component glyph to be included in the compound glyph.
     pub component: Glyph,
     /// The transformation applied to the component glyph.
-    pub xform: Affine2D<Point2D>,
+    pub xform: Affine2D,
 }
 
 impl GlyphComponent {
@@ -20,7 +20,7 @@ impl GlyphComponent {
         }
     }
 
-    pub fn with_xform(mut self, xform: Affine2D<Point2D>) -> Self {
+    pub fn with_xform(mut self, xform: Affine2D) -> Self {
         self.xform = xform;
         self
     }
