@@ -28,17 +28,7 @@ pub fn run(cmd: SsgCommand) -> anyhow::Result<()> {
     );
 
     let status = Command::new(CARGO)
-        .args([
-            "run",
-            "-p",
-            "monoxide-font",
-            "--features",
-            "playground",
-            "--example",
-            "playground",
-            "--",
-            "render",
-        ])
+        .args(["run", "--example=playground", "--", "render"])
         .arg(&assets_dir)
         .current_dir(workspace_root())
         .stdout(std::process::Stdio::inherit())
