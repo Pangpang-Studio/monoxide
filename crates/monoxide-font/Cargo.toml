@@ -7,9 +7,6 @@ license.workspace = true
 repository.workspace = true
 version.workspace = true
 
-[features]
-playground = []
-
 [dependencies]
 monoxide-curves.workspace = true
 monoxide-script.workspace = true
@@ -19,6 +16,5 @@ monoxide-spiro.workspace = true
 anyhow.workspace = true
 dioxus-devtools.workspace = true
 itertools.workspace = true
-monoxide-playground.workspace = true
 snapbox = { workspace = true }
 tokio.workspace = true

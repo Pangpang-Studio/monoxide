@@ -14,7 +14,10 @@ monoxide-font.workspace = true
 monoxide-script.workspace = true
 tracing-subscriber.workspace = true
 
-[build-dependencies]
+[dev-dependencies]
+dioxus-devtools.workspace = true
+monoxide-playground.workspace = true
+tokio.workspace = true
 
 [lints.rust]
 rust_2018_idioms = { level = "deny", priority = -1 }

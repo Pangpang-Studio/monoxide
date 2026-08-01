@@ -1265,8 +1265,11 @@ name = "monoxide"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dioxus-devtools",
  "monoxide-font",
+ "monoxide-playground",
  "monoxide-script",
+ "tokio",
  "tracing-subscriber",
 ]
 
@@ -1290,7 +1293,6 @@ dependencies = [
  "dioxus-devtools",
  "itertools 0.15.0",
  "monoxide-curves",
- "monoxide-playground",
  "monoxide-script",
  "monoxide-spiro",
  "snapbox",

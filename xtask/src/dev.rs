@@ -72,8 +72,6 @@ fn graceful_shutdown(st: &Mutex<ShutdownState>) {
 }
 
 pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
-    let playground_crate = "monoxide-font";
-    let playground_example = "playground";
     let playground_webui_dir = util::playground_webui_dir();
     let playground_webui_dist = util::playground_webui_dist_dir();
 
@@ -122,13 +120,7 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
     }
 
     // Then start the playground server.
-    let playground_child = start_playground(
-        &cmd,
-        playground_crate,
-        playground_example,
-        webui_port,
-        &playground_webui_dist,
-    )?;
+    let playground_child = start_playground(&cmd, webui_port, &playground_webui_dist)?;
     {
         // graceful shutdown stuff
         let mut st = shutdown_state.lock().unwrap();
@@ -189,8 +181,6 @@ fn check_exit_status(shutdown_state: &Arc<Mutex<ShutdownState>>) -> bool {
 
 fn start_playground(
     cmd: &DevCommand,
-    playground_crate: &str,
-    playground_example: &str,
     webui_port: Option<u16>,
     playground_webui_dir: &Path,
 ) -> anyhow::Result<Child> {
@@ -202,15 +192,7 @@ fn start_playground(
         playground_cmd = Command::new("dx");
         playground_cmd.env("TELEMETRY", "false");
     }
-    playground_cmd.args([
-        "serve",
-        "--hotpatch",
-        "-p",
-        playground_crate,
-        "--example",
-        playground_example,
-        "--features=playground",
-    ]);
+    playground_cmd.args(["serve", "--hotpatch", "--example=playground"]);
     let mut playground_args = vec![Cow::from("serve"), format!("--port={}", cmd.port).into()];
     if let Some(webui_port) = webui_port {
         playground_args.push(format!("--reverse-proxy=http://127.0.0.1:{webui_port}").into());
