@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use monoxide_curves::{SpiroCurve, point::Point2D};
+use monoxide_curves::{
+    SpiroCurve,
+    point::{Point2D, Point2DExt},
+};
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use super::IntoOutline;

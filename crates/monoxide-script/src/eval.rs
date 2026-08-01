@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, sync::Arc, time::SystemTime};
 
-use monoxide_curves::{point::Point2D, xform::Affine2D};
+use monoxide_curves::xform::Affine2D;
 use monoxide_ttf::{
     hl,
     model::{
@@ -30,7 +30,7 @@ pub struct AuxiliarySettings {
 
 pub struct SerializedComponent {
     pub index: usize,
-    pub xform: Affine2D<Point2D>,
+    pub xform: Affine2D,
 }
 
 pub enum SerializedGlyphKind {

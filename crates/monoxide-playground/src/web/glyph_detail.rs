@@ -207,7 +207,7 @@ impl EvalTracer for GlyphDetailTracer {
 
     fn constructed_beziers<'b>(
         &mut self,
-        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id
     where
         Self: 'b,
@@ -258,8 +258,8 @@ impl EvalTracer for GlyphDetailTracer {
     fn transformed<'b>(
         &mut self,
         parent: Self::Id,
-        xform: &Affine2D<Point2D>,
-        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        xform: &Affine2D,
+        beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id {
         let (ser, id) = self.allocate_next();
         ser.kind = ConstructionKind::Transform {
@@ -294,7 +294,7 @@ impl EvalTracer for GlyphDetailTracer {
         }
     }
 
-    fn intermediate_output(&mut self, id: Self::Id, curve: &[CubicBezier<Point2D>]) {
+    fn intermediate_output(&mut self, id: Self::Id, curve: &[CubicBezier]) {
         let it = self.buf.get_mut(id).unwrap();
         it.result_curve = Some(curve.to_vec());
     }

@@ -21,6 +21,13 @@ impl From<SpiroCp> for sirop::Cp {
     }
 }
 
+impl SpiroCp {
+    /// Projects `self`'s coordinates using the given function.
+    pub fn proj<T>(&self, f: impl Fn(f64, f64) -> T) -> T {
+        f(self.x, self.y)
+    }
+}
+
 #[derive(Copy, Clone, Default, PartialEq, Eq, Debug)]
 #[repr(u8)]
 pub enum SpiroCpTy {

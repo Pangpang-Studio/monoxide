@@ -23,7 +23,7 @@ pub fn k(cx: &InputContext) -> Glyph {
 
     let pipe = Rect::new((sbl + stw / 4., 0.), (sbl + stw / 4., cap)).aligned(Alignment::Left);
     let chevron = Chevron::new(mix(sbr, sbl, 0.1) + stw..sbr, 0.0..xh);
-    let bar = Rect::new((sbl + stw / 4., mih), chevron.corner() + (stw, 0.).into());
+    let bar = Rect::new((sbl + stw / 4., mih), chevron.corner() + (stw, 0.));
 
     Glyph::builder()
         .outlines([
@@ -42,10 +42,7 @@ pub fn k_cap(cx: &InputContext) -> Glyph {
 
     let pipe = Rect::new((sbl + stw / 4., 0.), (sbl + stw / 4., cap)).aligned(Alignment::Left);
     let chevron = Chevron::new(mix(sbr, sbl, 0.1) + stw..sbr, 0.0..cap);
-    let bar = Rect::new(
-        (sbl + stw / 4., cap / 2.),
-        chevron.corner() + (stw, 0.).into(),
-    );
+    let bar = Rect::new((sbl + stw / 4., cap / 2.), chevron.corner() + (stw, 0.));
 
     Glyph::builder()
         .outlines([

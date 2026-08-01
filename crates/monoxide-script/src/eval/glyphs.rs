@@ -2,7 +2,10 @@
 
 use std::sync::Arc;
 
-use monoxide_curves::{point::Point2D, xform::Affine2D};
+use monoxide_curves::{
+    point::Point2D,
+    xform::{Affine2D, AffineExt},
+};
 use monoxide_ttf::{
     hl::{self, glyf::ConvertError},
     model::{
@@ -79,7 +82,7 @@ fn eval_simple_glyph(
     let quads = res_outlines
         .into_iter()
         .map(|x| monoxide_curves::convert::cube_to_quad(x, 0.00001))
-        .map(|x| x.cast(|x| x * (aux.point_per_em as f64)))
+        .map(|x| x.cast(|p| (p.to_vec2() * aux.point_per_em as f64).to_point()))
         .map(|x| {
             x.cast(|v| {
                 let x_fword = v.x as fword;
@@ -157,11 +160,12 @@ fn eval_compound_glyph(
 }
 
 /// Affine transform a bounding box
-fn affine_bb(aux: &AuxiliarySettings, aff: &Affine2D<Point2D>, bb: &GlyphCommon) -> GlyphCommon {
+fn affine_bb(aux: &AuxiliarySettings, aff: &Affine2D, bb: &GlyphCommon) -> GlyphCommon {
     // One day we will have a bounding box on data before transform...
     // But now let's hack this through by translating the points back to f64 and
     // calculate the result bounding box
-    let aff = Affine2D::make(aff.translation() * aux.point_per_em as f64, aff.matrix());
+    let translation = aff.translation().to_vec2() * aux.point_per_em as f64;
+    let aff = Affine2D::make(translation.to_point(), aff.matrix());
     let points = [
         cvt_pt(bb.x_min, bb.y_min),
         cvt_pt(bb.x_max, bb.y_min),

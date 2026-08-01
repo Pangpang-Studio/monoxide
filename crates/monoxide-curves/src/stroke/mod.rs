@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 
 use itertools::Itertools;
+use kurbo::Vec2;
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use crate::{
@@ -21,12 +22,12 @@ use crate::{
 /// represented in the out direction.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Tangent {
-    Continuous(Point2D),
-    Corner { in_: Point2D, out: Point2D },
+    Continuous(Vec2),
+    Corner { in_: Vec2, out: Vec2 },
 }
 
 /// Test if two normalized tangents are approximately the same direction.
-fn approx_eq(tan1: Point2D, tan2: Point2D) -> bool {
+fn approx_eq(tan1: Vec2, tan2: Vec2) -> bool {
     tan1.dot(tan2) > 0.99
 }
 
@@ -117,7 +118,7 @@ pub fn stroke_spiro(
 
 #[allow(dead_code)]
 fn debug_spiro_points<C: CurveDebugger>(
-    cube_curve: &CubicBezier<Point2D>,
+    cube_curve: &CubicBezier,
     spiro_indices: &[usize],
     dbg: &mut C,
 ) {
@@ -246,7 +247,10 @@ fn stroke_spiro_raw(
                         angle_diff
                     };
                     let width_factor = 1.0 / angle_diff.cos();
-                    (Tangent::Continuous(*tangent_override), width_factor)
+                    (
+                        Tangent::Continuous(tangent_override.to_vec2()),
+                        width_factor,
+                    )
                 } else {
                     (tangent, 1.0)
                 }
@@ -264,7 +268,7 @@ fn stroke_spiro_raw(
         let right_offset = width * right_offset_factor;
 
         let (left, right) = determine_stroked_points(left_offset, right_offset, cp, tangent);
-        dbg.line(cp.into(), right, format_args!(""));
+        dbg.line(cp.proj(Point2D::new), right, format_args!(""));
         push_point(left, right, cp, &mut left_curve, &mut right_curve);
     }
 
@@ -279,7 +283,7 @@ fn determine_stroked_points(
 ) -> (Point2D, Point2D) {
     match tangent {
         Tangent::Continuous(tangent) => {
-            move_point_normal_both(cp.into(), tangent, left_offset, right_offset)
+            move_point_normal_both(Point2D::new(cp.x, cp.y), tangent, left_offset, right_offset)
         }
         Tangent::Corner { in_, out } => make_line_join(cp, in_, out, left_offset, right_offset),
     }

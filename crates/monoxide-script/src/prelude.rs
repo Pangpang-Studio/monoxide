@@ -1,4 +1,7 @@
-pub use monoxide_curves::{point::Point2D, xform::Affine2D};
+pub use monoxide_curves::{
+    point::{Point2D, Point2DExt},
+    xform::{Affine2D, AffineExt},
+};
 
 pub use crate::{
     ast::{Glyph, GlyphBuilder, OutlineExpr},

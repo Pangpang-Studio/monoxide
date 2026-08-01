@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use by_address::ByAddress;
-use monoxide_curves::xform::Affine2D;
+use monoxide_curves::xform::{Affine2D, AffineExt};
 use petgraph::prelude::DiGraphMap;
 
 use crate::{

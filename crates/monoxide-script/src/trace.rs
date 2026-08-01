@@ -1,6 +1,6 @@
 //! Provides trait for tracing the evaluation of a glyph
 
-use monoxide_curves::{CubicBezier, debug::CurveDebugger, point::Point2D, xform::Affine2D};
+use monoxide_curves::{CubicBezier, debug::CurveDebugger, xform::Affine2D};
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
 pub trait EvalTracer {
@@ -22,7 +22,7 @@ pub trait EvalTracer {
 
     fn constructed_beziers<'b>(
         &mut self,
-        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id
     where
         Self: 'b;
@@ -43,15 +43,15 @@ pub trait EvalTracer {
     fn transformed<'b>(
         &mut self,
         parent: Self::Id,
-        xform: &Affine2D<Point2D>,
-        beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        xform: &Affine2D,
+        beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id;
     fn spiro_to_bezier(&mut self, parent: Self::Id) -> Self::Id;
     fn boolean_added<'b>(&mut self, parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id
     where
         Self: 'b;
 
-    fn constructed_bezier(&mut self, bezier: &CubicBezier<Point2D>) -> Self::Id {
+    fn constructed_bezier(&mut self, bezier: &CubicBezier) -> Self::Id {
         self.constructed_beziers(std::iter::once(bezier))
     }
 
@@ -61,7 +61,7 @@ pub trait EvalTracer {
 
     /// Provide the intermediate output of the given ID for additional debug
     /// info. The callee may omit this if the intermediate output is not needed.
-    fn intermediate_output(&mut self, id: Self::Id, curve: &[CubicBezier<Point2D>]) {
+    fn intermediate_output(&mut self, id: Self::Id, curve: &[CubicBezier]) {
         let _ = curve;
         let _ = id;
     }
@@ -95,7 +95,7 @@ impl EvalTracer for () {
 
     fn constructed_beziers<'b>(
         &mut self,
-        _beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        _beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id {
         NoId
     }
@@ -119,8 +119,8 @@ impl EvalTracer for () {
     fn transformed<'b>(
         &mut self,
         _parent: Self::Id,
-        _xform: &Affine2D<Point2D>,
-        _beziers: impl IntoIterator<Item = &'b CubicBezier<Point2D>>,
+        _xform: &Affine2D,
+        _beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id {
         NoId
     }
@@ -133,7 +133,7 @@ impl EvalTracer for () {
         NoId
     }
 
-    fn intermediate_output(&mut self, _id: Self::Id, _curve: &[CubicBezier<Point2D>]) {}
+    fn intermediate_output(&mut self, _id: Self::Id, _curve: &[CubicBezier]) {}
 
     fn curve_debugger(&mut self, _id: Self::Id) -> Self::CurveDebugger<'_> {}
 }

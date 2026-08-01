@@ -22,7 +22,7 @@ pub struct GlyphOverview {
     /// The name of the glyph, if any
     pub name: Option<String>,
     /// The outline(s) of the current glyph
-    pub outline: Vec<CubicBezier<Point2D>>,
+    pub outline: Vec<CubicBezier>,
     /// The error occurred when evaluating the glyph, if any
     pub error: Option<String>,
     /// The space to advance for this glyph
@@ -69,7 +69,7 @@ pub struct SerializedGlyphConstruction {
     pub kind: ConstructionKind,
 
     /// The resulting curve of the construction, if any
-    pub result_curve: Option<Vec<CubicBezier<Point2D>>>,
+    pub result_curve: Option<Vec<CubicBezier>>,
 
     /// Auxiliary points for debugging
     pub debug_points: Vec<DebugPoint>,
@@ -114,7 +114,7 @@ pub enum ConstructionKind {
         curve: Vec<Vec<SerializeSpiroPoint>>,
     },
     CubicBezier {
-        curve: Vec<CubicBezier<Point2D>>,
+        curve: Vec<CubicBezier>,
     },
     Stroke {
         parent: usize,
@@ -125,7 +125,7 @@ pub enum ConstructionKind {
         parent: usize,
         mov: Point2D,
         mat: [Point2D; 2],
-        curve: Vec<CubicBezier<Point2D>>,
+        curve: Vec<CubicBezier>,
     },
     SpiroToBezier {
         parent: usize,

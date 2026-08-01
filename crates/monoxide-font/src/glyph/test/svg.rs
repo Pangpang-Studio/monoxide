@@ -40,7 +40,7 @@ impl<W: Write> SvgPen<W> {
         writeln!(self.buf, "Z")
     }
 
-    fn draw_el(&mut self, el: &CubicSegment<Point2D>) -> fmt::Result {
+    fn draw_el(&mut self, el: &CubicSegment) -> fmt::Result {
         match el {
             CubicSegment::Line(p) => {
                 write!(self.buf, "L")?;
@@ -56,7 +56,7 @@ impl<W: Write> SvgPen<W> {
         }
     }
 
-    pub fn draw_contour(&mut self, contour: &CubicBezier<Point2D>) -> fmt::Result {
+    pub fn draw_contour(&mut self, contour: &CubicBezier) -> fmt::Result {
         self.draw_start(&contour.start)?;
 
         for el in &contour.segments {

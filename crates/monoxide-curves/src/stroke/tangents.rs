@@ -1,3 +1,4 @@
+use kurbo::Vec2;
 use monoxide_spiro::SpiroCp;
 
 use crate::{
@@ -10,7 +11,7 @@ use crate::{
 /// normalized tangent vectors, one for each control point.
 pub fn calc_tangents(
     curve: &[SpiroCp],
-    cube_curve: &CubicBezier<Point2D>,
+    cube_curve: &CubicBezier,
     indices: &[usize],
 ) -> Vec<Tangent> {
     debug_assert_eq!(
@@ -45,7 +46,7 @@ pub fn calc_tangents(
             }) => Some(p2 - p1),
             None => None,
         }
-        .map(Point2D::normalize);
+        .map(Vec2::normalize);
 
         let in_seg = if index != 0 {
             Some(cube_curve.segment(index - 1).expect("segment exists"))
@@ -69,7 +70,7 @@ pub fn calc_tangents(
             }) => Some(p2 - p1),
             None => None,
         }
-        .map(Point2D::normalize);
+        .map(Vec2::normalize);
 
         let tan = match (in_tangent, out_tangent) {
             (Some(in_), Some(out)) if approx_eq(in_, out) => Tangent::Continuous(in_),
@@ -91,11 +92,11 @@ pub fn calc_tangents(
 /// Returns `(left_point, right_point)`.
 pub fn move_point_normal_both(
     point: Point2D,
-    tangent: Point2D,
+    tangent: Vec2,
     left_offset: f64,
     right_offset: f64,
 ) -> (Point2D, Point2D) {
-    let normal = tangent.normal_left(); // on the left side
+    let normal = tangent.turn_90(); // on the left side
     let left_offset_ = normal * left_offset;
     let right_offset_ = -normal * right_offset;
     ((point + left_offset_), (point + right_offset_))
@@ -103,14 +104,14 @@ pub fn move_point_normal_both(
 
 pub fn make_line_join(
     cp: SpiroCp,
-    in_tangent: Point2D,
-    out_tangent: Point2D,
+    in_tangent: Vec2,
+    out_tangent: Vec2,
     left_offset: f64,
     right_offset: f64,
 ) -> (Point2D, Point2D) {
     fn calc_join(
-        in_tangent: Point2D,
-        out_tangent: Point2D,
+        in_tangent: Vec2,
+        out_tangent: Vec2,
         in_tip: Point2D,
         out_tip: Point2D,
     ) -> (f64, Point2D) {
@@ -167,11 +168,11 @@ pub fn make_line_join(
         (k1, res)
     }
 
+    let cp = cp.proj(Point2D::new);
+
     // Move separately with in and out tangent
-    let (in_left, in_right) =
-        move_point_normal_both(cp.into(), in_tangent, left_offset, right_offset);
-    let (out_left, out_right) =
-        move_point_normal_both(cp.into(), out_tangent, left_offset, right_offset);
+    let (in_left, in_right) = move_point_normal_both(cp, in_tangent, left_offset, right_offset);
+    let (out_left, out_right) = move_point_normal_both(cp, out_tangent, left_offset, right_offset);
 
     // {left,right}_offset might be close to zero due to stroke alignments,
     // making the thing numerically unstable/might get NaN/Infinity. Choose a

@@ -4,10 +4,10 @@ use monoxide_curves::{CubicBezier, SpiroCurve, point::Point2D, xform::Affine2D};
 
 #[derive(Debug, Clone)]
 pub enum OutlineExpr {
-    Bezier(CubicBezier<Point2D>),
+    Bezier(CubicBezier),
     Spiro(SpiroCurve),
     Stroked(Arc<OutlineExpr>, f64),
-    Transformed(Arc<OutlineExpr>, Affine2D<Point2D>),
+    Transformed(Arc<OutlineExpr>, Affine2D),
 }
 
 impl Default for OutlineExpr {
@@ -21,7 +21,7 @@ impl OutlineExpr {
         Arc::new(OutlineExpr::Stroked(self, width))
     }
 
-    pub fn transformed(self: Arc<Self>, xform: Affine2D<Point2D>) -> Arc<Self> {
+    pub fn transformed(self: Arc<Self>, xform: Affine2D) -> Arc<Self> {
         Arc::new(OutlineExpr::Transformed(self, xform))
     }
 }
