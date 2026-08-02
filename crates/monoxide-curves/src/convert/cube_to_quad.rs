@@ -4,12 +4,12 @@
 
 use kurbo::PathSeg;
 
-use crate::{CubicBezier, CubicSegment, QuadBezier, point::Point2D};
+use crate::{CubicBezier, CubicSegment, QuadBezier};
 
 /// Convert a cubic bezier curve into a quadratic bezier curve, with `prec` as
 /// the maximum allowed distance between the original curve and its
 /// approximation.
-pub fn cube_to_quad(cube: CubicBezier, prec: f64) -> QuadBezier<Point2D> {
+pub fn cube_to_quad(cube: CubicBezier, prec: f64) -> QuadBezier {
     let mut quad = QuadBezier::builder(cube.start);
 
     for seg in cube.segment_iter() {
