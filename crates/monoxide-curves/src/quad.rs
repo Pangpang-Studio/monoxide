@@ -1,3 +1,5 @@
+use crate::point::Point2D;
+
 /// A quadratic bezier segment, with `P` as the point type
 #[derive(Debug, Clone, PartialEq)]
 pub struct QuadSegment<P> {
@@ -16,7 +18,7 @@ impl<P: PartialEq> QuadSegment<P> {
 
 /// A Bezier curve with `P` as the point type and `S` as the segment type.
 #[derive(Debug, Clone, PartialEq)]
-pub struct QuadBezier<P> {
+pub struct QuadBezier<P = Point2D> {
     /// The start point of the curve.
     pub start: P,
     /// The segments of the curve.
@@ -56,7 +58,7 @@ impl<P: Copy> QuadBezier<P> {
     }
 }
 
-pub struct QuadBezierBuilder<P> {
+pub struct QuadBezierBuilder<P = Point2D> {
     bezier: QuadBezier<P>,
 }
 
