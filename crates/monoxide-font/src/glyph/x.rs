@@ -14,7 +14,7 @@ pub fn x(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(XShape::new(sbl..sbr, 0.0..xh).stroked(stw))
+        .or_outlines(XShape::new(sbl..sbr, 0.0..xh).stroked(stw))
         .build()
 }
 
@@ -24,7 +24,7 @@ pub fn x_cap(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(XShape::new(sbl..sbr, 0.0..cap).stroked(stw))
+        .or_outlines(XShape::new(sbl..sbr, 0.0..cap).stroked(stw))
         .build()
 }
 

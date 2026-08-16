@@ -26,8 +26,10 @@ pub fn seven(cx: &InputContext) -> Glyph {
     let serif = Rect::new((sbl, cap - serif_len - stw), (sbl, cap)).aligned(Alignment::Left);
 
     Glyph::builder()
-        .outline(serif.stroked(stw))
-        .outline(bar.stroked(stw))
-        .outline(slash.stroked(stw))
+        .or_outlines([
+            serif.stroked(stw).into_outline(),
+            bar.stroked(stw).into_outline(),
+            slash.stroked(stw),
+        ])
         .build()
 }

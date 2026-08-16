@@ -16,7 +16,7 @@ pub fn u(cx: &InputContext) -> Glyph {
     let FontParamSettingsView { mid, mih, .. } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(NShape::from_settings(cx.settings()).transformed(
+        .or_outlines(NShape::from_settings(cx.settings()).transformed(
             Affine2D::mirrored_along((mid, 0.), (0., 1.)).mirror_along((0., mih), (1., 0.)),
         ))
         .build()

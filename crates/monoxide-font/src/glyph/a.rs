@@ -13,7 +13,43 @@ use crate::{
 
 pub fn a(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(AShape::from_settings(&cx.settings))
+        .or_outlines(AShape::from_settings(&cx.settings))
+        .build()
+}
+
+pub fn a_cap(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        sbl,
+        sbr,
+        mid,
+        cap,
+        lower_left,
+        lower_right,
+        upper_mid,
+        stw,
+        ..
+    } = cx.settings().view();
+
+    let bar_height = 0.65;
+
+    let left = Slash::new(sbl..mid, 0.0..cap).with_aln(SlashAlignment::symm(0.5));
+    let right = Slash {
+        xr: mid..sbr,
+        ..left.clone()
+    }
+    .back();
+
+    let bar = Rect::new(
+        mix(lower_left, upper_mid, bar_height),
+        mix(lower_right, upper_mid, bar_height),
+    );
+
+    Glyph::builder()
+        .or_outlines([
+            left.stroked(stw),
+            right.stroked(stw),
+            bar.stroked(stw).into_outline(),
+        ])
         .build()
 }
 
@@ -58,38 +94,4 @@ impl IntoOutlines for AShape {
     fn into_outlines(self) -> Self::Outlines {
         [self.hook.into_outline(), self.bowl.into_outline()]
     }
-}
-
-pub fn a_cap(cx: &InputContext) -> Glyph {
-    let FontParamSettingsView {
-        sbl,
-        sbr,
-        mid,
-        cap,
-        lower_left,
-        lower_right,
-        upper_mid,
-        stw,
-        ..
-    } = cx.settings().view();
-
-    let bar_height = 0.65;
-
-    let left = Slash::new(sbl..mid, 0.0..cap).with_aln(SlashAlignment::symm(0.5));
-    let right = Slash {
-        xr: mid..sbr,
-        ..left.clone()
-    }
-    .back();
-
-    let bar = Rect::new(
-        mix(lower_left, upper_mid, bar_height),
-        mix(lower_right, upper_mid, bar_height),
-    );
-
-    Glyph::builder()
-        .outline(left.stroked(stw))
-        .outline(right.stroked(stw))
-        .outline(bar.stroked(stw))
-        .build()
 }

@@ -6,7 +6,7 @@ use crate::{InputContext, dir::Alignment, glyph::j::JShape, math::mix, prelude::
 
 pub fn t(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(TShape::from_settings(&cx.settings))
+        .or_outlines(TShape::from_settings(&cx.settings))
         .build()
 }
 
@@ -24,8 +24,7 @@ pub fn t_cap(cx: &InputContext) -> Glyph {
     let pipe = Rect::new(upper_mid, lower_mid);
 
     Glyph::builder()
-        .outline(bar.stroked(stw))
-        .outline(pipe.stroked(stw))
+        .or_outlines([bar.stroked(stw), pipe.stroked(stw)])
         .build()
 }
 

@@ -15,7 +15,7 @@ use crate::{
 
 pub fn r(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(RShape::from_settings(&cx.settings))
+        .or_outlines(RShape::from_settings(&cx.settings))
         .build()
 }
 
@@ -36,7 +36,7 @@ pub fn r_cap(cx: &InputContext) -> Glyph {
             .stroked(stw)
     };
 
-    Glyph::builder().outlines(p_shape).outline(tail).build()
+    Glyph::builder().or_outlines(p_shape).outline(tail).build()
 }
 
 pub struct RShape {

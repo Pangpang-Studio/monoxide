@@ -15,7 +15,7 @@ use crate::{
 
 pub fn d(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(DShape::from_settings(&cx.settings))
+        .or_outlines(DShape::from_settings(&cx.settings))
         .build()
 }
 
@@ -28,7 +28,7 @@ pub fn d_cap(cx: &InputContext) -> Glyph {
         .with_mid_curve_h_factor(1.2)
         .with_end_curve_h_factor(1.0);
 
-    Glyph::builder().outlines(p_cap_shape).build()
+    Glyph::builder().or_outlines(p_cap_shape).build()
 }
 
 pub struct DShape {

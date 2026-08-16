@@ -29,8 +29,7 @@ pub fn y(cx: &InputContext) -> Glyph {
     let backslash = Slash::new(sbl..mid, (0.)..xh).with_aln(aln).back();
 
     Glyph::builder()
-        .outline(slash.stroked(stw))
-        .outline(backslash.stroked(stw))
+        .or_outlines([slash.stroked(stw), backslash.stroked(stw)])
         .build()
 }
 
@@ -55,7 +54,6 @@ pub fn y_cap(cx: &InputContext) -> Glyph {
     ]);
 
     Glyph::builder()
-        .outline(chevron.stroked(stw))
-        .outline(stem.stroked(stw))
+        .or_outlines([chevron.stroked(stw), stem.stroked(stw).into_outline()])
         .build()
 }

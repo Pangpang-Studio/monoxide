@@ -26,8 +26,10 @@ pub fn four(cx: &InputContext) -> Glyph {
     let slash = Slash::new(sbl..x, y + stw..cap);
 
     Glyph::builder()
-        .outline(pipe.stroked(stw))
-        .outline(bar.stroked(stw))
-        .outline(slash.stroked(stw * 0.9))
+        .or_outlines([
+            pipe.stroked(stw).into_outline(),
+            bar.stroked(stw).into_outline(),
+            slash.stroked(stw * 0.9),
+        ])
         .build()
 }

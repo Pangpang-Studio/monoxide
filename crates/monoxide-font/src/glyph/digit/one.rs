@@ -27,7 +27,6 @@ pub fn one(cx: &InputContext) -> Glyph {
     ]);
 
     Glyph::builder()
-        .outline(pipe)
-        .outline(slash.stroked(stw))
+        .or_outlines([pipe, slash.stroked(stw)])
         .build()
 }

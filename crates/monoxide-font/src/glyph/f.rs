@@ -6,7 +6,7 @@ use crate::{InputContext, dir::Alignment, glyph::j::JShape, math::mix, prelude::
 
 pub fn f(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(FShape::from_settings(&cx.settings))
+        .or_outlines(FShape::from_settings(&cx.settings))
         .build()
 }
 
@@ -16,7 +16,7 @@ pub fn f_cap(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(FCapShape::new(sbl + stw / 2.0..sbr, 0.0..cap).stroked(stw))
+        .or_outlines(FCapShape::new(sbl + stw / 2.0..sbr, 0.0..cap).stroked(stw))
         .build()
 }
 
