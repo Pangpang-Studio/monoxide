@@ -18,7 +18,7 @@ pub fn p(cx: &InputContext) -> Glyph {
         xh, mid, mih, dsc, ..
     } = cx.settings.view();
     Glyph::builder()
-        .outlines(
+        .or_outlines(
             DShape::from_settings(&cx.settings)
                 .with_height(xh - dsc)
                 .transformed(Affine2D::rotated_around((mid, mih), PI)),
@@ -28,7 +28,7 @@ pub fn p(cx: &InputContext) -> Glyph {
 
 pub fn p_cap(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(PCapShape::from_settings(&cx.settings))
+        .or_outlines(PCapShape::from_settings(&cx.settings))
         .build()
 }
 

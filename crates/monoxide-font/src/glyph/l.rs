@@ -10,7 +10,7 @@ pub fn l(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(LShape::new(sbl..sbr, 0.0..cap).stroked(stw))
+        .or_outlines(LShape::new(sbl..sbr, 0.0..cap).stroked(stw))
         .build()
 }
 
@@ -33,7 +33,7 @@ pub fn l_cap(cx: &InputContext) -> Glyph {
     let bar = Rect::new((sbl, 0.), (sbr, 0.)).aligned(Alignment::Right);
 
     Glyph::builder()
-        .outlines([serif, pipe, bar].map(|it| it.stroked(stw).into_outline()))
+        .or_outlines([pipe, bar, serif].map(|it| it.stroked(stw).into_outline()))
         .build()
 }
 

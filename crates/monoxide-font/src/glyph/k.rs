@@ -26,11 +26,11 @@ pub fn k(cx: &InputContext) -> Glyph {
     let bar = Rect::new((sbl + stw / 4., mih), chevron.corner() + (stw, 0.));
 
     Glyph::builder()
-        .outlines([
+        .or_outlines([
             pipe.stroked(stw).into_outline(),
+            bar.stroked(stw * 0.9).into_outline(),
             // TODO: Find out how the scaling factors are determined.
             chevron.stroked(stw * 0.9),
-            bar.stroked(stw * 0.9).into_outline(),
         ])
         .build()
 }
@@ -45,11 +45,11 @@ pub fn k_cap(cx: &InputContext) -> Glyph {
     let bar = Rect::new((sbl + stw / 4., cap / 2.), chevron.corner() + (stw, 0.));
 
     Glyph::builder()
-        .outlines([
+        .or_outlines([
             pipe.stroked(stw).into_outline(),
+            bar.stroked(stw * 0.9).into_outline(),
             // TODO: Find out how the scaling factors are determined.
             chevron.stroked(stw * 0.9),
-            bar.stroked(stw * 0.9).into_outline(),
         ])
         .build()
 }

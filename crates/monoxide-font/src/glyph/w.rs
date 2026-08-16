@@ -16,7 +16,7 @@ pub fn w(cx: &InputContext) -> Glyph {
 
     let chevron = Chevron::new(sbl..mid, 0.0..xh, 0.5, 0.75);
     Glyph::builder()
-        .outlines(WShape::from(chevron).stroked(stw))
+        .or_outlines(WShape::from(chevron).stroked(stw))
         .build()
 }
 
@@ -32,7 +32,7 @@ pub fn w_cap(cx: &InputContext) -> Glyph {
 
     let chevron = Chevron::new(sbl..mid, 0.0..cap, 0.5, xh / cap);
     Glyph::builder()
-        .outlines(WShape::from(chevron).stroked(stw))
+        .or_outlines(WShape::from(chevron).stroked(stw))
         .build()
 }
 

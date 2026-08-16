@@ -17,6 +17,12 @@ pub fn j(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn j_cap(cx: &InputContext) -> Glyph {
+    Glyph::builder()
+        .or_outlines(JCapShape::from_settings(&cx.settings))
+        .build()
+}
+
 pub struct JShape {
     pub hook: Arc<OutlineExpr>,
     pub top_serif: Rect,
@@ -95,12 +101,6 @@ impl IntoOutlines for JShape {
         ]
         .map(move |it| it.transformed(Affine2D::translated(self.offset)))
     }
-}
-
-pub fn j_cap(cx: &InputContext) -> Glyph {
-    Glyph::builder()
-        .outlines(JCapShape::from_settings(&cx.settings))
-        .build()
 }
 
 pub struct JCapShape {

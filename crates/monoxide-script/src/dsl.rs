@@ -118,6 +118,15 @@ pub trait IntoOutlinesExt: IntoOutlines {
             .into_iter()
             .map(move |outline| outline.transformed(xform))
     }
+
+    fn or(self) -> Option<Arc<OutlineExpr>>
+    where
+        Self: Sized,
+    {
+        self.into_outlines()
+            .into_iter()
+            .reduce(|acc, it| acc.or(it))
+    }
 }
 
 impl<T: IntoOutlines> IntoOutlinesExt for T {}

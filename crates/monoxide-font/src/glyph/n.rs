@@ -12,7 +12,7 @@ use crate::{
 
 pub fn n(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(NShape::from_settings(&cx.settings))
+        .or_outlines(NShape::from_settings(&cx.settings))
         .build()
 }
 
@@ -26,9 +26,11 @@ pub fn n_cap(cx: &InputContext) -> Glyph {
     let diag = Slash::new(sbl..sbr, 0.0..cap).back();
 
     Glyph::builder()
-        .outline(left.stroked(stw))
-        .outline(diag.stroked(stw))
-        .outline(right.stroked(stw))
+        .or_outlines([
+            left.stroked(stw).into_outline(),
+            diag.stroked(stw),
+            right.stroked(stw).into_outline(),
+        ])
         .build()
 }
 

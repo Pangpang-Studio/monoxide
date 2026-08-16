@@ -20,7 +20,7 @@ pub fn i_cap(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(
+        .or_outlines(
             LShape::new(sbl..sbr, 0.0..cap)
                 .with_top_bar_scale((-1.)..1.)
                 .stroked(stw),

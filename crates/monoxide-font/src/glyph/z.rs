@@ -21,7 +21,7 @@ pub fn z(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(ZShape::new(sbl..sbr, 0.0..xh, ovs, stw))
+        .or_outlines(ZShape::new(sbl..sbr, 0.0..xh, ovs, stw))
         .build()
 }
 
@@ -36,7 +36,7 @@ pub fn z_cap(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(ZShape::new(sbl..sbr, 0.0..cap, ovs, stw))
+        .or_outlines(ZShape::new(sbl..sbr, 0.0..cap, ovs, stw))
         .build()
 }
 
@@ -92,16 +92,16 @@ impl IntoOutlines for ZShape {
             return [
                 serif.into_outline(),
                 top_bar.into_outline(),
-                bottom_bar.into_outline(),
                 slash.into_outline(),
+                bottom_bar.into_outline(),
             ];
         };
 
         [
             serif.into_outline().stroked(stw),
             top_bar.into_outline().stroked(stw),
-            bottom_bar.into_outline().stroked(stw),
             slash.into_outline().stroked(0.9 * stw),
+            bottom_bar.into_outline().stroked(stw),
         ]
     }
 }

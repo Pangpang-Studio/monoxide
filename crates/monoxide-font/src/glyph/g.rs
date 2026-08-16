@@ -17,7 +17,7 @@ use crate::{
 
 pub fn g(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(GShape::from_settings(&cx.settings))
+        .or_outlines(GShape::from_settings(&cx.settings))
         .build()
 }
 
@@ -33,7 +33,7 @@ pub fn g_cap(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(
+        .or_outlines(
             GCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs)
                 .with_ovh(ovh)
                 .stroked(stw),

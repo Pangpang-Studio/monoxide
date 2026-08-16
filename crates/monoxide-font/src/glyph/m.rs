@@ -16,7 +16,7 @@ use crate::{
 
 pub fn m(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(MShape::from_settings(&cx.settings))
+        .or_outlines(MShape::from_settings(&cx.settings))
         .build()
 }
 
@@ -35,7 +35,7 @@ pub fn m_cap(cx: &InputContext) -> Glyph {
         .with_bot_width_scale(1.);
 
     Glyph::builder()
-        .outlines(
+        .or_outlines(
             WShape::from(chevron)
                 .stroked(stw)
                 .transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.))),

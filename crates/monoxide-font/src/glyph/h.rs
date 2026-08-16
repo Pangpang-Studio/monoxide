@@ -6,7 +6,7 @@ pub fn h(cx: &InputContext) -> Glyph {
     let FontParamSettingsView { cap, .. } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(NShape::from_settings(cx.settings()).with_pipe_height(cap))
+        .or_outlines(NShape::from_settings(cx.settings()).with_pipe_height(cap))
         .build()
 }
 
@@ -26,6 +26,6 @@ pub fn h_cap(cx: &InputContext) -> Glyph {
     let bar = Rect::new((lower_left.x, cap / 2.), (lower_right.x, cap / 2.));
 
     Glyph::builder()
-        .outlines([left, right, bar].map(|rect| rect.stroked(stw).into_outline()))
+        .or_outlines([left, bar, right].map(|rect| rect.stroked(stw)))
         .build()
 }

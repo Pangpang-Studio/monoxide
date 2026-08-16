@@ -12,7 +12,7 @@ use crate::{
 
 pub fn e(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(EShape::from_settings(cx.settings()))
+        .or_outlines(EShape::from_settings(cx.settings()))
         .build()
 }
 
@@ -22,7 +22,7 @@ pub fn e_cap(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(ECapShape::new(sbl + stw / 2.0..sbr, 0.0..cap).stroked(stw))
+        .or_outlines(ECapShape::new(sbl + stw / 2.0..sbr, 0.0..cap).stroked(stw))
         .build()
 }
 
