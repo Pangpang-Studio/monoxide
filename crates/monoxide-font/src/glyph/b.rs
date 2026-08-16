@@ -26,8 +26,6 @@ pub fn b_cap(cx: &InputContext) -> Glyph {
         sbl, mid, stw, cap, ..
     } = settings.view();
 
-    let p_cap_shape = PCapShape::from_settings(settings);
-
     let bowl = {
         let p_bowl_h_factor = PCapShape::DEFAULT_BOWL_H_FACTOR;
         let bowl_h_factor = 1. - p_bowl_h_factor;
@@ -36,10 +34,13 @@ pub fn b_cap(cx: &InputContext) -> Glyph {
         CapBowl::new((mid, cap - bowl_h / 2.), (mid - sbl, bowl_h / 2.))
     };
 
-    Glyph::builder()
-        .outline(bowl.stroked(stw))
-        .or_outlines(
-            p_cap_shape.transformed(Affine2D::mirrored_along((0., cap / 2.), Point2D::unit_x())),
-        )
-        .build()
+    // NOTE: We have to merge the two bowls first to satisfy the single-bezier
+    // requirement of the boolean operation.
+    let mut outlines = Vec::with_capacity(3);
+    outlines.push(bowl.stroked(stw));
+
+    let p_cap_shape = PCapShape::from_settings(settings);
+    outlines.extend(p_cap_shape.transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.))));
+
+    Glyph::builder().or_outlines(outlines).build()
 }
