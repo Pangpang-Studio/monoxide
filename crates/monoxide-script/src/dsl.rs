@@ -4,7 +4,7 @@ mod spiro_builder;
 use std::{iter, sync::Arc};
 
 pub use bezier_builder::{BezierBuilder, BezierInst};
-use itertools::chain;
+use linesweeper::BinaryOp;
 use monoxide_curves::xform::Affine2D;
 pub use spiro_builder::{SpiroBuilder, SpiroInst, SpiroInstOpts};
 
@@ -40,6 +40,38 @@ pub trait IntoOutlineExt: IntoOutline {
     {
         self.into_outline().transformed(xform)
     }
+
+    fn or<U: IntoOutline>(self, other: U) -> Arc<OutlineExpr>
+    where
+        Self: Sized,
+    {
+        self.into_outline()
+            .bool(other.into_outline(), BinaryOp::Union)
+    }
+
+    fn diff<U: IntoOutline>(self, other: U) -> Arc<OutlineExpr>
+    where
+        Self: Sized,
+    {
+        self.into_outline()
+            .bool(other.into_outline(), BinaryOp::Difference)
+    }
+
+    fn and<U: IntoOutline>(self, other: U) -> Arc<OutlineExpr>
+    where
+        Self: Sized,
+    {
+        self.into_outline()
+            .bool(other.into_outline(), BinaryOp::Intersection)
+    }
+
+    fn xor<U: IntoOutline>(self, other: U) -> Arc<OutlineExpr>
+    where
+        Self: Sized,
+    {
+        self.into_outline()
+            .bool(other.into_outline(), BinaryOp::Xor)
+    }
 }
 
 impl<T: IntoOutline> IntoOutlineExt for T {}
@@ -60,11 +92,11 @@ pub trait IntoOutlines {
     fn into_outlines(self) -> Self::Outlines;
 }
 
-impl<I: IntoIterator<Item = Arc<OutlineExpr>>> IntoOutlines for I {
-    type Outlines = Self;
+impl<T: IntoOutline, I: IntoIterator<Item = T>> IntoOutlines for I {
+    type Outlines = iter::Map<I::IntoIter, fn(T) -> Arc<OutlineExpr>>;
 
     fn into_outlines(self) -> Self::Outlines {
-        self
+        self.into_iter().map(T::into_outline)
     }
 }
 
@@ -86,29 +118,9 @@ pub trait IntoOutlinesExt: IntoOutlines {
             .into_iter()
             .map(move |outline| outline.transformed(xform))
     }
-
-    fn add<U: IntoOutlines>(self, other: U) -> Add<Self, U>
-    where
-        Self: Sized,
-    {
-        Add(self, other)
-    }
 }
 
 impl<T: IntoOutlines> IntoOutlinesExt for T {}
-
-pub struct Add<T, U>(T, U);
-
-impl<T: IntoOutlines, U: IntoOutlines> IntoOutlines for Add<T, U> {
-    type Outlines = iter::Chain<
-        <T::Outlines as IntoIterator>::IntoIter,
-        <U::Outlines as IntoIterator>::IntoIter,
-    >;
-
-    fn into_outlines(self) -> Self::Outlines {
-        chain!(self.0.into_outlines(), self.1.into_outlines())
-    }
-}
 
 #[doc(hidden)]
 #[macro_export]

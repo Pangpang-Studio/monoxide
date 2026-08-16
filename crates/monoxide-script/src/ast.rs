@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, ops::Deref, sync::Arc};
 
 use crate::{
     EvalSettings,
-    dsl::{IntoOutline, IntoOutlines},
+    dsl::{IntoOutline, IntoOutlines, IntoOutlinesExt},
 };
 
 mod compound;
@@ -125,6 +125,13 @@ impl GlyphBuilder {
     pub fn outlines(mut self, outlines: impl IntoOutlines) -> Self {
         for outline in outlines.into_outlines() {
             self = self.outline(outline);
+        }
+        self
+    }
+
+    pub fn or_outlines(mut self, outlines: impl IntoOutlines) -> Self {
+        if let Some(merged) = outlines.or() {
+            self = self.outline(merged);
         }
         self
     }
