@@ -3,7 +3,7 @@
 
 mod exchange;
 
-use kurbo::{Affine, CubicBez, Line, ParamCurve, PathSeg};
+use kurbo::{Affine, CubicBez, Line, ParamCurve, PathEl, PathSeg};
 use serde::{Deserialize, Serialize};
 
 use crate::point::Point2D;
@@ -159,6 +159,46 @@ impl CubicBezier {
             segments: self.segments.iter().map(|seg| seg.xform(xform)).collect(),
             closed: self.closed,
         }
+    }
+
+    pub fn from_kurbo(path: &kurbo::BezPath) -> Self {
+        let elems = path.elements();
+        let mut res = Self {
+            segments: Vec::with_capacity(elems.len() - 1),
+            start: Point2D::default(),
+            closed: false,
+        };
+
+        for elem in elems {
+            match elem {
+                PathEl::MoveTo(p) => res.start = *p,
+                PathEl::LineTo(p) => res.segments.push(CubicSegment::Line(*p)),
+                PathEl::QuadTo(_, _) => {
+                    unimplemented!("quadratic segments are not supported in CubicBezier")
+                }
+                PathEl::CurveTo(c1, c2, p) => res.segments.push(CubicSegment::Curve(*c1, *c2, *p)),
+                PathEl::ClosePath => res.closed = true,
+            }
+        }
+
+        res
+    }
+
+    pub fn to_kurbo(&self) -> kurbo::BezPath {
+        let mut path = kurbo::BezPath::new();
+
+        path.move_to(self.start);
+        for seg in &self.segments {
+            match seg {
+                CubicSegment::Line(end) => path.line_to(*end),
+                CubicSegment::Curve(c1, c2, end) => path.curve_to(*c1, *c2, *end),
+            }
+        }
+        if self.closed {
+            path.close_path();
+        }
+
+        path
     }
 }
 

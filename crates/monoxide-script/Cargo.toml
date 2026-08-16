@@ -11,6 +11,7 @@ version.workspace = true
 by_address.workspace = true
 indexmap.workspace = true
 itertools.workspace = true
+linesweeper.workspace = true
 monoxide-curves.workspace = true
 monoxide-spiro.workspace = true
 monoxide-ttf.workspace = true
