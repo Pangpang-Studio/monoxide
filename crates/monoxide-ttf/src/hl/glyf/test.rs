@@ -73,7 +73,7 @@ fn test_encode_decode() {
 
     let glyph = encode(&outlines).unwrap();
 
-    println!("encoded: {:?}", &glyph);
+    println!("encoded: {glyph:?}");
 
     let decoded = decode(&glyph).unwrap();
 
@@ -94,7 +94,7 @@ fn test_encode_decode_large_coordinates() {
 
     let glyph = encode(&outlines).unwrap();
 
-    println!("encoded: {:?}", &glyph);
+    println!("encoded: {glyph:?}");
 
     let decoded = decode(&glyph).unwrap();
 
