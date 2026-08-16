@@ -300,7 +300,8 @@ impl Segs {
                 };
                 v[jj] += x;
                 for (k, &deriv) in derivs[..jinc].iter().enumerate() {
-                    m[jj].a[joff + k] += y * deriv;
+                    let cell = &mut m[jj].a[joff + k];
+                    *cell = y.mul_add(deriv, *cell);
                 }
             };
 
@@ -346,7 +347,7 @@ impl Segs {
                 let dk = v[j];
                 j += 1;
                 s[i].ks.0[k] += dk;
-                norm += dk * dk;
+                norm = dk.mul_add(dk, norm);
             }
         }
         norm
@@ -480,7 +481,7 @@ impl BandMat {
             v.swap(i, k);
             l += usize::from(l < n);
             for i in (k + 1)..l {
-                v[i] -= m[k].al[i - k - 1] * v[k];
+                v[i] = m[k].al[i - k - 1].mul_add(-v[k], v[i]);
             }
         }
 
@@ -489,7 +490,7 @@ impl BandMat {
         for i in (0..n).rev() {
             let mut x = v[i];
             for k in 1..l {
-                x -= m[i].a[k] * v[k + i];
+                x = m[i].a[k].mul_add(-v[k + i], x);
             }
             v[i] = x / m[i].a[0];
             l += usize::from(l < 11);
