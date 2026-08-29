@@ -9,7 +9,7 @@ pub fn i(cx: &InputContext) -> Glyph {
     } = settings.view();
 
     Glyph::builder()
-        .outlines(LShape::new(sbl..sbr, 0.0..xh).stroked(stw))
+        .or_outlines(LShape::new(sbl..sbr, 0.0..xh).stroked(stw))
         .outline(dot(settings))
         .build()
 }
