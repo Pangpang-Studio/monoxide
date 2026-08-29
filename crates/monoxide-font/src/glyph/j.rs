@@ -13,7 +13,7 @@ use crate::{
 
 pub fn j(cx: &InputContext) -> Glyph {
     Glyph::builder()
-        .outlines(JShape::from_settings(&cx.settings))
+        .or_outlines(JShape::from_settings(&cx.settings))
         .build()
 }
 
