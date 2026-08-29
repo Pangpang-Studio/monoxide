@@ -76,9 +76,9 @@ impl AShape {
 
         let bowl = SpiroBuilder::open()
             .insts([
-                g4!(sbr, mih * 1.2).heading(Dir::R).width(0.9),
-                g4!(mid, mih * 1.2).width(0.95),
-                g4!(sbl, mih / 2.).width(1.05),
+                flat!(sbr, mih * 1.2).heading(Dir::L).width(0.9),
+                curl!(mix(sbr, mid, 0.1), mih * 1.2).width(0.9),
+                g4!(sbl, mih / 2.).width(1.),
                 g2!(mid, 0.).width(0.9),
                 g4!(sbr, mih * 0.8).aligned(Alignment::Right).width(0.1),
             ])
