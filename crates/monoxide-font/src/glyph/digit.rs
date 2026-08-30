@@ -3,6 +3,7 @@ mod nine;
 mod one;
 mod seven;
 mod six;
+mod two;
 mod zero;
 
-pub use self::{four::four, nine::nine, one::one, seven::seven, six::six, zero::zero};
+pub use self::{four::four, nine::nine, one::one, seven::seven, six::six, two::two, zero::zero};
