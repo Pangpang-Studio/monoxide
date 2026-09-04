@@ -185,9 +185,9 @@ dependencies = [
 
 [[package]]
 name = "axum-reverse-proxy"
-version = "1.4.0"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71ae1579aace37eba1fa5e75d69465939d086257a6f81a656896649ac1411089"
+checksum = "d147283f0e83e2959a84b600400a65691533ca48ab89217a25b159d064878f2e"
 dependencies = [
  "axum",
  "bytes",
