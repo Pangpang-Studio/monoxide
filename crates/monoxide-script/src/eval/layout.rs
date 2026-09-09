@@ -107,7 +107,8 @@ impl<'a> GlyphSerializer<'a> {
         self.stack.push(tofu.clone());
         assert_eq!(tofu_id, 0);
 
-        // The rest of the root glyphs need to be laid out continuously after TOFU.
+        // The rest of the root glyphs need to be laid out continuously after
+        // TOFU.
         for (&ch, glyph) in &self.cx.cmap {
             let id = self.assign_id(glyph);
             self.cmap.insert(ch, id);

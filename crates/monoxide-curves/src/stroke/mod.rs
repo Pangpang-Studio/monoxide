@@ -70,8 +70,8 @@ pub fn stroke_spiro(
     width: f64,
     dbg: &mut impl CurveDebugger,
 ) -> Result<StrokedSpiroCurve> {
-    // This ensures that the `curve` has >= 2 points, so operations like `[0]` and
-    // `.last().unwrap()` should be safe.
+    // This ensures that the `curve` has >= 2 points, so operations like `[0]`
+    // and `.last().unwrap()` should be safe.
     ensure_single_piece(&curve.points)?;
 
     let is_closed = curve.points[0].ty != SpiroCpTy::Open;
@@ -85,8 +85,9 @@ pub fn stroke_spiro(
 
     // Both `left` and `right` should be either:
     //
-    // - A closed curve. In this case, the two curves are simply concatenated (the
-    //   right one reversed because we need to decrease the winding number).
+    // - A closed curve. In this case, the two curves are simply concatenated
+    //   (the right one reversed because we need to decrease the winding
+    //   number).
     if is_closed {
         return Ok(StrokedSpiroCurve::Two(
             SpiroCurve::from_points(left, true),
@@ -94,9 +95,9 @@ pub fn stroke_spiro(
         ));
     }
 
-    // - [Open, ..., EndOpen], i.e. an open curve. In this case, we need to replace
-    //   all `Open` and `EndOpen` with `Corner`, except the first one which should
-    //   be `End`.
+    // - [Open, ..., EndOpen], i.e. an open curve. In this case, we need to
+    //   replace all `Open` and `EndOpen` with `Corner`, except the first one
+    //   which should be `End`.
     let mut result = left;
     debug_assert_eq!(result[0].ty, SpiroCpTy::Open);
     result[0].ty = SpiroCpTy::Corner;
