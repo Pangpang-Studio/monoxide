@@ -212,7 +212,8 @@ fn write_font_file(font: &FontFile, mut w: impl std::io::Write) -> std::io::Resu
     let mut table_records = Vec::with_capacity(n_table_records);
     let mut offset = header_size; // current write offset
 
-    // To assist debugging, we write "____{tag}" before the beginning of each table
+    // To assist debugging, we write "____{tag}" before the beginning of each
+    // table
     let debug_data_len = 8;
 
     for (tag, ser) in tables_ser.iter() {

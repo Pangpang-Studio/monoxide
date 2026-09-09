@@ -126,7 +126,8 @@ impl Table {
         // Search parameters
         // segCountX2 is just 2 * segCount
         let seg_count_x2 = seg_count_u16 * 2;
-        // searchRange is the maximum power of 2 less than or equal to segCount, times 2
+        // searchRange is the maximum power of 2 less than or equal to segCount,
+        // times 2
         let search_range = (1 << seg_count.ilog2()) as u16 * 2;
         // entrySelector is log2 of the maximum power of 2 that leq segCount
         let entry_selector = seg_count.ilog2() as u16;
