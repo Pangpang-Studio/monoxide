@@ -117,8 +117,9 @@ const constructionSteps: ComputedRef<ConstructionStep[]> = computed(() => {
     } else if (v.kind.t === 'transform') {
       const strOfPoint = (p: Point2D) => `[${p.x}, ${p.y}]`
       desc = `transform(%${v.kind.parent}, mov=${strOfPoint(v.kind.mov)}, mat=[${strOfPoint(v.kind.mat[0])}, ${strOfPoint(v.kind.mat[1])}])`
-    } else if (v.kind.t === 'boolean-add') {
-      desc = 'add(' + v.kind.parents.map((p) => `%${p}`).join(', ') + ')'
+    } else if (v.kind.t === 'boolean') {
+      desc =
+        v.kind.op + '(' + v.kind.parents.map((p) => `%${p}`).join(', ') + ')'
     } else if (v.kind.t === 'spiro-to-bezier') {
       desc = `spiro_to_bezier(%${v.kind.parent})`
     } else {

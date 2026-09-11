@@ -14,7 +14,7 @@ use monoxide_script::{
     ast::{FontContext, OutlineExpr},
     eval::{SerializedGlyph, SerializedGlyphKind, eval_outline},
     prelude::*,
-    trace::EvalTracer,
+    trace::{BooleanOp, EvalTracer},
 };
 use monoxide_spiro::SpiroCp;
 
@@ -107,7 +107,7 @@ fn simple_glyph_to_detail(
             Err(err) => out_errs.push(err.to_string()),
         }
     }
-    let output_id = tracer.boolean_added(&out_ids);
+    let output_id = tracer.boolean(BooleanOp::Or, &out_ids);
     tracer.intermediate_output(output_id, &output_outline);
 
     let overview = GlyphOverview {
@@ -277,12 +277,17 @@ impl EvalTracer for GlyphDetailTracer {
         id
     }
 
-    fn boolean_added<'b>(&mut self, parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id
+    fn boolean<'b>(
+        &mut self,
+        op: BooleanOp,
+        parents: impl IntoIterator<Item = &'b Self::Id>,
+    ) -> Self::Id
     where
         Self: 'b,
     {
         let (ser, id) = self.allocate_next();
-        ser.kind = ConstructionKind::BooleanAdd {
+        ser.kind = ConstructionKind::Boolean {
+            op,
             parents: parents.into_iter().cloned().collect(),
         };
         id
