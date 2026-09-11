@@ -180,9 +180,10 @@ export interface SpiroToBezierConstruction {
   parent: number
 }
 
-/** Maps to `ConstructionKind::BooleanAdd` variant in `model.rs` */
-export interface BooleanAddConstruction {
-  t: 'boolean-add'
+/** Maps to `ConstructionKind::Boolean` variant in `model.rs` */
+export interface BooleanConstruction {
+  t: 'boolean'
+  op: 'or' | 'diff' | 'and' | 'xor'
   parents: number[]
 }
 
@@ -193,4 +194,4 @@ export type ConstructionKind =
   | StrokeConstruction
   | TransformConstruction
   | SpiroToBezierConstruction
-  | BooleanAddConstruction
+  | BooleanConstruction

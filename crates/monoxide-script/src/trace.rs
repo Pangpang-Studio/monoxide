@@ -1,6 +1,28 @@
 //! Provides trait for tracing the evaluation of a glyph
 
+use linesweeper::BinaryOp;
 use monoxide_curves::{CubicBezier, debug::CurveDebugger, xform::Affine2D};
+use serde::Serialize;
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BooleanOp {
+    Or,
+    Diff,
+    And,
+    Xor,
+}
+
+impl From<BinaryOp> for BooleanOp {
+    fn from(value: BinaryOp) -> Self {
+        match value {
+            BinaryOp::Union => Self::Or,
+            BinaryOp::Difference => Self::Diff,
+            BinaryOp::Intersection => Self::And,
+            BinaryOp::Xor => Self::Xor,
+        }
+    }
+}
 
 /// Trace the evaluation of a glyph. A no-op tracer is provided in [`()`].
 pub trait EvalTracer {
@@ -47,7 +69,11 @@ pub trait EvalTracer {
         beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id;
     fn spiro_to_bezier(&mut self, parent: Self::Id) -> Self::Id;
-    fn boolean_added<'b>(&mut self, parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id
+    fn boolean<'b>(
+        &mut self,
+        op: BooleanOp,
+        parents: impl IntoIterator<Item = &'b Self::Id>,
+    ) -> Self::Id
     where
         Self: 'b;
 
@@ -129,7 +155,11 @@ impl EvalTracer for () {
         NoId
     }
 
-    fn boolean_added<'b>(&mut self, _parents: impl IntoIterator<Item = &'b Self::Id>) -> Self::Id {
+    fn boolean<'b>(
+        &mut self,
+        _op: BooleanOp,
+        _parents: impl IntoIterator<Item = &'b Self::Id>,
+    ) -> Self::Id {
         NoId
     }
 

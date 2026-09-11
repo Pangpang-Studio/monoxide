@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use monoxide_curves::{CubicBezier, point::Point2D};
-use monoxide_script::{ast::FontContext, eval::SerializedFontContext};
+use monoxide_script::{ast::FontContext, eval::SerializedFontContext, trace::BooleanOp};
 use serde::Serialize;
 
 use crate::web::{self, glyph_detail::serialized_glyph_to_detail};
@@ -130,7 +130,8 @@ pub enum ConstructionKind {
     SpiroToBezier {
         parent: usize,
     },
-    BooleanAdd {
+    Boolean {
+        op: BooleanOp,
         parents: Vec<usize>,
     },
     /// A placeholder when the construction is not yet complete.

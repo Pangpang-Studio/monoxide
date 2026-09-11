@@ -131,7 +131,7 @@ fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> Eval
                 };
                 Ok((evaled.id, bez))
             };
-            eval_bool(op, eval_half(lhs)?, eval_half(rhs)?, dbg)
+            eval_bool(*op, eval_half(lhs)?, eval_half(rhs)?, dbg)
         }
         OutlineExpr::Stroked(outline_expr, width) => {
             let evaled = eval_outline_internal(outline_expr, dbg)?;
@@ -177,13 +177,13 @@ fn eval_to_bez<E: EvalTracer>(
 }
 
 fn eval_bool<E: EvalTracer>(
-    op: &BinaryOp,
+    op: BinaryOp,
     (lhs_id, lhs): (E::Id, CubicBezier),
     (rhs_id, rhs): (E::Id, CubicBezier),
     dbg: &mut E,
 ) -> EvalResult<E> {
-    let id = dbg.boolean_added(&[lhs_id, rhs_id]);
-    let merged = binary_op(&lhs.to_kurbo(), &rhs.to_kurbo(), FillRule::NonZero, *op)
+    let id = dbg.boolean(op.into(), &[lhs_id, rhs_id]);
+    let merged = binary_op(&lhs.to_kurbo(), &rhs.to_kurbo(), FillRule::NonZero, op)
         .map_err(|e| EvalError::Boolean(id, e))?
         .contours()
         // NOTE: We reverse the subpaths to avoid stacked beziers cancelling out each other.
