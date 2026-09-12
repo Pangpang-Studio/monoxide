@@ -68,21 +68,21 @@ impl IntoOutline for Hook {
             .insts([
                 // Top arc
                 g4!(left, y_hi - hook_h)
-                    .width(1.1)
+                    .width(1.)
                     .heading(Dir::U)
                     .aligned(Alignment::Left),
                 g4!(x, y_hi + ovs).heading(Dir::L),
                 g4!(right1, y_hi - hook_h)
-                    .width(1.)
+                    .width(1.1)
                     .heading(Dir::D)
                     .aligned(Alignment::Left),
                 // Midpoint
                 flat!(x, y_lo + y * 0.7)
-                    .width(0.9)
+                    .width(1.1)
                     .aligned(Alignment::Middle),
                 // Bottom arc
                 corner!(left1, y_lo + stw)
-                    .width(0.85)
+                    .width(1.)
                     .heading(Dir::D)
                     .aligned(Alignment::Right),
             ])
