@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use monoxide_script::{g2, prelude::*};
+use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
@@ -77,9 +77,9 @@ impl AShape {
         let bowl = SpiroBuilder::open()
             .insts([
                 flat!(sbr, mih * 1.2).heading(Dir::L).width(0.9),
-                curl!(mix(sbr, mid, 0.1), mih * 1.2).width(0.9),
+                curl!(mix(sbr, mid, 0.4), mih * 1.2).width(0.9),
                 g4!(sbl, mih / 2.).width(1.),
-                g2!(mid, 0.).width(0.9),
+                g4!(mid, 0.).width(0.9),
                 g4!(sbr, mih * 0.8).aligned(Alignment::Right).width(0.1),
             ])
             .stroked(stw);
