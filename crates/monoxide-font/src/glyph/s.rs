@@ -103,17 +103,15 @@ impl SShape {
     }
 }
 
-impl IntoOutline for SShape<OCapShape> {
+impl IntoOutline for SShape {
     fn into_outline(self) -> Arc<OutlineExpr> {
         let o_shape = self.o_shape;
         let Point2D { x, y } = o_shape.center();
-        let Point2D { x: rx, y: ry } = o_shape.radii();
+        let Point2D { y: ry, .. } = o_shape.radii();
         let ovs = o_shape.ovs();
 
         let left = o_shape.left();
         let right = o_shape.right();
-        let left1 = x - rx;
-        let right1 = x + rx;
         let y_hi = y + ry;
         let y_lo = y - ry;
 
@@ -126,14 +124,14 @@ impl IntoOutline for SShape<OCapShape> {
                     .heading(Dir::U)
                     .aligned(Alignment::Right),
                 g4!(x, y_hi + ovs).heading(Dir::L).aligned(Alignment::Right),
-                g4!(left1, y_hi - hook_h)
+                g4!(left, y_hi - hook_h)
                     .heading(Dir::D)
                     .width(1.)
                     .aligned(Alignment::Right),
                 // Midpoint
                 g4!(x, y).width(1.1).aligned(Alignment::Middle),
                 // Bottom arc
-                g4!(right1, y_lo + hook_h)
+                g4!(right, y_lo + hook_h)
                     .heading(Dir::D)
                     .width(1.)
                     .aligned(Alignment::Left),
