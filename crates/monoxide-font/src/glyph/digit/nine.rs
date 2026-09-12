@@ -40,11 +40,11 @@ impl NineShape {
             end: x_hi,
         } = xr;
         let Range {
-            start: bottom,
+            start: y_lo,
             end: y_hi,
         } = yr;
 
-        let y_lo = mix(bottom, y_hi, Self::DEFAULT_CIRCLE_H);
+        let y_lo = mix(y_lo, y_hi, Self::DEFAULT_CIRCLE_H);
         let x = x_lo.midpoint(x_hi);
         let y = y_lo.midpoint(y_hi);
         let rx = x - x_lo;
