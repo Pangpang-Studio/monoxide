@@ -5,10 +5,7 @@ use monoxide_script::prelude::*;
 use crate::{
     InputContext,
     dir::{Alignment, Dir},
-    glyph::{
-        c::CShape,
-        o::{IOShape, OCapShape},
-    },
+    glyph::o::{IOShape, OCapShape},
     math::mix,
     prelude::*,
 };
@@ -48,9 +45,12 @@ impl IntoOutline for EightShape {
         let Point2D { x, y } = o_shape.center();
         let Point2D { x: rx, y: ry } = o_shape.radii();
         let ovs = o_shape.ovs();
+        let end_curve_h = mix(o_shape.end_curve_h(), ry, 0.1);
 
         let top_fact = Self::TOP_CIRCLE_FACT;
         let top_ratio = top_fact / (1. - top_fact);
+        let end_curve_h_top = end_curve_h * top_fact;
+        let end_curve_h_bot = end_curve_h - end_curve_h_top;
 
         let left = o_shape.left();
         let right = o_shape.right();
@@ -60,32 +60,31 @@ impl IntoOutline for EightShape {
         let y_lo = y - ry;
         let y = mix(y_lo, y_hi, top_fact);
 
-        let hook_h = CShape::from(o_shape).aperture_curve_h();
-        let midpoint = g4!(x, y).width(0.85).aligned(Alignment::Middle);
+        let midpoint = g4!(x, y).width(0.8).aligned(Alignment::Middle);
 
         SpiroBuilder::closed()
             .insts([
                 // Top arc
-                g4!(right1, y_hi - hook_h)
+                flat!(right1, y + end_curve_h_top)
                     .width(1.)
-                    .heading(Dir::U)
                     .aligned(Alignment::Right),
-                g4!(x, y_hi + ovs).heading(Dir::L).aligned(Alignment::Right),
-                g4!(left1, y_hi - hook_h)
+                curl!(right1, y_hi - end_curve_h_top),
+                g4!(x, y_hi + ovs).heading(Dir::L),
+                flat!(left1, y_hi - end_curve_h_top),
+                curl!(left1, y + end_curve_h_top)
                     .width(1.)
-                    .heading(Dir::D)
                     .aligned(Alignment::Right),
                 // Midpoint
                 midpoint.clone(),
                 // Bottom arc
-                g4!(right, y_lo + hook_h)
+                flat!(right, y - end_curve_h_bot)
                     .width(1.)
-                    .heading(Dir::D)
                     .aligned(Alignment::Left),
-                g4!(x, y_lo - ovs).heading(Dir::L).aligned(Alignment::Left),
-                g4!(left, y_lo + hook_h)
+                curl!(right, y_lo + end_curve_h_bot),
+                g4!(x, y_lo - ovs).heading(Dir::L),
+                flat!(left, y_lo + end_curve_h_bot),
+                curl!(left, y - end_curve_h_bot)
                     .width(1.)
-                    .heading(Dir::U)
                     .aligned(Alignment::Left),
                 // Midpoint
                 midpoint,
