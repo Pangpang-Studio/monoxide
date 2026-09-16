@@ -78,7 +78,7 @@ impl IntoOutlines for FiveShape {
         };
 
         let y = mix(y_lo, y_hi, top_fact);
-        let y_corner = y - end_curve_h_bot * 0.55;
+        let y_corner = y - end_curve_h_bot * 0.4;
 
         let flag = SpiroBuilder::open().insts([
             g4!(right1, y_hi).aligned(Alignment::Right),
