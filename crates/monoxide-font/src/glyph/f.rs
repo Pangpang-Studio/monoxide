@@ -32,16 +32,18 @@ impl FShape {
             mid,
             mih,
             sbl,
+            sbr,
             stw,
             xh,
             cap,
             ..
         } = settings.view();
 
-        let hook = JShape::hook_raw(settings, cap)
+        let hook = JShape::hook_raw(settings, cap + stw / 2.)
             .transformed(Affine2D::mirrored_along((mid, mih), (0., 1.)));
 
-        let crossbar = Rect::new((mix(sbl, mid, 0.7), xh), (2. * mid, xh))
+        let x_offset = -stw;
+        let crossbar = Rect::new((mix(sbl, mid, 0.7), xh), (sbr - x_offset, xh))
             .aligned(Alignment::Left)
             .stroked(stw)
             .transformed(Affine2D::translated((0., -stw * 0.9)));
@@ -49,7 +51,7 @@ impl FShape {
         Self {
             hook,
             crossbar,
-            offset: (-stw, 0.).into(),
+            offset: (x_offset, 0.).into(),
         }
     }
 }
