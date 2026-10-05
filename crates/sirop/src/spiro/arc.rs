@@ -82,6 +82,9 @@ impl Arc {
         self.eval_k_sub(t, &self.ks.divide(-0.5, t))
     }
 
+    // TODO: Use more tolerant snapshot testing for SVGs before enabling this
+    // lint, otherwise it may cause slight snapshot drifts on x64.
+    #[allow(clippy::suboptimal_flops)]
     fn eval_k_sub(&self, t: f64, k_sub: &SpiroK) -> Point {
         let th_sub = self.rot + self.ks.theta(-0.5, t);
         let cth = (t + 0.5) * self.len * th_sub.cos();
