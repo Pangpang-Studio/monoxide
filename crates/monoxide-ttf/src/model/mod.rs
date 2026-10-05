@@ -66,11 +66,10 @@ impl<T: ITable> DynITable for T {
 
 fn ttf_checksum(data: &[u8]) -> u32 {
     let mut sum = 0u32;
-    let mut chunks = data.chunks_exact(4);
-    for chunk in &mut chunks {
-        sum = sum.wrapping_add(u32::from_be_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]));
+    let (chunks, remaining) = data.as_chunks::<4>();
+    for &chunk in chunks {
+        sum = sum.wrapping_add(u32::from_be_bytes(chunk));
     }
-    let remaining = chunks.remainder();
     if !remaining.is_empty() {
         let mut buf = [0u8; 4];
         buf[..remaining.len()].copy_from_slice(remaining);

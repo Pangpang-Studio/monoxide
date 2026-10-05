@@ -41,35 +41,40 @@ impl K {
             let t2_2 = t1_1 * t1_1;
             let t2_3 = 2. * (t1_1 * t1_2);
             let t2_4 = (t1_1 * t1_3).mul_add(2., t1_2 * t1_2);
-            let t2_5 = 2. * (t1_1 * t1_4 + t1_2 * t1_3);
+            let t2_5 = 2. * t1_2.mul_add(t1_3, t1_1 * t1_4);
             let t2_6 = (t1_2 * t1_4).mul_add(2., t1_3 * t1_3);
             let t2_7 = 2. * (t1_3 * t1_4);
             let t2_8 = t1_4 * t1_4;
-            let t3_4 = t2_2 * t1_2 + t2_3 * t1_1;
-            let t3_6 = t2_2 * t1_4 + t2_3 * t1_3 + t2_4 * t1_2 + t2_5 * t1_1;
-            let t3_8 = t2_4 * t1_4 + t2_5 * t1_3 + t2_6 * t1_2 + t2_7 * t1_1;
-            let t3_10 = t2_6 * t1_4 + t2_7 * t1_3 + t2_8 * t1_2;
+            let t3_4 = t2_3.mul_add(t1_1, t2_2 * t1_2);
+            let t3_6 = t2_5.mul_add(t1_1, t2_4.mul_add(t1_2, t2_3.mul_add(t1_3, t2_2 * t1_4)));
+            let t3_8 = t2_7.mul_add(t1_1, t2_6.mul_add(t1_2, t2_5.mul_add(t1_3, t2_4 * t1_4)));
+            let t3_10 = t2_8.mul_add(t1_2, t2_7.mul_add(t1_3, t2_6 * t1_4));
             let t4_4 = t2_2 * t2_2;
             let t4_5 = 2. * (t2_2 * t2_3);
             let t4_6 = (t2_2 * t2_4).mul_add(2., t2_3 * t2_3);
-            let t4_7 = 2. * (t2_2 * t2_5 + t2_3 * t2_4);
-            let t4_8 = (t2_2 * t2_6 + t2_3 * t2_5).mul_add(2., t2_4 * t2_4);
-            let t4_9 = 2. * (t2_2 * t2_7 + t2_3 * t2_6 + t2_4 * t2_5);
-            let t4_10 = (t2_2 * t2_8 + t2_3 * t2_7 + t2_4 * t2_6).mul_add(2., t2_5 * t2_5);
-            let t5_6 = t4_4 * t1_2 + t4_5 * t1_1;
-            let t5_8 = t4_4 * t1_4 + t4_5 * t1_3 + t4_6 * t1_2 + t4_7 * t1_1;
-            let t5_10 = t4_6 * t1_4 + t4_7 * t1_3 + t4_8 * t1_2 + t4_9 * t1_1;
+            let t4_7 = 2. * t2_3.mul_add(t2_4, t2_2 * t2_5);
+            let t4_8 = t2_3.mul_add(t2_5, t2_2 * t2_6).mul_add(2., t2_4 * t2_4);
+            let t4_9 = 2. * t2_4.mul_add(t2_5, t2_3.mul_add(t2_6, t2_2 * t2_7));
+            let t4_10 = t2_4
+                .mul_add(t2_6, t2_3.mul_add(t2_7, t2_2 * t2_8))
+                .mul_add(2., t2_5 * t2_5);
+            let t5_6 = t4_5.mul_add(t1_1, t4_4 * t1_2);
+            let t5_8 = t4_7.mul_add(t1_1, t4_6.mul_add(t1_2, t4_5.mul_add(t1_3, t4_4 * t1_4)));
+            let t5_10 = t4_9.mul_add(t1_1, t4_8.mul_add(t1_2, t4_7.mul_add(t1_3, t4_6 * t1_4)));
             let t6_6 = t4_4 * t2_2;
-            let t6_7 = t4_4 * t2_3 + t4_5 * t2_2;
-            let t6_8 = t4_4 * t2_4 + t4_5 * t2_3 + t4_6 * t2_2;
-            let t6_9 = t4_4 * t2_5 + t4_5 * t2_4 + t4_6 * t2_3 + t4_7 * t2_2;
-            let t6_10 = t4_4 * t2_6 + t4_5 * t2_5 + t4_6 * t2_4 + t4_7 * t2_3 + t4_8 * t2_2;
-            let t7_8 = t6_6 * t1_2 + t6_7 * t1_1;
-            let t7_10 = t6_6 * t1_4 + t6_7 * t1_3 + t6_8 * t1_2 + t6_9 * t1_1;
+            let t6_7 = t4_5.mul_add(t2_2, t4_4 * t2_3);
+            let t6_8 = t4_6.mul_add(t2_2, t4_5.mul_add(t2_3, t4_4 * t2_4));
+            let t6_9 = t4_7.mul_add(t2_2, t4_6.mul_add(t2_3, t4_5.mul_add(t2_4, t4_4 * t2_5)));
+            let t6_10 = t4_8.mul_add(
+                t2_2,
+                t4_7.mul_add(t2_3, t4_6.mul_add(t2_4, t4_5.mul_add(t2_5, t4_4 * t2_6))),
+            );
+            let t7_8 = t6_7.mul_add(t1_1, t6_6 * t1_2);
+            let t7_10 = t6_9.mul_add(t1_1, t6_8.mul_add(t1_2, t6_7.mul_add(t1_3, t6_6 * t1_4)));
             let t8_8 = t6_6 * t2_2;
-            let t8_9 = t6_6 * t2_3 + t6_7 * t2_2;
-            let t8_10 = t6_6 * t2_4 + t6_7 * t2_3 + t6_8 * t2_2;
-            let t9_10 = t8_8 * t1_2 + t8_9 * t1_1;
+            let t8_9 = t6_7.mul_add(t2_2, t6_6 * t2_3);
+            let t8_10 = t6_8.mul_add(t2_2, t6_7.mul_add(t2_3, t6_6 * t2_4));
+            let t9_10 = t8_9.mul_add(t1_1, t8_8 * t1_2);
             let t10_10 = t8_8 * t2_2;
 
             let mut u = 1.;
@@ -109,8 +114,8 @@ impl K {
             let cth = th.cos();
             let sth = th.sin();
 
-            x += cth * u - sth * v;
-            y += cth * v + sth * u;
+            x += sth.mul_add(-v, cth * u);
+            y += sth.mul_add(u, cth * v);
             s += ds;
         }
 
