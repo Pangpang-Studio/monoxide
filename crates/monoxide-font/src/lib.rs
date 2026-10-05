@@ -36,6 +36,7 @@ pub fn make_font() -> FontContext {
 
 pub const fn make_font_params() -> FontParamSettings {
     let width = 0.5;
+    let stroke_width = 0.144 * width;
     let cap_height = 0.7;
     let x_height = 0.75 * cap_height;
 
@@ -44,9 +45,9 @@ pub const fn make_font_params() -> FontParamSettings {
         cap_height,
         x_height,
         descender: -0.2,
-        stroke_width: 0.144 * width,
+        stroke_width,
         side_bearing: 0.125 * width,
         overshoot: 1. / 40.,
-        dot_size: 0.27 * width,
+        dot_size: 2. * stroke_width,
     }
 }
