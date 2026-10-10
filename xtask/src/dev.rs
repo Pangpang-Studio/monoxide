@@ -204,24 +204,9 @@ fn start_playground(
     playground_cmd.stderr(std::process::Stdio::inherit());
     playground_cmd.current_dir(workspace_root());
     info!("Starting playground server...");
-    let mut child = playground_cmd
         .spawn()
         .expect("Failed to run playground server");
 
-    // Wait a little while for the server to start
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    // check if the server is running
-    let status = child
-        .try_wait()
-        .expect("Failed to check if playground server is running");
-
-    if let Some(status) = status {
-        println!(
-            "Failed to start playground server on port {}. Return status {}.",
-            cmd.port, status
-        );
-        panic!("Failed to start playground server");
-    }
     info!("Playground server started on port {}", cmd.port);
     Ok(child)
 }
