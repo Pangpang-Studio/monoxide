@@ -5,8 +5,11 @@ use std::{
     path::Path,
     process::{Child, Command},
     sync::{Arc, Mutex},
+    thread,
+    time::{Duration, Instant},
 };
 
+use anyhow::bail;
 use tracing::{info, warn};
 
 use crate::{CARGO, util, workspace_root};
@@ -127,24 +130,12 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
         st.playground_child = Some(playground_child);
     }
 
-    // Wait for the servers to come online
-    loop {
-        if check_exit_status(&shutdown_state) {
-            anyhow::bail!("One of the servers exited. Exiting...");
-        }
-        let online = is_port_online(cmd.port).unwrap_or(false);
-        if online {
-            break;
-        } else {
-            info!("Waiting for playground server on port {}...", cmd.port);
-        }
-        std::thread::sleep(std::time::Duration::from_secs(1));
-    }
+    wait_for_port(&shutdown_state, cmd.port, Duration::from_secs(60))?;
 
     info!("All servers started successfully!");
     info!("");
     warn!(
-        "Open the Playground WebUI at http://127.0.0.1:{}/",
+        "Open the Playground WebUI at <http://127.0.0.1:{}/>",
         cmd.port
     );
     warn!("");
@@ -155,7 +146,7 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
         if check_exit_status(&shutdown_state) {
             break;
         }
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(1));
     }
 
     Ok(())
@@ -204,11 +195,45 @@ fn start_playground(
     playground_cmd.stderr(std::process::Stdio::inherit());
     playground_cmd.current_dir(workspace_root());
     info!("Starting playground server...");
+    let child = playground_cmd
         .spawn()
         .expect("Failed to run playground server");
 
-    info!("Playground server started on port {}", cmd.port);
     Ok(child)
+}
+
+/// Repeatedly queries the port until it is online according to
+/// [`is_port_online()`], or until the timeout is reached.
+fn wait_for_port(
+    shutdown_state: &Arc<Mutex<ShutdownState>>,
+    port: u16,
+    timeout: Duration,
+) -> anyhow::Result<()> {
+    let started_at = Instant::now();
+    loop {
+        if check_exit_status(shutdown_state) {
+            bail!("One of the servers exited. Exiting...");
+        }
+
+        match is_port_online(port) {
+            Ok(true) => {
+                info!("Playground server started on port {port}");
+                break Ok(());
+            }
+            Ok(false) => (),
+            Err(e) => warn!("Error checking if port {port} is online: {e:?}"),
+        }
+
+        if started_at.elapsed() >= timeout {
+            bail!(
+                "Playground server on port {port} did not become available within {} seconds",
+                timeout.as_secs()
+            );
+        }
+
+        info!("Waiting for playground server on port {port}...");
+        thread::sleep(Duration::from_secs(1));
+    }
 }
 
 const RETRY_COUNT: usize = 10;
@@ -236,7 +261,7 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
 
         let mut is_online = false;
         for _ in 0..start_timeout {
-            std::thread::sleep(std::time::Duration::from_secs(1));
+            thread::sleep(Duration::from_secs(1));
             // check if the server is running
             let status = child
                 .try_wait()
@@ -290,7 +315,7 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
 fn is_port_online(port: u16) -> anyhow::Result<bool> {
     let addr = SocketAddrV4::new([127, 0, 0, 1].into(), port);
     // Use a short timeout to avoid blocking for long
-    match TcpStream::connect_timeout(&addr.into(), std::time::Duration::from_millis(200)) {
+    match TcpStream::connect_timeout(&addr.into(), Duration::from_millis(200)) {
         Ok(_) => Ok(true), // Connection successful
         Err(e)
             if e.kind() == io::ErrorKind::ConnectionRefused
@@ -325,5 +350,27 @@ fn gracefully_kill(child: &mut Child) -> anyhow::Result<()> {
         child.kill()?;
         child.wait()?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn waits_until_playground_port_is_online() {
+        let listener = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        wait_for_port(&Arc::default(), port, Duration::from_secs(2)).unwrap();
+    }
+
+    #[test]
+    fn times_out_when_playground_port_is_unavailable() {
+        let error = wait_for_port(&Arc::default(), 0, Duration::from_secs(2)).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("did not become available within")
+        );
     }
 }
