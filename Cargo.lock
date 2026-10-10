@@ -1182,6 +1182,7 @@ dependencies = [
  "anyhow",
  "dioxus-devtools",
  "itertools",
+ "kurbo",
  "monoxide-curves",
  "monoxide-script",
  "monoxide-spiro",

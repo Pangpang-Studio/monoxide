@@ -16,5 +16,6 @@ monoxide-spiro.workspace = true
 anyhow.workspace = true
 dioxus-devtools.workspace = true
 itertools.workspace = true
+kurbo.workspace = true
 snapbox = { workspace = true }
 tokio.workspace = true
