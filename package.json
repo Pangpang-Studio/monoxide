@@ -4,6 +4,6 @@
     "lint": "cd tools/playground && $npm_execpath run lint"
   },
   "devDependencies": {
-    "oxfmt": "^0.73.0"
+    "oxfmt": "^0.74.0"
   }
 }
