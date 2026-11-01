@@ -18,6 +18,32 @@ pub fn apostrophe(cx: &InputContext) -> Glyph {
         .outline(Tick::new((mid, cap + dtr), (mid, xh - stw)).stroked(stw))
         .build()
 }
+pub fn quotes(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid,
+        xh,
+        dtr,
+        stw,
+        cap,
+        ..
+    } = cx.settings().view();
+
+    let gap = 1.25 * stw;
+    let left = mid - gap;
+    let right = mid + gap;
+    let top = cap + dtr;
+    let bot = xh - stw;
+
+    Glyph::builder()
+        .outlines(
+            [
+                Tick::new((left, top), (left, bot)),
+                Tick::new((right, top), (right, bot)),
+            ]
+            .map(|it| it.stroked(stw)),
+        )
+        .build()
+}
 
 /// A rectangle formed by drawing a line between points `start` and
 /// `end` and span it in the normal direction according to the given width.

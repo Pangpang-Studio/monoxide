@@ -10,7 +10,7 @@ pub use self::{
     dash::{dash, underscore},
     dot::dot,
     slash::{backslash, slash},
-    tick::apostrophe,
+    tick::{apostrophe, quotes},
     tofu::tofu,
 };
 use crate::InputContext;
