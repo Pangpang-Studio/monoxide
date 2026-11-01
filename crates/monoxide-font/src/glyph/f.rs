@@ -43,7 +43,7 @@ impl FShape {
             .transformed(Affine2D::mirrored_along((mid, mih), (0., 1.)));
 
         let x_offset = -stw;
-        let crossbar = Rect::new((mix(sbl, mid, 0.7), xh), (sbr - x_offset, xh))
+        let crossbar = Rect::new((mix(sbl, mid, 0.7), xh), (sbr - x_offset - stw / 2., xh))
             .aligned(Alignment::Left)
             .stroked(stw)
             .transformed(Affine2D::translated((0., -stw * 0.9)));
