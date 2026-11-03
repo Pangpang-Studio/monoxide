@@ -12,18 +12,12 @@ pub fn h(cx: &InputContext) -> Glyph {
 
 pub fn h_cap(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
-        lower_left,
-        lower_right,
-        upper_left,
-        upper_right,
-        stw,
-        cap,
-        ..
+        sbl, sbr, stw, cap, ..
     } = cx.settings().view();
 
-    let left = Rect::new(lower_left, upper_left).aligned(Alignment::Left);
-    let right = Rect::new(lower_right, upper_right).aligned(Alignment::Right);
-    let bar = Rect::new((lower_left.x, cap / 2.), (lower_right.x, cap / 2.));
+    let left = Rect::new((sbl, 0.), (sbl, cap)).aligned(Alignment::Left);
+    let right = Rect::new((sbr, 0.), (sbr, cap)).aligned(Alignment::Right);
+    let bar = Rect::new((sbl, cap / 2.), (sbr, cap / 2.));
 
     Glyph::builder()
         .or_outlines([left, bar, right].map(|rect| rect.stroked(stw)))

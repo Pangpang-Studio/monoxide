@@ -23,9 +23,6 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
         sbr,
         mid,
         cap,
-        lower_left,
-        lower_right,
-        upper_mid,
         stw,
         ..
     } = cx.settings().view();
@@ -40,8 +37,8 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
     .back();
 
     let bar = Rect::new(
-        mix(lower_left, upper_mid, bar_height),
-        mix(lower_right, upper_mid, bar_height),
+        mix(Point2D::new(sbl, 0.), (mid, cap).into(), bar_height),
+        mix(Point2D::new(sbr, 0.), (mid, cap).into(), bar_height),
     );
 
     Glyph::builder()
