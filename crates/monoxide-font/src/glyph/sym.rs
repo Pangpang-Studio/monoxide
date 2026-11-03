@@ -8,7 +8,7 @@ use monoxide_script::prelude::*;
 
 pub use self::{
     dash::{dash, underscore},
-    dot::{comma, dot},
+    dot::{comma, dot, exclamation},
     slash::{backslash, slash},
     tick::{apostrophe, quotes},
     tofu::tofu,
