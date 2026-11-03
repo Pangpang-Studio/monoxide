@@ -4,7 +4,7 @@ use crate::{
     InputContext,
     dir::{Alignment, Dir},
     prelude::*,
-    shape::Ring,
+    shape::{Rect, Ring},
 };
 
 pub fn dot(cx: &InputContext) -> Glyph {
@@ -37,5 +37,16 @@ pub fn comma(cx: &InputContext) -> Glyph {
                 .stroked(stw)
                 .into_outline(),
         ])
+        .build()
+}
+
+pub fn exclamation(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid, stw, dtr, cap, ..
+    } = cx.settings.view();
+
+    Glyph::builder()
+        .outline(Ring::at((mid, dtr), (dtr, dtr)))
+        .outline(Rect::new((mid, dtr * 3.5), (mid, cap)).stroked(stw))
         .build()
 }

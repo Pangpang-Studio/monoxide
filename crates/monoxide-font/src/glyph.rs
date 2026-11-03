@@ -50,7 +50,10 @@ pub use self::{
     q::{q, q_cap},
     r::{r, r_cap},
     s::{s, s_cap},
-    sym::{apostrophe, backslash, comma, dash, dot, quotes, slash, space, tofu, underscore},
+    sym::{
+        apostrophe, backslash, comma, dash, dot, exclamation, quotes, slash, space, tofu,
+        underscore,
+    },
     t::{t, t_cap},
     u::{u, u_cap},
     v::{v, v_cap},
@@ -65,6 +68,7 @@ pub type GlyphFn = fn(&InputContext) -> Glyph;
 
 pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     (' ', space),
+    ('!', exclamation),
     ('"', quotes),
     ('\'', apostrophe),
     (',', comma),
