@@ -1,4 +1,3 @@
-use monoxide_curves::point::Point2D;
 use monoxide_script::EvalSettings;
 
 /// Defines the basic em parameters for the font.
@@ -64,12 +63,6 @@ pub struct FontParamSettingsView {
     pub asc: f64,
     pub sbr: f64,
     pub dtr: f64,
-    pub lower_left: Point2D,
-    pub lower_right: Point2D,
-    pub lower_mid: Point2D,
-    pub upper_left: Point2D,
-    pub upper_right: Point2D,
-    pub upper_mid: Point2D,
 }
 
 impl FontParamSettings {
@@ -91,12 +84,6 @@ impl FontParamSettings {
             asc: self.asc(),
             sbr: self.sbr(),
             dtr: self.dtr(),
-            lower_left: self.lower_left(),
-            lower_right: self.lower_right(),
-            lower_mid: self.lower_mid(),
-            upper_left: self.upper_left(),
-            upper_right: self.upper_right(),
-            upper_mid: self.upper_mid(),
         }
     }
 
@@ -175,36 +162,6 @@ impl FontParamSettings {
     /// The dot radius in glyphs like 'i' and 'j'.
     pub const fn dtr(&self) -> f64 {
         self.dot() / 2.
-    }
-
-    /// The lower left corner of the em square.
-    pub const fn lower_left(&self) -> Point2D {
-        Point2D::new(self.sbl(), 0.0)
-    }
-
-    /// The lower right corner of the em square.
-    pub const fn lower_right(&self) -> Point2D {
-        Point2D::new(self.sbr(), 0.0)
-    }
-
-    /// The lower mid point of the em square.
-    pub const fn lower_mid(&self) -> Point2D {
-        Point2D::new(self.mid(), 0.0)
-    }
-
-    /// The upper left corner of the em square.
-    pub const fn upper_left(&self) -> Point2D {
-        Point2D::new(self.sbl(), self.cap())
-    }
-
-    /// The upper right corner of the em square.
-    pub const fn upper_right(&self) -> Point2D {
-        Point2D::new(self.sbr(), self.cap())
-    }
-
-    /// The upper mid point of the em square.
-    pub const fn upper_mid(&self) -> Point2D {
-        Point2D::new(self.mid(), self.cap())
     }
 }
 

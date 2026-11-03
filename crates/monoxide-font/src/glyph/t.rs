@@ -12,16 +12,16 @@ pub fn t(cx: &InputContext) -> Glyph {
 
 pub fn t_cap(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
+        mid,
         stw,
-        lower_mid,
-        upper_left,
-        upper_mid,
-        upper_right,
+        sbl,
+        sbr,
+        cap,
         ..
     } = cx.settings().view();
 
-    let bar = Rect::new(upper_left, upper_right).aligned(Alignment::Left);
-    let pipe = Rect::new(upper_mid, lower_mid);
+    let bar = Rect::new((sbl, cap), (sbr, cap)).aligned(Alignment::Left);
+    let pipe = Rect::new((mid, cap), (mid, 0.));
 
     Glyph::builder()
         .or_outlines([bar.stroked(stw), pipe.stroked(stw)])
