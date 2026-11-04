@@ -25,3 +25,13 @@ pub fn underscore(cx: &InputContext) -> Glyph {
 fn bar(xr: Range<f64>, y: f64) -> Rect {
     Rect::new((xr.start, y), (xr.end, y))
 }
+
+pub fn pipe(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        cap, dsc, mid, stw, ..
+    } = cx.settings().view();
+
+    Glyph::builder()
+        .outline(Rect::new((mid, dsc + stw), (mid, cap + stw)).stroked(stw))
+        .build()
+}
