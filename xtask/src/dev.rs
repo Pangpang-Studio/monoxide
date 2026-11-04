@@ -130,7 +130,7 @@ pub fn run(cmd: DevCommand) -> anyhow::Result<()> {
         st.playground_child = Some(playground_child);
     }
 
-    wait_for_port(&shutdown_state, cmd.port, Duration::from_secs(60))?;
+    wait_for_port(&shutdown_state, cmd.port, Duration::from_mins(5))?;
 
     info!("All servers started successfully!");
     info!("");
