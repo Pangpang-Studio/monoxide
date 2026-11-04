@@ -1,4 +1,4 @@
-mod dash;
+mod bar;
 mod dot;
 mod slash;
 mod tick;
@@ -7,7 +7,7 @@ mod tofu;
 use monoxide_script::prelude::*;
 
 pub use self::{
-    dash::{dash, underscore},
+    bar::{dash, underscore},
     dot::{comma, dot, exclamation},
     slash::{backslash, slash},
     tick::{apostrophe, asterisk, quotes},
