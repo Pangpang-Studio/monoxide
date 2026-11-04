@@ -7,7 +7,7 @@ mod tofu;
 use monoxide_script::prelude::*;
 
 pub use self::{
-    bar::{dash, underscore},
+    bar::{dash, pipe, underscore},
     dot::{comma, dot, exclamation},
     slash::{backslash, slash},
     tick::{apostrophe, asterisk, quotes},
