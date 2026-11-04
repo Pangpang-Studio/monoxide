@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{f64::consts::TAU, sync::Arc};
 
 use monoxide_script::prelude::*;
 
@@ -42,6 +42,27 @@ pub fn quotes(cx: &InputContext) -> Glyph {
             ]
             .map(|it| it.stroked(stw)),
         )
+        .build()
+}
+
+pub fn asterisk(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid, xh, cap, stw, ..
+    } = cx.settings().view();
+
+    let center = (mid, xh.midpoint(cap));
+    let tick_h = 0.2;
+    let tick = Tick::new(Point2D::from(center) - (0., tick_h), center)
+        .stroked(stw)
+        .into_outline();
+
+    let petals = 5;
+    let base_rot = TAU / petals as f64;
+    Glyph::builder()
+        .or_outlines((0..petals).map(|i| {
+            let rot = Affine2D::rotated_around(center, i as f64 * base_rot);
+            tick.clone().transformed(rot)
+        }))
         .build()
 }
 
