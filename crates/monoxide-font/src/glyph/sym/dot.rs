@@ -15,6 +15,17 @@ pub fn dot(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn colon(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView { mid, xh, dtr, .. } = cx.settings.view();
+
+    Glyph::builder()
+        .outlines([
+            Ring::at((mid, xh - dtr), (dtr, dtr)),
+            Ring::at((mid, dtr), (dtr, dtr)),
+        ])
+        .build()
+}
+
 pub fn comma(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
         mid, stw, dtr, dsc, ..
