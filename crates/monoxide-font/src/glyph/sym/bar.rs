@@ -10,7 +10,7 @@ pub fn dash(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outline(bar(sbl..sbr, cap / 2.).stroked(stw))
+        .outline(hbar(sbl..sbr, cap / 2.).stroked(stw))
         .build()
 }
 
@@ -18,12 +18,8 @@ pub fn underscore(cx: &InputContext) -> Glyph {
     let FontParamSettingsView { sbl, sbr, stw, .. } = cx.settings().view();
 
     Glyph::builder()
-        .outline(bar(sbl..sbr, 0.).stroked(stw).aligned(Alignment::Left))
+        .outline(hbar(sbl..sbr, 0.).stroked(stw).aligned(Alignment::Left))
         .build()
-}
-
-fn bar(xr: Range<f64>, y: f64) -> Rect {
-    Rect::new((xr.start, y), (xr.end, y))
 }
 
 pub fn pipe(cx: &InputContext) -> Glyph {
@@ -32,6 +28,32 @@ pub fn pipe(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outline(Rect::new((mid, dsc + stw), (mid, cap + stw)).stroked(stw))
+        .outline(vbar(mid, dsc + stw..cap + stw).stroked(stw))
         .build()
+}
+
+pub fn plus(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        sbl,
+        mid,
+        sbr,
+        stw,
+        cap,
+        ..
+    } = cx.settings().view();
+
+    let y = cap / 2.;
+    let r = mid - sbl;
+
+    Glyph::builder()
+        .or_outlines([hbar(sbl..sbr, y), vbar(mid, y - r..y + r)].map(|it| it.stroked(stw)))
+        .build()
+}
+
+fn hbar(xr: Range<f64>, y: f64) -> Rect {
+    Rect::new((xr.start, y), (xr.end, y))
+}
+
+fn vbar(x: f64, yr: Range<f64>) -> Rect {
+    Rect::new((x, yr.start), (x, yr.end))
 }
