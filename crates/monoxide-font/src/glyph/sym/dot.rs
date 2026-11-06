@@ -36,6 +36,17 @@ pub fn comma(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn semicolon(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid, xh, dsc, dtr, ..
+    } = cx.settings.view();
+
+    Glyph::builder()
+        .outline(Ring::at((mid, xh - dtr), (dtr, dtr)))
+        .outline(CommaShape::new(mid, dsc, dtr))
+        .build()
+}
+
 struct CommaShape {
     mid: f64,
     dtr: f64,
