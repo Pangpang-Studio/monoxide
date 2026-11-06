@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use monoxide_script::prelude::*;
 
 use crate::{
@@ -27,28 +29,42 @@ pub fn colon(cx: &InputContext) -> Glyph {
 }
 
 pub fn comma(cx: &InputContext) -> Glyph {
-    let FontParamSettingsView {
-        mid, stw, dtr, dsc, ..
-    } = cx.settings.view();
+    let FontParamSettingsView { mid, dtr, dsc, .. } = cx.settings.view();
 
     Glyph::builder()
-        .or_outlines([
-            Ring::at((mid, dtr), (dtr, dtr)).into_outline(),
-            SpiroBuilder::open()
-                .insts([
-                    g4!(mid - dtr / 2., dsc).width(1.).aligned(Alignment::Right),
-                    g4!(mid + dtr / 2., dsc / 2.)
-                        .width(0.9)
-                        .aligned(Alignment::Right),
-                    g4!(mid + dtr, dtr)
-                        .width(0.8)
-                        .heading(Dir::D)
-                        .aligned(Alignment::Right),
-                ])
-                .stroked(stw)
-                .into_outline(),
-        ])
+        .outline(CommaShape::new(mid, dsc, dtr))
         .build()
+}
+
+struct CommaShape {
+    mid: f64,
+    dtr: f64,
+    dsc: f64,
+}
+
+impl CommaShape {
+    fn new(mid: f64, dsc: f64, dtr: f64) -> Self {
+        Self { mid, dsc, dtr }
+    }
+}
+
+impl IntoOutline for CommaShape {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        let Self { mid, dtr, dsc } = self;
+
+        Ring::at((mid, dtr), (dtr, dtr)).or(SpiroBuilder::open()
+            .insts([
+                g4!(mid - dtr / 2., dsc).width(1.).aligned(Alignment::Right),
+                g4!(mid + dtr / 2., dsc / 2.)
+                    .width(0.9)
+                    .aligned(Alignment::Right),
+                g4!(mid + dtr, dtr)
+                    .width(0.8)
+                    .heading(Dir::D)
+                    .aligned(Alignment::Right),
+            ])
+            .stroked(dtr))
+    }
 }
 
 pub fn exclamation(cx: &InputContext) -> Glyph {
