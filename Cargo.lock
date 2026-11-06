@@ -163,9 +163,9 @@ dependencies = [
 
 [[package]]
 name = "axum-reverse-proxy"
-version = "2.2.0"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d147283f0e83e2959a84b600400a65691533ca48ab89217a25b159d064878f2e"
+checksum = "3fc7d76335475f8fb5312cb38dceceeba6d9ebccfe3c5e06fa871579a5cf4965"
 dependencies = [
  "axum",
  "bytes",
@@ -179,6 +179,7 @@ dependencies = [
  "rand",
  "tokio",
  "tokio-tungstenite 0.28.0",
+ "tokio-util",
  "tower",
  "tracing",
  "url",
@@ -1903,6 +1904,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
+ "futures-util",
  "libc",
  "pin-project-lite",
  "tokio",
