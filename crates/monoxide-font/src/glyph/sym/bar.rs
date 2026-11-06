@@ -32,6 +32,25 @@ pub fn pipe(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn equal(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        sbl,
+        mid,
+        sbr,
+        stw,
+        cap,
+        ..
+    } = cx.settings().view();
+
+    let xr = sbl..sbr;
+    let y = cap / 2.;
+    let dy = (mid - sbl) / 2.;
+
+    Glyph::builder()
+        .or_outlines([hbar(xr.clone(), y - dy), hbar(xr, y + dy)].map(|it| it.stroked(stw)))
+        .build()
+}
+
 pub fn plus(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
         sbl,
