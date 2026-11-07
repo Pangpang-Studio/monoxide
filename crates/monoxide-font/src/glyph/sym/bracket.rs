@@ -69,3 +69,68 @@ impl IntoOutline for SquareBracketShape {
             .into_outline()
     }
 }
+
+pub fn round_bracket_l(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        cap,
+        dsc,
+        sbl,
+        mid,
+        stw,
+        ..
+    } = cx.settings().view();
+
+    let dx = (mid - sbl) * 0.75;
+    let dy = -dsc / 2.;
+    Glyph::builder()
+        .outline(RoundBracketShape::new(mid - dx..mid + dx, -dy..cap + dy).stroked(stw))
+        .build()
+}
+
+pub fn round_bracket_r(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        cap,
+        dsc,
+        sbl,
+        mid,
+        stw,
+        ..
+    } = cx.settings().view();
+
+    let dx = (mid - sbl) * -0.75;
+    let dy = -dsc / 2.;
+    Glyph::builder()
+        .outline(RoundBracketShape::new(mid - dx..mid + dx, -dy..cap + dy).stroked(stw))
+        .build()
+}
+
+struct RoundBracketShape {
+    pub xr: Range<f64>,
+    pub yr: Range<f64>,
+}
+
+impl RoundBracketShape {
+    pub fn new(xr: Range<f64>, yr: Range<f64>) -> Self {
+        Self { xr, yr }
+    }
+}
+
+impl IntoOutline for RoundBracketShape {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        let Range { start: x0, end: x1 } = self.xr;
+        let Range { start: y0, end: y1 } = self.yr;
+
+        let aln = if x0.total_cmp(&x1) == y0.total_cmp(&y1) {
+            Alignment::Right
+        } else {
+            Alignment::Left
+        };
+        SpiroBuilder::open()
+            .insts([
+                g4!(x1, y1).aligned(aln),
+                g4!(x0, y0.midpoint(y1)),
+                g4!(x1, y0),
+            ])
+            .into_outline()
+    }
+}
