@@ -51,9 +51,9 @@ pub use self::{
     r::{r, r_cap},
     s::{s, s_cap},
     sym::{
-        apostrophe, asterisk, backslash, colon, comma, dash, dot, equal, exclamation, pipe, plus,
-        quotes, round_bracket_l, round_bracket_r, semicolon, slash, space, square_bracket_l,
-        square_bracket_r, tofu, underscore,
+        apostrophe, asterisk, backslash, colon, comma, curly_bracket_l, curly_bracket_r, dash, dot,
+        equal, exclamation, pipe, plus, quotes, round_bracket_l, round_bracket_r, semicolon, slash,
+        space, square_bracket_l, square_bracket_r, tofu, underscore,
     },
     t::{t, t_cap},
     u::{u, u_cap},
@@ -149,7 +149,9 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('x', x),
     ('y', y),
     ('z', z),
+    ('{', curly_bracket_l),
     ('|', pipe),
+    ('}', curly_bracket_r),
     (char::REPLACEMENT_CHARACTER, tofu),
 ];
 
