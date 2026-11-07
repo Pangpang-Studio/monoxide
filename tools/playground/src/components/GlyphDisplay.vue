@@ -15,7 +15,7 @@
       <div>#{{ props.overview.id }}</div>
       <div v-for="(c, i) in chars_list" :key="i" class="">
         {{ c.unicode }}
-        <pre class="inline">'{{ props.chars[i] }}'</pre>
+        <pre class="inline">{{ c.ch }}</pre>
       </div>
       <div v-if="!chars_list">(no chars maps to this glyph)</div>
     </div>
