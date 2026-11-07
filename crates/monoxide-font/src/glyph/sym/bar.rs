@@ -27,8 +27,9 @@ pub fn pipe(cx: &InputContext) -> Glyph {
         cap, dsc, mid, stw, ..
     } = cx.settings().view();
 
+    let dy = -dsc / 2.;
     Glyph::builder()
-        .outline(vbar(mid, dsc + stw..cap + stw).stroked(stw))
+        .outline(vbar(mid, -dy..cap + dy).stroked(stw))
         .build()
 }
 
