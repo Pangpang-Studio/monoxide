@@ -52,7 +52,7 @@ pub use self::{
     s::{s, s_cap},
     sym::{
         apostrophe, asterisk, backslash, colon, comma, dash, dot, equal, exclamation, pipe, plus,
-        quotes, semicolon, slash, space, tofu, underscore,
+        quotes, semicolon, slash, space, square_bracket_l, square_bracket_r, tofu, underscore,
     },
     t::{t, t_cap},
     u::{u, u_cap},
@@ -116,7 +116,9 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('X', x_cap),
     ('Y', y_cap),
     ('Z', z_cap),
+    ('[', square_bracket_l),
     ('\\', backslash),
+    (']', square_bracket_r),
     ('_', underscore),
     ('a', a),
     ('b', b),
