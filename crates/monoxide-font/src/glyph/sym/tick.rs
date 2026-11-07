@@ -20,6 +20,7 @@ pub fn apostrophe(cx: &InputContext) -> Glyph {
 }
 pub fn quotes(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
+        sbl,
         mid,
         xh,
         dtr,
@@ -28,7 +29,7 @@ pub fn quotes(cx: &InputContext) -> Glyph {
         ..
     } = cx.settings().view();
 
-    let gap = 1.25 * stw;
+    let gap = (mid - sbl) / 2.;
     let left = mid - gap;
     let right = mid + gap;
     let top = cap + dtr;
