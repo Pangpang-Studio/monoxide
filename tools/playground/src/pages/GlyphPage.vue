@@ -294,7 +294,7 @@ const otherGlyphsSelection = computed(() => {
         <h2 class="font-bold">Characters</h2>
         <div v-for="(c, i) in chars" :key="i" class="flex flex-row gap-4">
           <div class="">{{ c.unicode }}</div>
-          <pre class="inline">'{{ c.ch }}'</pre>
+          <pre class="inline">{{ c.ch }}</pre>
         </div>
       </div>
       <!-- Construction of the glyph -->

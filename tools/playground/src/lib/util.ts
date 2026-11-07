@@ -13,7 +13,7 @@ export function charList(chars: string[]): CharListOutput[] {
     return {
       charcode: n,
       unicode: `u+${n.toString(16).padStart(4, '0')}`,
-      ch: c,
+      ch: JSON.stringify(c),
     }
   })
 }
