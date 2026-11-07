@@ -103,6 +103,61 @@ impl IntoOutline for RoundBracketShape {
             .into_outline()
     }
 }
+pub fn curly_bracket_l(cx: &InputContext) -> Glyph {
+    bracket(cx, CurlyBracketShape::new, 1.)
+}
+
+pub fn curly_bracket_r(cx: &InputContext) -> Glyph {
+    bracket(cx, CurlyBracketShape::new, -1.)
+}
+
+struct CurlyBracketShape {
+    pub xr: Range<f64>,
+    pub yr: Range<f64>,
+    pub stw: f64,
+}
+
+impl CurlyBracketShape {
+    pub fn new(xr: Range<f64>, yr: Range<f64>, stw: f64) -> Self {
+        Self { xr, yr, stw }
+    }
+}
+
+impl IntoOutline for CurlyBracketShape {
+    fn into_outline(self) -> Arc<OutlineExpr> {
+        let Range { start: x0, end: x1 } = self.xr;
+        let Range { start: y0, end: y1 } = self.yr;
+        let stw = self.stw;
+
+        let x10s = (x1 - x0).signum();
+        let y10s = (y1 - y0).signum();
+
+        let x0 = x0 - stw * x10s / 2.;
+        let x = x0.midpoint(x1);
+        let y = y0.midpoint(y1);
+        let aln = if x10s == y10s {
+            Alignment::Right
+        } else {
+            Alignment::Left
+        };
+
+        let curl = SpiroBuilder::open()
+            .insts([
+                g4!(x1, y1).heading(Dir::L),
+                g4!(mix(x0, x1, 0.2), mix(y1, y, 1.)),
+                g4!(mix(x0, x1, 0.6), mix(y1, y, 0.75)),
+                g4!(x, mix(y1, y, 0.35)).aligned(aln),
+                g4!(mix(x0, x1, 0.55), mix(y1, y, 0.15)),
+                corner!(x0, y0.midpoint(y1))
+                    .heading(Dir::L)
+                    .aligned(Alignment::Middle),
+            ])
+            .stroked(stw);
+
+        curl.clone()
+            .or(curl.transformed(Affine2D::mirrored_along((x, y), (1., 0.))))
+    }
+}
 
 fn bracket<S: IntoOutline>(
     cx: &InputContext,
