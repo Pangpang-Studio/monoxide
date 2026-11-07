@@ -8,7 +8,7 @@ mod tofu;
 use monoxide_script::prelude::*;
 
 pub use self::{
-    bar::{dash, equal, pipe, plus, underscore},
+    bar::{dash, equal, hash, pipe, plus, underscore},
     bracket::{
         curly_bracket_l, curly_bracket_r, round_bracket_l, round_bracket_r, square_bracket_l,
         square_bracket_r,

@@ -70,6 +70,39 @@ pub fn plus(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn hash(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        wth,
+        sbl,
+        sbr,
+        mid,
+        stw,
+        cap,
+        ..
+    } = cx.settings().view();
+
+    let gap = (mid - sbl) / 2.;
+    let left = mid - gap;
+    let right = mid + gap;
+    let y0 = cap * 0.3;
+    let y1 = cap - y0;
+
+    let xr = sbl.midpoint(0.)..sbr.midpoint(wth);
+    let yr = 0.0..cap;
+
+    Glyph::builder()
+        .outlines(
+            [
+                vbar(left, yr.clone()),
+                vbar(right, yr),
+                hbar(xr.clone(), y0),
+                hbar(xr, y1),
+            ]
+            .map(|it| it.stroked(stw)),
+        )
+        .build()
+}
+
 fn hbar(xr: Range<f64>, y: f64) -> Rect {
     Rect::new((xr.start, y), (xr.end, y))
 }
