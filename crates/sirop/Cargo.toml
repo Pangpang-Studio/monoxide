@@ -3,7 +3,6 @@ name = "sirop"
 description = "A libspiro port in pure Rust."
 authors.workspace = true
 edition.workspace = true
-homepage.workspace = true
 license.workspace = true
 repository.workspace = true
 version.workspace = true

@@ -2,7 +2,6 @@
 name = "monoxide"
 authors.workspace = true
 edition.workspace = true
-homepage.workspace = true
 license.workspace = true
 repository.workspace = true
 version.workspace = true
@@ -55,7 +54,6 @@ authors = [
     "Rynco Maekawa <lynzrand@outlook.com>",
 ]
 edition = "2024"
-homepage = "https://github.com/Pangpang-Studio/monoxide"
 license = "GPL-3.0-only WITH Font-exception-2.0"
 repository = "https://github.com/Pangpang-Studio/monoxide"
 version = "0.1.0"

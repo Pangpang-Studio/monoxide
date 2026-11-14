@@ -2,7 +2,6 @@
 name = "monoxide-script"
 authors.workspace = true
 edition.workspace = true
-homepage.workspace = true
 license.workspace = true
 repository.workspace = true
 version.workspace = true
