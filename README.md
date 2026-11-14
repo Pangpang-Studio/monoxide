@@ -19,7 +19,19 @@ Monoxide is an experiment to build a monospaced typeface in Rust.
 The immediate goal of monoxide is to create a typeface that can be used by its
 makers to code monoxide itself.
 
-> After all, who doesn't love the ouroboros?
+After all, who doesn't love the ouroboros?
+
+## Progress
+
+<a href="https://pangpang-studio.github.io/monoxide/">
+  <p>
+    <img
+      src="assets/banner.png"
+      width="360"
+      title="Monoxide Playground"
+    />
+  </p>
+</a>
 
 So far, we have achieved the first working version of:
 
@@ -30,11 +42,11 @@ So far, we have achieved the first working version of:
 - An expanding set of glyphs that will hopefully cover our basic
   programming needs soon™.
 
-Please feel free to check out our [Web playground][playground] :]
+To see more for yourself, here's the [monoxide playground][playground] :]
 
 [playground]: https://pangpang-studio.github.io/monoxide/
 
-## Prerequisites
+## Development
 
 Please make sure you have the following installed on your machine:
 
@@ -44,8 +56,6 @@ Please make sure you have the following installed on your machine:
     Whenever possible, use the same `dx` version as monoxide's `dioxus-devtools`
     dependency.
 - PNPM for the JavaScript part of the project, namely the WebUI.
-
-## Development
 
 Launching the playground is as simple as:
 
