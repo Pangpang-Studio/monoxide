@@ -43,8 +43,8 @@ impl JShape {
             ..
         } = settings.view();
 
-        let hook = Self::hook_raw(settings, None)
-            .transformed(Affine2D::mirrored_along((0., xh / 2.), (1., 0.)));
+        let hook =
+            Self::hook_raw(settings, None).transformed(Affine2D::reflect((0., xh / 2.), (1., 0.)));
 
         let top_serif = Rect::new(
             (mid, xh),
@@ -86,7 +86,7 @@ impl JShape {
         Hook::new((mid, y_hi - ry), (rx, ry), ovs)
             .with_hook_tip_heading(Self::HOOK_TIP_HEADING)
             .stroked(1.05 * stw)
-            .transformed(Affine2D::translated((-rx + stw / 2., 0.)))
+            .transformed(Affine2D::translate((-rx + stw / 2., 0.)))
     }
 }
 
@@ -99,7 +99,7 @@ impl IntoOutlines for JShape {
             self.top_serif.into_outline(),
             self.dot.into_outline(),
         ]
-        .map(move |it| it.transformed(Affine2D::translated(self.offset)))
+        .map(move |it| it.transformed(Affine2D::translate(self.offset.to_vec2())))
     }
 }
 
@@ -125,7 +125,7 @@ impl JCapShape {
         let hook = Hook::new((mid, cap - mih), (1.05 * (mid - sbl), mih), ovs)
             .with_hook_tip_heading(JShape::HOOK_TIP_HEADING)
             .stroked(1.1 * stw)
-            .transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.)));
+            .transformed(Affine2D::reflect((0., cap / 2.), (1., 0.)));
 
         let pipe = Rect::new((mix(sbl, mid, 0.3), cap), (sbr, cap))
             .aligned(Alignment::Left)
@@ -144,6 +144,6 @@ impl IntoOutlines for JCapShape {
 
     fn into_outlines(self) -> Self::Outlines {
         [self.hook.into_outline(), self.pipe.into_outline()]
-            .map(move |it| it.transformed(Affine2D::translated(self.offset)))
+            .map(move |it| it.transformed(Affine2D::translate(self.offset.to_vec2())))
     }
 }

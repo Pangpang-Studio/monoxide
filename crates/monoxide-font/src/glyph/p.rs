@@ -21,7 +21,7 @@ pub fn p(cx: &InputContext) -> Glyph {
         .or_outlines(
             DShape::from_settings(&cx.settings)
                 .with_height(xh - dsc)
-                .transformed(Affine2D::rotated_around((mid, mih), PI)),
+                .transformed(Affine2D::rotate_about(PI, (mid, mih))),
         )
         .build()
 }

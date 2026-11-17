@@ -1,10 +1,7 @@
 //! Affine transform utilities.
 //!
-//! This module is a thin wrapper around [`kurbo::Affine`]. [`Affine2D`] is
-//! simply [`kurbo::Affine`]; [`AffineExt`] adds a handful of
-//! domain-specific constructors and introspection helpers (matching names
-//! used throughout the rest of this codebase, and font-matrix decomposition
-//! helpers) that `kurbo` doesn't provide out of the box.
+//! [`AffineExt`] adds a handful of domain-specific constructors and
+//! introspection helpers on top of existing `kurbo` functionalities.
 
 pub use kurbo::Affine as Affine2D;
 
@@ -13,34 +10,9 @@ use crate::point::Point2D;
 /// Extension methods for [`Affine2D`] used throughout this crate and its
 /// consumers, on top of what `kurbo` already provides.
 pub trait AffineExt: Sized {
-    /// Creates an identity affine transformation.
-    fn id() -> Self;
-
     /// Creates an affine transform from a translation and a column-major 2x2
     /// matrix.
     fn make(translation: impl Into<Point2D>, matrix: [impl Into<Point2D>; 2]) -> Self;
-
-    /// Create a transformation that translates the point by `translation`.
-    fn translated(translation: impl Into<Point2D>) -> Self;
-
-    /// Create a transformation that rotates the point by `angle`.
-    fn rotated(angle: f64) -> Self;
-
-    /// Create a transformation that rotates the point by `angle` around
-    /// `center`.
-    fn rotated_around(center: impl Into<Point2D>, angle: f64) -> Self;
-
-    /// Create a transformation that scales the point by `scale`.
-    fn scaled(scale: f64) -> Self;
-
-    /// Create a transformation that reflects the point along the line that
-    /// crosses `base` and goes in `direction`.
-    fn mirrored_along(base: impl Into<Point2D>, direction: impl Into<Point2D>) -> Self;
-
-    /// Reflects the input across the line through `point` in `direction`
-    /// *before* applying `self`, i.e. the resulting transform is
-    /// `self ∘ Reflect_line(point, direction)`.
-    fn mirror_along(self, point: impl Into<Point2D>, direction: impl Into<Point2D>) -> Self;
 
     /// Applies this transformation to a point.
     fn apply(&self, point: &Point2D) -> Point2D;
@@ -70,38 +42,10 @@ pub trait AffineExt: Sized {
 }
 
 impl AffineExt for Affine2D {
-    fn id() -> Self {
-        Self::IDENTITY
-    }
-
     fn make(translation: impl Into<Point2D>, matrix: [impl Into<Point2D>; 2]) -> Self {
         let translation = translation.into();
         let [col0, col1] = matrix.map(Into::into);
         Self::new([col0.x, col0.y, col1.x, col1.y, translation.x, translation.y])
-    }
-
-    fn translated(translation: impl Into<Point2D>) -> Self {
-        Self::translate(translation.into().to_vec2())
-    }
-
-    fn rotated(angle: f64) -> Self {
-        Self::rotate(angle)
-    }
-
-    fn rotated_around(center: impl Into<Point2D>, angle: f64) -> Self {
-        Self::rotate_about(angle, center.into())
-    }
-
-    fn scaled(scale: f64) -> Self {
-        Self::scale(scale)
-    }
-
-    fn mirrored_along(base: impl Into<Point2D>, direction: impl Into<Point2D>) -> Self {
-        Self::reflect(base.into(), direction.into().to_vec2())
-    }
-
-    fn mirror_along(self, point: impl Into<Point2D>, direction: impl Into<Point2D>) -> Self {
-        self.pre_reflect(point.into(), direction.into().to_vec2())
     }
 
     fn apply(&self, point: &Point2D) -> Point2D {

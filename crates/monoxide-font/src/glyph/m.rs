@@ -38,7 +38,7 @@ pub fn m_cap(cx: &InputContext) -> Glyph {
         .or_outlines(
             WShape::from(chevron)
                 .stroked(stw)
-                .transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.))),
+                .transformed(Affine2D::reflect((0., cap / 2.), (1., 0.))),
         )
         .build()
 }
@@ -68,7 +68,7 @@ impl MShape {
         let hook = Hook::new((mix(mid, sbr, 0.5), mih), ((mid - sbl) / 2., mih), ovs).stroked(stw);
         let hooks = [
             hook.clone(),
-            hook.transformed(Affine2D::translated((sbl - mid + stw / 2., 0.))),
+            hook.transformed(Affine2D::translate((sbl - mid + stw / 2., 0.))),
         ];
         let pipe = Rect::new((sbl, 0.), (sbl, xh))
             .aligned(Alignment::Left)

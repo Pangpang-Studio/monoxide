@@ -13,7 +13,7 @@ pub fn q(cx: &InputContext) -> Glyph {
         .or_outlines(
             DShape::from_settings(&cx.settings)
                 .with_height(xh - dsc)
-                .transformed(Affine2D::mirrored_along((0., mih), (1., 0.))),
+                .transformed(Affine2D::reflect((0., mih), (1., 0.))),
         )
         .build()
 }

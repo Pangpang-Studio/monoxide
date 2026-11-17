@@ -64,7 +64,7 @@ impl GShape {
             .into_outline();
         let hook = Hook::new((mid, mih - dsc), (mid - sbl, mih), ovs)
             .stroked(1.05 * stw)
-            .transformed(Affine2D::mirrored_along((0., xh / 2.), (1., 0.)));
+            .transformed(Affine2D::reflect((0., xh / 2.), (1., 0.)));
 
         Self { bowl, hook }
     }

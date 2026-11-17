@@ -46,7 +46,7 @@ impl TShape {
         } = settings.view();
 
         let hook = JShape::hook_raw(settings, cap)
-            .transformed(Affine2D::rotated_around((mid, cap / 2.), PI));
+            .transformed(Affine2D::rotate_about(PI, (mid, cap / 2.)));
 
         let crossbar = Rect::new((mix(sbl, mid, 0.8), xh), (2. * mid, xh))
             .aligned(Alignment::Left)
@@ -65,6 +65,6 @@ impl IntoOutlines for TShape {
 
     fn into_outlines(self) -> Self::Outlines {
         [self.hook.into_outline(), self.crossbar.into_outline()]
-            .map(move |it| it.transformed(Affine2D::translated(self.offset)))
+            .map(move |it| it.transformed(Affine2D::translate(self.offset.to_vec2())))
     }
 }

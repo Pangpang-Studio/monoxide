@@ -76,7 +76,7 @@ impl IntoOutlines for RShape {
 
     fn into_outlines(self) -> Self::Outlines {
         [self.hook.into_outline(), self.pipe.into_outline()]
-            .map(move |it| it.transformed(Affine2D::translated(self.offset)))
+            .map(move |it| it.transformed(Affine2D::translate(self.offset.to_vec2())))
     }
 }
 
