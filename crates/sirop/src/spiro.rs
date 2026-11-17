@@ -343,10 +343,10 @@ impl Segs {
         for i in 0..n {
             let ty0 = s[i].ty();
             let ty1 = s[i + 1].ty();
-            for k in 0..ty0.jinc(ty1) {
+            for k in s[i].ks.0.iter_mut().take(ty0.jinc(ty1)) {
                 let dk = v[j];
                 j += 1;
-                s[i].ks.0[k] += dk;
+                *k += dk;
                 norm = dk.mul_add(dk, norm);
             }
         }
