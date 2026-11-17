@@ -1,5 +1,6 @@
 mod bar;
 mod bracket;
+mod chevron;
 mod dot;
 mod slash;
 mod tick;
@@ -13,6 +14,7 @@ pub use self::{
         curly_bracket_l, curly_bracket_r, round_bracket_l, round_bracket_r, square_bracket_l,
         square_bracket_r,
     },
+    chevron::caret,
     dot::{colon, comma, dot, exclamation, semicolon},
     slash::{backslash, slash},
     tick::{apostrophe, asterisk, quotes},
