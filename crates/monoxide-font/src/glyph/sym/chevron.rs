@@ -19,6 +19,36 @@ pub fn caret(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn less(cx: &InputContext) -> Glyph {
+    angle_bracket(cx, true)
+}
+
+pub fn greater(cx: &InputContext) -> Glyph {
+    angle_bracket(cx, false)
+}
+
+fn angle_bracket(cx: &InputContext, left: bool) -> Glyph {
+    let FontParamSettingsView {
+        sbl,
+        mid,
+        sbr,
+        cap,
+        stw,
+        ..
+    } = cx.settings().view();
+
+    let gap = cap * 0.6;
+    let mut xform = Affine2D::reflect((0., 0.), (1., 1.));
+    if left {
+        xform = xform.then_reflect((mid, 0.), (0., 1.));
+    }
+    Glyph::builder()
+        .outline(
+            Caret::new(cap.midpoint(-gap)..cap.midpoint(gap), sbl..sbr, stw).transformed(xform),
+        )
+        .build()
+}
+
 /// A caret heading up, delimited within the given x and y ranges.
 #[derive(Clone, Debug)]
 pub struct Caret {
