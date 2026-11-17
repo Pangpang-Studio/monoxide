@@ -61,7 +61,7 @@ pub fn asterisk(cx: &InputContext) -> Glyph {
     let base_rot = TAU / petals as f64;
     Glyph::builder()
         .or_outlines((0..petals).map(|i| {
-            let rot = Affine2D::rotated_around(center, i as f64 * base_rot);
+            let rot = Affine2D::rotate_about(i as f64 * base_rot, center);
             tick.clone().transformed(rot)
         }))
         .build()

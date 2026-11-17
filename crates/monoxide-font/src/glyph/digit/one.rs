@@ -19,7 +19,7 @@ pub fn one(cx: &InputContext) -> Glyph {
 
     let pipe = Rect::new((mid, 0.), (mid, cap))
         .stroked(stw)
-        .transformed(Affine2D::translated((stw / 2., 0.)));
+        .transformed(Affine2D::translate((stw / 2., 0.)));
 
     let slash = SpiroBuilder::open().insts([
         g4!(sbl, xh).aligned(Alignment::Left),

@@ -12,10 +12,8 @@ use crate::{
 pub fn b(cx: &InputContext) -> Glyph {
     Glyph::builder()
         .or_outlines(
-            DShape::from_settings(&cx.settings).transformed(Affine2D::mirrored_along(
-                (cx.settings.mid(), 0.),
-                Point2D::unit_y(),
-            )),
+            DShape::from_settings(&cx.settings)
+                .transformed(Affine2D::reflect((cx.settings.mid(), 0.), (0., 1.))),
         )
         .build()
 }
@@ -40,7 +38,7 @@ pub fn b_cap(cx: &InputContext) -> Glyph {
     outlines.push(bowl.stroked(stw));
 
     let p_cap_shape = PCapShape::from_settings(settings);
-    outlines.extend(p_cap_shape.transformed(Affine2D::mirrored_along((0., cap / 2.), (1., 0.))));
+    outlines.extend(p_cap_shape.transformed(Affine2D::reflect((0., cap / 2.), (1., 0.))));
 
     Glyph::builder().or_outlines(outlines).build()
 }

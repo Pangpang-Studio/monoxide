@@ -155,7 +155,7 @@ impl IntoOutline for CurlyBracketShape {
             .stroked(stw);
 
         curl.clone()
-            .or(curl.transformed(Affine2D::mirrored_along((x, y), (1., 0.))))
+            .or(curl.transformed(Affine2D::reflect((x, y), (1., 0.))))
     }
 }
 

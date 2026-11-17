@@ -66,7 +66,7 @@ impl IntoOutlines for WShape {
         }
 
         let [c0, c1] = chevron;
-        let xform = Affine2D::mirrored_along((mid, 0.), (0., 1.));
+        let xform = Affine2D::reflect((mid, 0.), (0., 1.));
         [
             c0.clone().transformed(xform),
             c1.clone().transformed(xform),

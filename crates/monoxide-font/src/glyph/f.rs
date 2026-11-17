@@ -40,13 +40,13 @@ impl FShape {
         } = settings.view();
 
         let hook = JShape::hook_raw(settings, cap + stw / 2.)
-            .transformed(Affine2D::mirrored_along((mid, mih), (0., 1.)));
+            .transformed(Affine2D::reflect((mid, mih), (0., 1.)));
 
         let x_offset = -stw;
         let crossbar = Rect::new((mix(sbl, mid, 0.7), xh), (sbr - x_offset - stw / 2., xh))
             .aligned(Alignment::Left)
             .stroked(stw)
-            .transformed(Affine2D::translated((0., -stw * 0.9)));
+            .transformed(Affine2D::translate((0., -stw * 0.9)));
 
         Self {
             hook,
@@ -60,7 +60,8 @@ impl IntoOutlines for FShape {
     type Outlines = [Arc<OutlineExpr>; 2];
 
     fn into_outlines(self) -> Self::Outlines {
-        [self.hook, self.crossbar].map(move |it| it.transformed(Affine2D::translated(self.offset)))
+        [self.hook, self.crossbar]
+            .map(move |it| it.transformed(Affine2D::translate(self.offset.to_vec2())))
     }
 }
 

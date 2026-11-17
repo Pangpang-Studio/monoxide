@@ -1,4 +1,4 @@
-use monoxide_curves::xform::{Affine2D, AffineExt};
+use monoxide_curves::xform::Affine2D;
 
 use crate::ast::Glyph;
 
@@ -16,7 +16,7 @@ impl GlyphComponent {
     pub fn from_glyph(glyph: Glyph) -> Self {
         GlyphComponent {
             component: glyph,
-            xform: Affine2D::id(),
+            xform: Affine2D::IDENTITY,
         }
     }
 
@@ -30,7 +30,7 @@ impl From<Glyph> for GlyphComponent {
     fn from(val: Glyph) -> Self {
         GlyphComponent {
             component: val,
-            xform: Affine2D::id(),
+            xform: Affine2D::IDENTITY,
         }
     }
 }

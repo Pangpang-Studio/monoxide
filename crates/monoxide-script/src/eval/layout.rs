@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use by_address::ByAddress;
-use monoxide_curves::xform::{Affine2D, AffineExt};
+use monoxide_curves::xform::Affine2D;
 use petgraph::prelude::DiGraphMap;
 
 use crate::{
@@ -169,7 +169,7 @@ impl<'a> GlyphSerializer<'a> {
                     .map
                     .get(ByAddress::from_ref(simple_glyph))
                     .expect("Should be assigned");
-                let xform = Affine2D::id();
+                let xform = Affine2D::IDENTITY;
                 components.push(SerializedComponent { index, xform });
             }
 
