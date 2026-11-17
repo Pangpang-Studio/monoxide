@@ -14,7 +14,7 @@ pub use self::{
         curly_bracket_l, curly_bracket_r, round_bracket_l, round_bracket_r, square_bracket_l,
         square_bracket_r,
     },
-    chevron::caret,
+    chevron::{caret, greater, less},
     dot::{colon, comma, dot, exclamation, semicolon},
     slash::{backslash, slash},
     tick::{apostrophe, asterisk, quotes},
