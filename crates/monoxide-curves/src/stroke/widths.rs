@@ -76,7 +76,7 @@ fn calc_curve_lengths(
     }
     // last segment
     lengths.push(
-        (indices.last().copied().unwrap_or(0)..curve.len())
+        (indices.last().copied().unwrap_or(0)..cubic.segment_count())
             .map(arclen)
             .sum(),
     );
