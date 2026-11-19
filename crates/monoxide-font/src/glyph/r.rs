@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use monoxide_script::prelude::*;
+use monoxide_script::{g2, prelude::*};
 
 use crate::{
     InputContext,
@@ -57,7 +57,15 @@ impl RShape {
             ..
         } = settings.view();
 
-        let hook = Hook::new((mid, mih), (mid - sbl, mih), ovs).stroked(stw);
+        let hook = {
+            let rx = mid - sbl;
+            let ry = mih;
+            let hook_tip_width = 0.8;
+            Hook::new((mid, mih), (rx, ry), ovs)
+                .with_hook_tip_width(hook_tip_width)
+                .with_hook_tip_r_fact(1. - stw * (1. - hook_tip_width) / rx)
+                .stroked(stw)
+        };
 
         let pipe = Rect::new((sbl, 0.), (sbl, xh))
             .aligned(Alignment::Left)
@@ -82,13 +90,27 @@ impl IntoOutlines for RShape {
 
 pub struct Hook {
     pub o_shape: OShape,
+    pub hook_tip_width: Option<f64>,
+    pub hook_tip_r_fact: Option<f64>,
 }
 
 impl Hook {
     pub fn new(center: impl Into<Point2D>, radii: impl Into<Point2D>, ovs: f64) -> Self {
         Self {
             o_shape: OShape::new(center, radii, ovs),
+            hook_tip_width: None,
+            hook_tip_r_fact: None,
         }
+    }
+
+    pub fn with_hook_tip_width(mut self, width: impl Into<Option<f64>>) -> Self {
+        self.hook_tip_width = width.into();
+        self
+    }
+
+    pub fn with_hook_tip_r_fact(mut self, offset: impl Into<Option<f64>>) -> Self {
+        self.hook_tip_r_fact = offset.into();
+        self
     }
 }
 
@@ -96,25 +118,34 @@ impl IntoOutline for Hook {
     fn into_outline(self) -> Arc<OutlineExpr> {
         let o_shape = &self.o_shape;
         let Point2D { x, y } = o_shape.center();
-        let Point2D { y: ry, .. } = o_shape.radii();
+        let Point2D { x: rx, y: ry } = o_shape.radii();
         let ovs = o_shape.ovs();
 
         let mid_curve_w = o_shape.mid_curve_w();
         let mid_curve_h = o_shape.mid_curve_h();
 
+        let tip_r_factor = self.hook_tip_r_fact.unwrap_or(1.);
+        let tip_width = self.hook_tip_width.unwrap_or(1.);
+
         let y_hi = y + ry;
+        let y_hi1 = y + ry * tip_r_factor;
 
         SpiroBuilder::open()
             .insts([
-                g4!(x + mid_curve_w + ovs, y_hi)
+                // Right side
+                g4!(x + rx, y + ry * 0.4)
                     .aligned(Alignment::Right)
-                    // .heading(self.hook_tip_heading)
+                    .heading(Dir::D)
                     .width(1.1),
-                g4!(x + mid_curve_w / 1.5, y_hi + ovs),
-                g4!(x - mid_curve_w / 2., y_hi - mid_curve_h * 0.75),
-                g4!(x - mid_curve_w, y_hi - mid_curve_h * 2.)
-                    .heading(Dir::L)
-                    .width(1.),
+                // Top arc
+                g2!(x + mid_curve_w * 0.9, y_hi - mid_curve_h / 2.).width(1.),
+                g4!(x, y_hi + ovs).width(1.).heading(Dir::L),
+                g2!(
+                    x - mid_curve_w * 0.9 * tip_r_factor,
+                    y_hi1 - mid_curve_h / 2.
+                )
+                .aligned(Alignment::Right),
+                g4!(x - rx * tip_r_factor, y_hi1 - mid_curve_h * 1.4).width(tip_width),
             ])
             .into_outline()
     }
