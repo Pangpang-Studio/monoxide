@@ -250,13 +250,14 @@ const otherGlyphsSelection = computed(() => {
       title = `Glyph #${i}`
     }
     let revChar = state.revCmap.value.get(i)
-    for (let c of revChar ?? []) {
-      title += ` '${c}'`
+    if (revChar) {
+      if (revChar?.length > 0) {
+        const firstChar = revChar[0]
+        title += ` ${JSON.stringify(firstChar)}`
+      }
+      if (revChar.length > 1) title += ` (+${revChar.length - 1} more)`
     }
-    return {
-      id: i,
-      title: title,
-    }
+    return { id: i, title }
   })
 })
 </script>
