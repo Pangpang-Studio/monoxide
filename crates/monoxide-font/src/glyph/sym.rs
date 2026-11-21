@@ -19,7 +19,7 @@ pub use self::{
     dollar::dollar,
     dot::{colon, comma, dot, exclamation, semicolon},
     slash::{backslash, slash},
-    tick::{apostrophe, asterisk, quotes},
+    tick::{apostrophe, asterisk, backtick, quotes},
     tofu::tofu,
 };
 use crate::InputContext;

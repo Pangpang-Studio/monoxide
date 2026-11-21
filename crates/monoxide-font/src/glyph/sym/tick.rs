@@ -46,6 +46,19 @@ pub fn quotes(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn backtick(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid, xh, cap, stw, ..
+    } = cx.settings().view();
+
+    let center = Point2D::new(mid, xh.midpoint(cap));
+    let tick = Tick::new(center - (0., 0.2), center + (0., 0.07)).stroked(stw);
+
+    Glyph::builder()
+        .outline(tick.transformed(Affine2D::rotate_about(0.6 * TAU, center)))
+        .build()
+}
+
 pub fn asterisk(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
         mid, xh, cap, stw, ..
