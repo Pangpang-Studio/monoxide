@@ -1,6 +1,7 @@
 mod bar;
 mod bracket;
 mod chevron;
+mod dollar;
 mod dot;
 mod slash;
 mod tick;
@@ -15,6 +16,7 @@ pub use self::{
         square_bracket_r,
     },
     chevron::{caret, greater, less},
+    dollar::dollar,
     dot::{colon, comma, dot, exclamation, semicolon},
     slash::{backslash, slash},
     tick::{apostrophe, asterisk, quotes},
