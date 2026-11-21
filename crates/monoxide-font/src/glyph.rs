@@ -69,7 +69,6 @@ use crate::InputContext;
 pub type GlyphFn = fn(&InputContext) -> Glyph;
 
 pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
-    (' ', space),
     ('!', exclamation),
     ('"', quotes),
     ('#', hash),
@@ -158,6 +157,35 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('|', pipe),
     ('}', curly_bracket_r),
     (char::REPLACEMENT_CHARACTER, tofu),
+];
+
+pub const WHITESPACES: &[char] = &[
+    '\u{0009}', // horizontal tab
+    '\u{000A}', // line feed
+    '\u{000B}', // vertical tab
+    '\u{000C}', // form feed
+    '\u{000D}', // carriage return
+    '\u{0020}', // space
+    '\u{0085}', // next line
+    '\u{00A0}', // no-break space
+    '\u{1680}', // ogham space mark
+    '\u{180E}', // mongolian vowel separator
+    '\u{2000}', // en quad
+    '\u{2001}', // em quad
+    '\u{2002}', // en space
+    '\u{2003}', // em space
+    '\u{2004}', // three-per-em space
+    '\u{2005}', // four-per-em space
+    '\u{2006}', // six-per-em space
+    '\u{2007}', // figure space
+    '\u{2008}', // punctuation space
+    '\u{2009}', // thin space
+    '\u{200A}', // hair space
+    '\u{2028}', // line separator
+    '\u{2029}', // paragraph separator
+    '\u{202F}', // narrow no-break space
+    '\u{205F}', // medium mathematical space
+    '\u{3000}', // ideographic space
 ];
 
 #[cfg(test)]
