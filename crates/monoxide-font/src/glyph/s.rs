@@ -91,7 +91,7 @@ impl IntoOutline for HookedSShape {
     }
 }
 
-struct SShape<O = OCapShape> {
+pub struct SShape<O = OCapShape> {
     pub o_shape: O,
 }
 
