@@ -27,12 +27,16 @@ pub fn make_font() -> FontContext {
     };
 
     let mut fcx = FontContext::new(cx.settings.clone());
+
+    let space = glyph::space(&cx);
     for &ch in glyph::WHITESPACES {
-        fcx.set_mapping(ch, glyph::space(&cx));
+        fcx.set_mapping(ch, space.clone());
     }
+
     for &(ch, gl) in glyph::GLYPH_FNS {
         fcx.set_mapping(ch, gl(&cx));
     }
+
     fcx.set_tofu();
     fcx
 }
