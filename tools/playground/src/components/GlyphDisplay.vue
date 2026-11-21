@@ -13,20 +13,21 @@
     <div class="flex flex-col">
       <h3 v-if="props.name" class="font-bold">{{ props.name }}</h3>
       <div>#{{ props.overview.id }}</div>
-      <div v-for="(c, i) in chars_list" :key="i" class="">
-        {{ c.unicode }}
-        <pre class="inline">{{ c.ch }}</pre>
+      <div v-if="firstChar" :key="firstChar.charcode" class="">
+        {{ firstChar.unicode }}
+        <pre class="inline">{{ firstChar.ch }}</pre>
+        <span v-if="moreChars"> ...</span>
       </div>
-      <div v-if="!chars_list">(no chars maps to this glyph)</div>
+      <div v-if="!firstChar">(no chars maps to this glyph)</div>
     </div>
   </RouterLink>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, toRefs } from 'vue'
 
 import type { GlyphOverview } from '../lib/types'
-import { charList } from '../lib/util'
+import { charList, type CharListOutput } from '../lib/util'
 import type { DraftToSvgXform } from './svg/types'
 import { svgPenMulti } from './svg/util'
 
@@ -37,7 +38,16 @@ export interface GlyphDisplayProps {
 }
 
 const props = defineProps<GlyphDisplayProps>()
-const chars_list = computed(() => charList(props.chars))
+
+const charInfo = computed(
+  (): { firstChar?: CharListOutput; moreChars: boolean } => {
+    const { chars } = props
+    return chars.length === 0
+      ? { moreChars: false }
+      : { firstChar: charList([chars[0]])[0], moreChars: chars.length > 1 }
+  },
+)
+const { firstChar, moreChars } = toRefs(charInfo.value)
 
 const drawnPath = computed(() => {
   let overview = props.overview
