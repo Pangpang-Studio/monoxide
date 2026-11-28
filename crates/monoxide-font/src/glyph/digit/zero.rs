@@ -33,6 +33,6 @@ pub fn zero(cx: &InputContext) -> Glyph {
     .with_heading(Dir::L);
 
     Glyph::builder()
-        .outlines([o_cap_shape.stroked(stw), slash.stroked(stw)])
+        .or_outlines([o_cap_shape.stroked(stw), slash.stroked(stw)])
         .build()
 }

@@ -22,7 +22,7 @@ pub fn nine(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(NineShape::new(sbl..sbr, 0.0..cap, mid - stw / 2., ovs).stroked(stw))
+        .or_outlines(NineShape::new(sbl..sbr, 0.0..cap, mid - stw / 2., ovs).stroked(stw))
         .build()
 }
 
