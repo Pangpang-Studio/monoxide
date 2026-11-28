@@ -107,11 +107,27 @@ impl SpiroInst {
         self
     }
 
+    /// Set the fraction of the local stroke width to the left of this knot.
+    /// Values outside 0..=1 place both edges on the same side of the path.
+    /// Between marked knots the fraction varies linearly with arc length.
     pub fn aligned(mut self, align: impl IntoStrokeAlignment) -> Self {
         self.opts.alignment = Some(align.into_alignment());
         self
     }
 
+    /// Multiply the base stroke width here. Width and alignment interpolate
+    /// independently, so either can be set without adding an anchor for the
+    /// other.
+    ///
+    /// ```
+    /// use monoxide_script::prelude::*;
+    ///
+    /// let stroke = SpiroBuilder::open().insts([
+    ///     g4!(0., 0.).width(0.6).aligned(0.2),
+    ///     g4!(0.4, 0.7),
+    ///     g4!(1., 0.3).width(1.4).aligned(0.8),
+    /// ]).stroked(0.08);
+    /// ```
     pub fn width(mut self, width: f64) -> Self {
         self.opts.width_factor = Some(width);
         self

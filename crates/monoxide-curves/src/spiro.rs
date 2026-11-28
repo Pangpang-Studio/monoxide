@@ -22,20 +22,20 @@ pub struct SpiroCurve {
     pub tangents: BTreeMap<usize, Point2D>,
 
     /// The factor by which the width of the stroke is multiplied.
-    /// If not provided, interpolates between surrounding points.
+    /// Between marked knots, this varies linearly with centerline arc length.
     ///
     /// If no points to interpolate, the value is the same as 1.0.
     pub width_factors: BTreeMap<usize, f64>,
 
     /// The alignment of the stroke at this point.
-    /// If not provided, interpolates between surrounding points.
+    /// Between marked knots, this varies linearly with centerline arc length.
     /// If no points to interpolate, the value is the same as 0.5.
     ///
     /// # Value interpretation
     ///
     /// At the tangent at this point, the distance between the control point
     /// and the left edge of the stroke is `strokewidth * self.0`. This value
-    /// it not limited to `0 <= x <= 1`, so that the stroke can be placed
+    /// is not limited to `0 <= x <= 1`, so that the stroke can be placed
     /// outside the curve if needed.
     ///
     /// Quick lookup:

@@ -13,7 +13,7 @@ pub struct SolvedStrokeAttrs {
     /// Width factor relative to the default width of the stroke.
     pub width_factors: Vec<f64>,
     /// Represents the position of the control point within the normal, left=0,
-    /// right=1. See [`StrokeAlignment`].
+    /// right=1. See [`SpiroCurve::alignment`].
     pub alignments: Vec<f64>,
 }
 
@@ -68,7 +68,7 @@ fn calc_curve_lengths(
     cubic: &CubicBezier,
     indices: &[usize],
 ) -> Result<Vec<f64>> {
-    let max_error = 0.001;
+    let max_error = super::offset::ACCURACY * 0.1;
     let mut lengths = Vec::with_capacity(curve.len());
     let arclen = |seg| PathSeg::from(cubic.segment(seg).unwrap()).arclen(max_error);
     for &[from, to] in indices.array_windows() {

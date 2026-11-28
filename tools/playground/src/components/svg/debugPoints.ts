@@ -11,7 +11,7 @@ export function generateDebugPoints(
 ): SvgDebugPointInfo[] {
   const points: SvgDebugPointInfo[] = []
 
-  if (part.kind.t == 'spiro' || part.kind.t == 'stroke') {
+  if (part.kind.t == 'spiro') {
     for (const curve of part.kind.curve) debugSpiro(curve, points)
   } else {
     if (part.kind.t == 'cubic-bezier' || part.kind.t == 'transform') {
