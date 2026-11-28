@@ -3,7 +3,7 @@
 
 mod exchange;
 
-use kurbo::{Affine, CubicBez, Line, ParamCurve, PathEl, PathSeg};
+use kurbo::{Affine, CubicBez, Line, ParamCurve, ParamCurveDeriv, PathEl, PathSeg, Vec2};
 use serde::{Deserialize, Serialize};
 
 use crate::point::Point2D;
@@ -70,6 +70,25 @@ impl From<CubicSegmentFull> for PathSeg {
             }
         }
     }
+}
+
+pub(crate) fn unit_tangent(seg: PathSeg, t: f64) -> Option<Vec2> {
+    if let PathSeg::Line(line) = seg {
+        return (line.p0 != line.p1).then(|| (line.p1 - line.p0).normalize());
+    }
+    let cubic = seg.to_cubic();
+    let velocity = cubic.deriv();
+    let derivative = velocity.eval(t).to_vec2();
+    if derivative != Vec2::ZERO {
+        return Some(derivative.normalize());
+    }
+    // A repeated control handle has zero velocity. Use the first nonzero
+    // derivative, taking the incoming limit at the end of the segment.
+    let acceleration = velocity.deriv().eval(t).to_vec2();
+    if acceleration != Vec2::ZERO {
+        return Some(if t == 1. { -acceleration } else { acceleration }.normalize());
+    }
+    (cubic.p3 != cubic.p0).then(|| (cubic.p3 - cubic.p0).normalize())
 }
 
 /// Represents a cubic bezier path: a single contour made of line and cubic
@@ -147,6 +166,18 @@ impl CubicBezier {
     /// segment.
     pub fn point_at(&self, segment: usize, t: f64) -> Point2D {
         PathSeg::from(self.segment(segment).expect("segment index out of bounds")).eval(t)
+    }
+
+    /// Unit tangent in the direction of travel on a segment, at `t` in 0..=1.
+    /// At stationary points use the outgoing limit, or the incoming limit at
+    /// the end. A missing or constant segment has no tangent.
+    pub fn tangent_at(&self, segment: usize, t: f64) -> Option<Vec2> {
+        unit_tangent(self.segment(segment)?.into(), t)
+    }
+
+    /// Unit left normal at the same position as [`Self::point_at`].
+    pub fn normal_at(&self, segment: usize, t: f64) -> Option<Vec2> {
+        self.tangent_at(segment, t).map(Vec2::turn_90)
     }
 
     /// Applies the given affine transformation to the cubic bezier curve.
@@ -350,4 +381,19 @@ fn test_cubic_bezier_interpolation() {
     assert_eq!(points[1], Point2D::new(0.1, 0.));
     assert_eq!(points[11], Point2D::new(1., 0.));
     assert_eq!(points[21], Point2D::new(2., 2.));
+}
+
+#[test]
+fn tangents_and_normals_at_curves_and_stationary_endpoints() {
+    let mut curve = CubicBezier::builder(Point2D::ORIGIN);
+    curve
+        .curve_to((0., 1.).into(), (1., 1.).into(), (1., 0.).into())
+        .curve_to((1., 0.).into(), (2., 0.).into(), (2., 0.).into())
+        .line_to((2., 0.).into());
+    let curve = curve.build();
+    assert_eq!(curve.tangent_at(0, 0.5), Some(Vec2::new(1., 0.)));
+    assert_eq!(curve.normal_at(0, 0.5), Some(Vec2::new(0., 1.)));
+    assert_eq!(curve.tangent_at(1, 0.), Some(Vec2::new(1., 0.)));
+    assert_eq!(curve.tangent_at(1, 1.), Some(Vec2::new(1., 0.)));
+    assert_eq!(curve.normal_at(2, 0.5), None);
 }

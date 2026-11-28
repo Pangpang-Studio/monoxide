@@ -3,13 +3,15 @@
 
 use kurbo::{CubicBez, ParamCurve, ParamCurveArclen, ParamCurveDeriv, PathSeg, Point, Vec2};
 
-use crate::{CubicBezier, CubicSegment, debug::CurveDebugger};
+use super::cap::{Cap, cut_edge};
+use crate::{CubicBezier, CubicSegment, cube::unit_tangent, debug::CurveDebugger};
 
 /// Smaller than one tenth of a unit at 2048 units per em.
 pub(super) const ACCURACY: f64 = 1e-5;
 
 #[derive(Clone, Copy)]
 pub(super) struct Knot {
+    pub point: Point,
     pub segment: usize,
     pub width: f64,
     pub alignment: f64,
@@ -20,8 +22,6 @@ pub(super) struct Knot {
 struct Section {
     width: f64,
     alignment: f64,
-    // Tangential travel per unit of normal displacement, for an oblique cut.
-    skew: f64,
 }
 
 impl Section {
@@ -29,58 +29,31 @@ impl Section {
         Self {
             width: self.width + (other.width - self.width) * t,
             alignment: self.alignment + (other.alignment - self.alignment) * t,
-            skew: self.skew + (other.skew - self.skew) * t,
         }
     }
 }
 
-fn tangent(seg: PathSeg, t: f64) -> Vec2 {
-    if let PathSeg::Line(line) = seg {
-        return (line.p1 - line.p0).normalize();
-    }
-    let cubic = seg.to_cubic();
-    let velocity = cubic.deriv();
-    let derivative = velocity.eval(t).to_vec2();
-    if derivative != Vec2::ZERO {
-        return derivative.normalize();
-    }
-    // A repeated control handle has zero velocity. Use the first nonzero
-    // derivative, taking the incoming limit at the end of the segment.
-    let acceleration = velocity.deriv().eval(t).to_vec2();
-    if acceleration != Vec2::ZERO {
-        return if t == 1. { -acceleration } else { acceleration }.normalize();
-    }
-    (cubic.p3 - cubic.p0).normalize()
-}
-
-/// The same cut must meet both incident edges at the knot. A miter uses the
-/// angle bisector. At near-reversals it would be unbounded, so each side
-/// keeps its own normal and the two endpoints form a bevel.
-fn section(knot: Knot, tangent: Vec2, adjacent: Option<Vec2>) -> Section {
-    let skew = match (knot.heading, adjacent) {
-        // Both incident spans terminate on the same cut line. Their projected
-        // offsets can differ, giving e.g. a flat crown on a diagonal join.
-        (Some(h), _) if h.dot(tangent).abs() > 1e-8 => h.turn_90().dot(tangent) / h.dot(tangent),
-        (_, Some(other)) if other.dot(tangent) < 1. - 1e-8 => {
-            let denominator = 1. + other.dot(tangent);
-            // Limit the miter to four times the side's offset.
-            if denominator >= 2. / 4_f64.powi(2) {
-                other.turn_90().dot(tangent) / denominator
-            } else {
-                0.
-            }
+impl Knot {
+    fn section(self) -> Section {
+        Section {
+            width: self.width,
+            alignment: self.alignment,
         }
-        _ => 0.,
-    };
-    Section {
-        width: knot.width,
-        alignment: knot.alignment,
-        skew,
+    }
+
+    /// The angle bisector gives a miter at an unmarked corner. Beyond four
+    /// times the side offset each span keeps its normal, producing a bevel.
+    fn cut_heading(self, tangent: Vec2, adjacent: Option<Vec2>) -> Option<Vec2> {
+        self.heading.or_else(|| {
+            let other = adjacent?;
+            let dot = other.dot(tangent);
+            (dot < 1. - 1e-8 && 1. + dot >= 2. / 4_f64.powi(2))
+                .then(|| (other + tangent).normalize())
+        })
     }
 }
 
-/// One side of one centerline segment. The cut vector always has unit
-/// projection on the normal, including when a heading tilts the cut.
+/// One side of one centerline segment, measured on its local normal.
 struct Edge {
     segment: PathSeg,
     length: f64,
@@ -112,17 +85,16 @@ impl Edge {
         };
         let speed = velocity.hypot();
         let tan = if speed == 0. {
-            tangent(seg, t)
+            unit_tangent(seg, t).unwrap()
         } else {
             velocity / speed
         };
         let normal = tan.turn_90();
-        let cut = normal + tan * section.skew;
         let alignment = section.alignment - self.side;
         let offset = section.width * alignment;
-        let point = seg.eval(t) + cut * offset;
+        let point = seg.eval(t) + normal * offset;
 
-        // Differentiate center + cut * offset. Matching the actual edge
+        // Differentiate center + normal * offset. Matching the actual edge
         // tangents avoids small loops at horizontal and vertical extrema.
         let du = speed / self.length;
         let d_offset = du
@@ -133,9 +105,10 @@ impl Edge {
         } else {
             Vec2::ZERO
         };
-        let d_cut =
-            d_tan.turn_90() + d_tan * section.skew + tan * (du * (self.end.skew - self.start.skew));
-        (point, velocity + d_cut * offset + cut * d_offset)
+        (
+            point,
+            velocity + d_tan.turn_90() * offset + normal * d_offset,
+        )
     }
 
     /// Fit a cubic Hermite segment and split wherever the sampled edge
@@ -201,47 +174,66 @@ pub(super) fn outline(
         let next = spans
             .get(i + 1)
             .or_else(|| if closed { spans.first() } else { None });
-        let start_section = section(
-            *start,
-            tangent(segments[*range.start()], 0.),
-            prev.map(|(_, _, r)| tangent(segments[*r.end()], 1.)),
+        let first = segments[*range.start()];
+        let last = segments[*range.end()];
+        let incoming = unit_tangent(first, 0.).unwrap();
+        let outgoing = unit_tangent(last, 1.).unwrap();
+        let start_heading = start.cut_heading(
+            incoming,
+            prev.and_then(|(_, _, r)| unit_tangent(segments[*r.end()], 1.)),
         );
-        let end_section = section(
-            *end,
-            tangent(segments[*range.end()], 1.),
-            next.map(|(_, _, r)| tangent(segments[*r.start()], 0.)),
+        let end_heading = end.cut_heading(
+            outgoing,
+            next.and_then(|(_, _, r)| unit_tangent(segments[*r.start()], 0.)),
         );
+        let mut edges = [0., 1.].map(|side| CubicBezier {
+            start: first.start() + incoming.turn_90() * (start.width * (start.alignment - side)),
+            segments: vec![],
+            closed: false,
+        });
         let length: f64 = lengths[range.clone()].iter().sum();
         let mut distance = 0.;
         for j in range.clone().filter(|&j| lengths[j] > 0.) {
             let seg = segments[j];
-            let start = start_section.lerp(end_section, distance / length);
+            let from = start.section().lerp(end.section(), distance / length);
             distance += lengths[j];
-            let end = start_section.lerp(end_section, distance / length);
-            for (side, path) in sides.iter_mut().enumerate() {
+            let to = start.section().lerp(end.section(), distance / length);
+            for (side, path) in edges.iter_mut().enumerate() {
                 let edge = Edge {
                     segment: seg,
                     length: lengths[j],
-                    start,
-                    end,
+                    start: from,
+                    end: to,
                     side: side as f64,
                 };
-                let from = edge.sample(0.).0;
-                let path = path.get_or_insert_with(|| CubicBezier {
-                    start: from,
-                    segments: vec![],
-                    closed,
-                });
-                if let Some(last) = path.segments.last()
-                    && last.last_point().distance(from) > ACCURACY * 0.01
-                {
-                    path.segments.push(CubicSegment::Line(from));
-                }
                 edge.fit(0., 1., 0, &mut path.segments);
-                if side == 1 && j == *range.start() {
-                    dbg.line(seg.start(), from, format_args!(""));
-                }
             }
+        }
+
+        for (side, mut edge) in edges.into_iter().enumerate() {
+            if start_heading.is_some() || end_heading.is_some() {
+                cut_edge(
+                    &mut edge,
+                    Cap::new(start.point, incoming, start_heading),
+                    Cap::new(end.point, -outgoing, end_heading),
+                );
+            }
+            if side == 1 {
+                dbg.line(first.start(), edge.start, format_args!(""));
+            }
+            let path = sides[side].get_or_insert_with(|| CubicBezier {
+                start: edge.start,
+                segments: vec![],
+                closed,
+            });
+            let tip = path
+                .segments
+                .last()
+                .map_or(path.start, CubicSegment::last_point);
+            if tip.distance(edge.start) > ACCURACY * 0.01 {
+                path.segments.push(CubicSegment::Line(edge.start));
+            }
+            path.segments.extend(edge.segments);
         }
     }
     let [Some(mut left), Some(right)] = sides else {
@@ -258,7 +250,11 @@ pub(super) fn outline(
     };
     for outline in &mut outlines {
         // TrueType omits the final on-curve point of a closed contour.
-        if outline.segments.last().unwrap().last_point() != outline.start {
+        if outline
+            .segments
+            .last()
+            .is_some_and(|s| s.last_point() != outline.start)
+        {
             outline.segments.push(CubicSegment::Line(outline.start));
         }
     }

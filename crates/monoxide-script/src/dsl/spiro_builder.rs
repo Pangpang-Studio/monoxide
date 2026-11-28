@@ -104,6 +104,9 @@ macro_rules! curl {
 impl SpiroInst {
     /// Orient the cross section perpendicular to this heading. At a corner
     /// both incident spans meet the same cut line, for example a flat crown.
+    /// At an open end the line cuts the offset edges through the authored
+    /// endpoint. The extended side continues along its edge tangent.
+    /// A heading perpendicular to travel falls back to a butt cap.
     pub fn heading(mut self, pt: impl Into<Point2D>) -> Self {
         self.opts.heading = Some(pt.into());
         self

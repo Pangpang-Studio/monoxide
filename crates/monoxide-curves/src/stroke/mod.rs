@@ -11,6 +11,7 @@ use crate::{
     spiro::{SpiroCurve, default_alignment},
 };
 
+mod cap;
 mod offset;
 mod widths;
 
@@ -58,6 +59,7 @@ pub fn stroke_spiro(
         .into_iter()
         .enumerate()
         .map(|(i, segment)| Knot {
+            point: curve.points[i].proj(kurbo::Point::new),
             segment,
             width: width * attrs.width_factors[i],
             alignment: attrs.alignments[i],
@@ -81,8 +83,18 @@ pub fn stroke_bezier(
     {
         segments.push(PathSeg::Line(kurbo::Line::new(last.end(), curve.start)));
     }
-    let knots: Vec<_> = (0..segments.len() + usize::from(!curve.closed))
-        .map(|segment| Knot {
+    let knots: Vec<_> = segments
+        .iter()
+        .map(ParamCurve::start)
+        .chain(
+            segments
+                .last()
+                .filter(|_| !curve.closed)
+                .map(ParamCurve::end),
+        )
+        .enumerate()
+        .map(|(segment, point)| Knot {
+            point,
             segment,
             width,
             alignment: default_alignment(),
@@ -167,6 +179,64 @@ mod tests {
         assert!((outline[0].to_kurbo().area() + 4.).abs() < 1e-6);
     }
 
+    // A tilted cap used to move an entire span's edge tangentially. Its inner
+    // endpoint must be on the original offset, and its cut line must pass
+    // through the authored knot.
+    #[test]
+    fn oblique_cap_intersects_the_curved_edge() {
+        use SpiroCpTy::*;
+        let mut curve = SpiroCurve::from(vec![
+            Open.at((0., 0.)),
+            G4.at((0.4, 0.4)),
+            EndOpen.at((0.8, 0.)),
+        ]);
+        let center = crate::convert::spiro_to_cube(&curve.points)
+            .unwrap()
+            .remove(0);
+        let tan = center.tangent_at(0, 0.).unwrap();
+        let normal = center.normal_at(0, 0.).unwrap();
+        let heading = (tan + normal * 0.8).normalize();
+        curve.tangents.insert(0, heading.to_point());
+        let outline = stroke_spiro(&curve, 0.1, &mut ()).unwrap();
+
+        let right = |t| center.point_at(0, t) - center.normal_at(0, t).unwrap() * 0.05;
+        let distance = |t| (right(t) - center.start).dot(heading);
+        assert!(distance(0.) < 0. && distance(1.) > 0.);
+        let (mut lo, mut hi) = (0.0_f64, 1.0_f64);
+        for _ in 0..48 {
+            let mid = lo.midpoint(hi);
+            if distance(mid) < 0. {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        assert_on_outline(&outline, right(hi));
+        assert_on_outline(&outline, right(hi.midpoint(1.)));
+        assert_on_outline(&outline, center.start + normal * 0.05 - tan * 0.04);
+        let cap = outline[0].segment_iter().any(|s| {
+            s.rest.is_line()
+                && (s.start - center.start).dot(heading).abs() < 1e-8
+                && (s.rest.last_point() - center.start).dot(heading).abs() < 1e-8
+                && s.start.distance(s.rest.last_point()) > 0.09
+        });
+        assert!(cap);
+    }
+
+    #[test]
+    fn short_stroke_can_be_cut_on_the_opposite_extension() {
+        use SpiroCpTy::*;
+        let mut curve = SpiroCurve::from(vec![Open.at((0., 0.)), EndOpen.at((0.1, 0.))]);
+        let heading = kurbo::Vec2::new(1., 1.).normalize().to_point();
+        curve.tangents.extend([(0, heading), (1, heading)]);
+        let outline = stroke_spiro(&curve, 0.5, &mut ()).unwrap();
+        assert_eq!(outline.len(), 1);
+        assert!((outline[0].to_kurbo().area() + 0.05).abs() < 1e-8);
+        for p in [(-0.25, 0.25), (-0.15, 0.25), (0.25, -0.25), (0.35, -0.25)] {
+            assert_on_outline(&outline, p.into());
+        }
+    }
+
     #[test]
     fn heading_at_a_corner_cuts_both_spans_on_the_same_line() {
         use SpiroCpTy::*;
@@ -181,6 +251,23 @@ mod tests {
         assert_eq!(outline.len(), 1);
         assert!((outline[0].to_kurbo().bounding_box().y1 - 1.).abs() < 2e-6);
         assert_on_outline(&outline, (0.5, 1.).into());
+    }
+
+    #[test]
+    fn a_miter_keeps_the_varying_offset_on_its_incident_line() {
+        use SpiroCpTy::*;
+        let mut curve = SpiroCurve::from(vec![
+            Open.at((0., 0.)),
+            Corner.at((1., 0.)),
+            EndOpen.at((1., 1.)),
+        ]);
+        curve.alignment.extend([(0, 0.1), (1, 0.9)]);
+        let outline = stroke_spiro(&curve, 0.2, &mut ()).unwrap();
+        for x in [0.25, 0.5, 0.75] {
+            let left = 0.2 * (0.1 + 0.8 * x);
+            assert_on_outline(&outline, (x, left).into());
+            assert_on_outline(&outline, (x, left - 0.2).into());
+        }
     }
 
     #[test]
