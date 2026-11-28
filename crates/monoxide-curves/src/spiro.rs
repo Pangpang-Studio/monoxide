@@ -15,27 +15,26 @@ use crate::point::Point2D;
 pub struct SpiroCurve {
     pub points: Vec<SpiroCp>,
 
-    /// The overridden tangents at each point. This overrides both the in and
-    /// out tangents at the point. (It makes no sense overriding only one, since
-    /// that would make an angled corner with at least one edge with the wrong
-    /// stroke width, which is almost always undesirable.)
+    /// Optional stroke headings at the knots. These orient the stroke's
+    /// cross-section without changing the underlying curve. Headings at
+    /// corners are ignored.
     pub tangents: BTreeMap<usize, Point2D>,
 
     /// The factor by which the width of the stroke is multiplied.
-    /// If not provided, interpolates between surrounding points.
+    /// If not provided, interpolates between surrounding points by arc length.
     ///
     /// If no points to interpolate, the value is the same as 1.0.
     pub width_factors: BTreeMap<usize, f64>,
 
     /// The alignment of the stroke at this point.
-    /// If not provided, interpolates between surrounding points.
+    /// If not provided, interpolates between surrounding points by arc length.
     /// If no points to interpolate, the value is the same as 0.5.
     ///
     /// # Value interpretation
     ///
     /// At the tangent at this point, the distance between the control point
-    /// and the left edge of the stroke is `strokewidth * self.0`. This value
-    /// it not limited to `0 <= x <= 1`, so that the stroke can be placed
+    /// and the left edge of the stroke is `strokewidth * alignment`. This value
+    /// is not limited to `0 <= x <= 1`, so that the stroke can be placed
     /// outside the curve if needed.
     ///
     /// Quick lookup:
@@ -53,7 +52,7 @@ pub struct SpiroCurve {
     /// |--x--|        |
     /// |-----w--------|
     ///
-    /// self.0 = x / w
+    /// alignment = x / w
     /// ```
     pub alignment: BTreeMap<usize, f64>,
 }

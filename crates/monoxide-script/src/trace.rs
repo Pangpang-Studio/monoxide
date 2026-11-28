@@ -58,7 +58,7 @@ pub trait EvalTracer {
         &mut self,
         parent: Self::Id,
         width: f64,
-        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+        beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id
     where
         Self: 'b;
@@ -137,7 +137,7 @@ impl EvalTracer for () {
         &mut self,
         _parent: Self::Id,
         _width: f64,
-        _spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
+        _beziers: impl IntoIterator<Item = &'b CubicBezier>,
     ) -> Self::Id {
         NoId
     }

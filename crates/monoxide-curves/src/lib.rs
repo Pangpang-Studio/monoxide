@@ -3,7 +3,8 @@
 //! This crate is a thin wrapper around [`kurbo`]'s curve and geometry types.
 //! It re-exports [`kurbo::Point`] as [`point::Point2D`] and layers a small
 //! amount of domain-specific functionality on top of `kurbo`, most notably
-//! stroking a curve with per-point width/alignment control (see [`stroke`]).
+//! stroking curves into Bézier outlines with per-point width/alignment control
+//! (see [`stroke`]).
 pub mod convert;
 pub mod cube;
 pub mod debug;

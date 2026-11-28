@@ -78,6 +78,11 @@ And if you want to edit the Rust part outside of `monoxide-font`:
 
 See `cargo xtask dev --help` for more knobs to tweak.
 
+Stroke expansion uses Kurbo and produces cubic Bézier outlines. Spiro strokes
+retain per-knot width, directional alignment, and heading controls; unspecified
+widths and alignments are interpolated along the curve. Bézier outlines can also
+be stroked, including after a transformation.
+
 ## Distribution
 
 To generate a TTF file from the current design, run:

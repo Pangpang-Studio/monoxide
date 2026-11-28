@@ -119,7 +119,7 @@ pub enum ConstructionKind {
     Stroke {
         parent: usize,
         width: f64,
-        curve: Vec<Vec<SerializeSpiroPoint>>,
+        curve: Vec<CubicBezier>,
     },
     Transform {
         parent: usize,
