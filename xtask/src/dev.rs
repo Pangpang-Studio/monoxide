@@ -253,6 +253,9 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
             .current_dir(dir)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
+            // Vite reads the TTY for its CLI shortcuts. If it outlives us, it would be left in the
+            // background and die with `read EIO`.
+            .stdin(Stdio::null());
 
         let mut child = cmd.spawn().expect("Failed to run pnpm dev");
 
