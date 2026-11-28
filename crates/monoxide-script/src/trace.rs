@@ -54,14 +54,7 @@ pub trait EvalTracer {
     ) -> Self::Id
     where
         Self: 'b;
-    fn stroked<'b>(
-        &mut self,
-        parent: Self::Id,
-        width: f64,
-        spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
-    ) -> Self::Id
-    where
-        Self: 'b;
+    fn stroked(&mut self, parent: Self::Id, width: f64) -> Self::Id;
     fn transformed<'b>(
         &mut self,
         parent: Self::Id,
@@ -133,12 +126,7 @@ impl EvalTracer for () {
         NoId
     }
 
-    fn stroked<'b>(
-        &mut self,
-        _parent: Self::Id,
-        _width: f64,
-        _spiros: impl IntoIterator<Item = &'b [monoxide_spiro::SpiroCp]>,
-    ) -> Self::Id {
+    fn stroked(&mut self, _parent: Self::Id, _width: f64) -> Self::Id {
         NoId
     }
 

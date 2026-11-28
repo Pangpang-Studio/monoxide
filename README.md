@@ -35,7 +35,9 @@ After all, who doesn't love the ouroboros?
 
 So far, we have achieved the first working version of:
 
-- A Rust-based eDSL to describe the typeface design.
+- A Rust-based eDSL to describe the typeface design. Spiro strokes support
+  per-knot widths, alignments, and headings. Both Spiro and Bézier paths can
+  be stroked into cubic Bézier outlines.
 - A backend that can generate real TTF files.
 - A hot-reloadable playground powered by Axum and Vue for editing the design
   and previewing the results in real time.

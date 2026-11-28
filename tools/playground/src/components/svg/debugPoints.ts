@@ -11,7 +11,7 @@ export function generateDebugPoints(
 ): SvgDebugPointInfo[] {
   const points: SvgDebugPointInfo[] = []
 
-  if (part.kind.t == 'spiro' || part.kind.t == 'stroke') {
+  if (part.kind.t == 'spiro') {
     for (const curve of part.kind.curve) debugSpiro(curve, points)
   } else {
     if (part.kind.t == 'cubic-bezier' || part.kind.t == 'transform') {
@@ -46,7 +46,6 @@ function debugSpiro(curve: SerializeSpiroPoint[], points: SvgDebugPointInfo[]) {
 }
 
 function debugCubicBezier(curve: CubicBezier, points: SvgDebugPointInfo[]) {
-  console.log(curve)
   if (curve.segments.length === 0) return
 
   {
@@ -82,8 +81,12 @@ function debugCubicBezier(curve: CubicBezier, points: SvgDebugPointInfo[]) {
       // pass
     }
     if (j === curve.segments.length - 1) {
-      if (curve.closed) {
-        // pass, we already added the start point
+      if (
+        curve.closed &&
+        segment.p2.x === curve.start.x &&
+        segment.p2.y === curve.start.y
+      ) {
+        // The starting point is already visible.
       } else {
         points.push({
           x: segment.p2.x,

@@ -7,8 +7,9 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-itertools.workspace = true
 kurbo.workspace = true
+kurbo-se.workspace = true
+linesweeper.workspace = true
 monoxide-spiro.workspace = true
 serde.workspace = true
 thiserror.workspace = true
