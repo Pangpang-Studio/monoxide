@@ -8,7 +8,7 @@ use crate::{
     glyph::{j::JShape, n::Hook},
     math::mix,
     prelude::*,
-    shape::{Rect, Slash, SlashAlignment},
+    shape::Rect,
 };
 
 pub fn a(cx: &InputContext) -> Glyph {
@@ -29,12 +29,12 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
 
     let bar_height = 0.65;
 
-    let left = Slash::new(sbl..mid, 0.0..cap).with_aln(SlashAlignment::symm(0.5));
-    let right = Slash {
-        xr: mid..sbr,
-        ..left.clone()
-    }
-    .back();
+    let foot = |x| corner!(x, 0.).heading(Dir::U).width(1.).aligned(0.4);
+    let legs = SpiroBuilder::open().insts([
+        foot(sbl),
+        corner!(mid, cap).heading(Dir::U).width(0.9).aligned(0.5),
+        foot(sbr),
+    ]);
 
     let bar = Rect::new(
         mix(Point2D::new(sbl, 0.), (mid, cap).into(), bar_height),
@@ -42,11 +42,7 @@ pub fn a_cap(cx: &InputContext) -> Glyph {
     );
 
     Glyph::builder()
-        .or_outlines([
-            left.stroked(stw),
-            right.stroked(stw),
-            bar.stroked(stw).into_outline(),
-        ])
+        .or_outlines([legs.stroked(stw), bar.stroked(stw).into_outline()])
         .build()
 }
 

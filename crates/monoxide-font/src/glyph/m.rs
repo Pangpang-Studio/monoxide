@@ -4,11 +4,8 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    dir::Alignment,
-    glyph::{
-        o::{IOShape, OShape},
-        w::{Chevron, WShape},
-    },
+    dir::{Alignment, Dir},
+    glyph::o::{IOShape, OShape},
     math::mix,
     prelude::*,
     shape::Rect,
@@ -23,24 +20,29 @@ pub fn m(cx: &InputContext) -> Glyph {
 pub fn m_cap(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
         sbl,
+        sbr,
         mid,
         stw,
         xh,
         cap,
         ..
     } = cx.settings().view();
+    let left = sbl + stw * 0.3;
+    let right = sbr - stw * 0.3;
+    let foot = |x| corner!(x, 0.).width(1.1).aligned(0.5);
+    let shoulder = |x| corner!(x, cap).heading(Dir::U).width(1.).aligned(0.53);
+    let stem = SpiroBuilder::open().insts([
+        foot(left),
+        shoulder(left),
+        corner!(mid, cap - xh)
+            .heading(Dir::U)
+            .width(0.8)
+            .aligned(0.5),
+        shoulder(right),
+        foot(right),
+    ]);
 
-    let chevron = Chevron::new(sbl..mid, 0.0..cap, 0.2, xh / cap)
-        .with_mid_scale(0.)
-        .with_bot_width_scale(1.);
-
-    Glyph::builder()
-        .or_outlines(
-            WShape::from(chevron)
-                .stroked(stw)
-                .transformed(Affine2D::reflect((0., cap / 2.), (1., 0.))),
-        )
-        .build()
+    Glyph::builder().outline(stem.stroked(stw)).build()
 }
 
 struct MShape {
