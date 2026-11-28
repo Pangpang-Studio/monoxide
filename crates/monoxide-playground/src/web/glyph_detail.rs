@@ -234,24 +234,9 @@ impl EvalTracer for GlyphDetailTracer {
         id
     }
 
-    fn stroked<'b>(
-        &mut self,
-        parent: Self::Id,
-        width: f64,
-        spiros: impl IntoIterator<Item = &'b [SpiroCp]>,
-    ) -> Self::Id
-    where
-        Self: 'b,
-    {
+    fn stroked(&mut self, parent: Self::Id, width: f64) -> Self::Id {
         let (ser, id) = self.allocate_next();
-        ser.kind = ConstructionKind::Stroke {
-            parent,
-            width,
-            curve: spiros
-                .into_iter()
-                .map(|s| s.iter().cloned().map(|x| x.into()).collect())
-                .collect(),
-        };
+        ser.kind = ConstructionKind::Stroke { parent, width };
         id
     }
 

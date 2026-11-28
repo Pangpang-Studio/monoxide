@@ -1,7 +1,10 @@
-use itertools::{Itertools, chain};
+use itertools::Itertools;
 use linesweeper::{BinaryOp, FillRule, binary_op};
 use monoxide_curves::{
-    CubicBezier, SpiroCurve, convert::spiro_to_cube, stroke::StrokedSpiroCurve, xform::AffineExt,
+    CubicBezier, SpiroCurve,
+    convert::spiro_to_cube,
+    stroke::{stroke_bezier, stroke_spiro},
+    xform::AffineExt,
 };
 
 use crate::{ast::OutlineExpr, trace::EvalTracer};
@@ -14,24 +17,8 @@ pub fn eval_outline<E: EvalTracer>(
     out: &mut Vec<CubicBezier>,
     dbg: &mut E,
 ) -> EvalResult<E, E::Id> {
-    let evaled = eval_outline_internal(expr, dbg)?;
-    let id = match evaled.kind {
-        EvalValueKind::Beziers(beziers) => {
-            out.extend(beziers);
-            evaled.id
-        }
-        EvalValueKind::Spiros(spiros) => {
-            let output_size_before = out.len();
-            let id = dbg.spiro_to_bezier(evaled.id);
-            for spiro in spiros {
-                let bez = spiro_to_cube(&spiro.points).map_err(|e| EvalError::CurveError(id, e))?;
-                out.extend(bez);
-            }
-            dbg.intermediate_output(id, &out[output_size_before..]);
-            id
-        }
-    };
-
+    let (id, beziers) = eval_outline_internal(expr, dbg)?.force_bezier(dbg)?;
+    out.extend(beziers);
     Ok(id)
 }
 
@@ -39,7 +26,7 @@ pub fn eval_outline<E: EvalTracer>(
 #[derive(Debug, Clone)]
 pub enum EvalValueKind {
     Beziers(Vec<CubicBezier>),
-    Spiros(Vec<SpiroCurve>),
+    Spiro(SpiroCurve),
 }
 
 #[derive(Debug, Clone)]
@@ -58,7 +45,7 @@ impl<Id: Copy> EvalValue<Id> {
 
     pub fn spiro(spiro: SpiroCurve, id: Id) -> Self {
         Self {
-            kind: EvalValueKind::Spiros(vec![spiro]),
+            kind: EvalValueKind::Spiro(spiro),
             id,
         }
     }
@@ -69,15 +56,9 @@ impl<Id: Copy> EvalValue<Id> {
     {
         Ok(match self.kind {
             EvalValueKind::Beziers(beziers) => (self.id, beziers),
-            EvalValueKind::Spiros(spiros) => {
-                let mut beziers = vec![];
+            EvalValueKind::Spiro(spiro) => {
                 let id = dbg.spiro_to_bezier(self.id);
-                for spiro in &spiros {
-                    let bez =
-                        spiro_to_cube(&spiro.points).map_err(|e| EvalError::CurveError(id, e))?;
-                    beziers.extend(bez);
-                }
-                dbg.intermediate_output(id, &beziers);
+                let beziers = eval_to_bez(id, &spiro, dbg)?;
                 (id, beziers)
             }
         })
@@ -86,11 +67,6 @@ impl<Id: Copy> EvalValue<Id> {
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum EvalError<Id> {
-    #[error(
-        "bezier stroking unimplemented at {0}: try putting `.transformed()` before `.stroked()`"
-    )]
-    StrokingABezier(Id),
-
     #[error("boolean operation error at {0}: {1}")]
     Boolean(Id, #[source] linesweeper::Error),
 
@@ -107,7 +83,9 @@ fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> Eval
         OutlineExpr::Spiro(spiro) => {
             let id = dbg.constructed_spiro(&spiro.points);
             // convert to beziers if needed
-            eval_to_bez(id, spiro, dbg)?;
+            if E::needs_evaluate_intermediate() {
+                eval_to_bez(id, spiro, dbg)?;
+            }
             Ok(EvalValue::spiro(spiro.clone(), id))
         }
         OutlineExpr::Bool(op, lhs, rhs) => {
@@ -115,11 +93,7 @@ fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> Eval
                 let evaled = eval_outline_internal(outline, dbg)?;
                 let bez = match evaled.kind {
                     EvalValueKind::Beziers(bez) => bez,
-                    EvalValueKind::Spiros(spiro) => spiro
-                        .into_iter()
-                        .map(|s| eval_to_bez(evaled.id, &s, dbg))
-                        .flatten_ok()
-                        .try_collect()?,
+                    EvalValueKind::Spiro(spiro) => eval_to_bez(evaled.id, &spiro, dbg)?,
                 };
                 Ok((evaled.id, bez))
             };
@@ -127,12 +101,21 @@ fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> Eval
         }
         OutlineExpr::Stroked(outline_expr, width) => {
             let evaled = eval_outline_internal(outline_expr, dbg)?;
-            match evaled.kind {
-                EvalValueKind::Beziers(_) => Err(EvalError::StrokingABezier(evaled.id)),
-                EvalValueKind::Spiros(eval_spiros) => {
-                    eval_stroked(evaled.id, &eval_spiros, *width, dbg)
-                }
-            }
+            let id = dbg.stroked(evaled.id, *width);
+            let result: Result<Vec<_>, _> = match evaled.kind {
+                EvalValueKind::Beziers(curves) => curves
+                    .iter()
+                    .map(|c| stroke_bezier(c, *width))
+                    .flatten_ok()
+                    .try_collect(),
+                EvalValueKind::Spiro(curve) => stroke_spiro(&curve, *width),
+            };
+            let outlines = result.map_err(|e| EvalError::CurveError(id, e))?;
+            dbg.intermediate_output(id, &outlines);
+            Ok(EvalValue {
+                kind: EvalValueKind::Beziers(outlines),
+                id,
+            })
         }
         OutlineExpr::Transformed(expr, xform) => {
             let evaled = eval_outline_internal(expr, dbg)?;
@@ -186,51 +169,5 @@ fn eval_bool<E: EvalTracer>(
     Ok(EvalValue {
         kind: EvalValueKind::Beziers(merged),
         id,
-    })
-}
-
-fn eval_stroked<E: EvalTracer>(
-    evaled_id: E::Id,
-    eval_spiros: &[SpiroCurve],
-    width: f64,
-    dbg: &mut E,
-) -> EvalResult<E> {
-    // For each of the spiro curves, stroke them. This may result in
-    // more than one spiro per original spiro.
-    let id = dbg.preallocate_next();
-
-    let mut out_spiros: Vec<SpiroCurve> = vec![];
-    for spiro in eval_spiros {
-        let oc = monoxide_curves::stroke::stroke_spiro(spiro, width, &mut dbg.curve_debugger(id))
-            .map_err(|e| EvalError::CurveError(id, e))?;
-        match oc {
-            StrokedSpiroCurve::One(spiro_cps) => {
-                out_spiros.push(spiro_cps);
-            }
-            StrokedSpiroCurve::Two(first_curve, second_curve) => {
-                out_spiros.push(first_curve);
-                out_spiros.push(second_curve);
-            }
-        }
-    }
-
-    let id = dbg.stroked(
-        evaled_id,
-        width,
-        out_spiros.iter().map(|s| s.points.as_slice()),
-    );
-
-    if E::needs_evaluate_intermediate() {
-        // Convert both original spiro and the stroked spiro to beziers
-        let bezs: Vec<_> = chain!(eval_spiros, &out_spiros)
-            .map(|spiro| spiro_to_cube(&spiro.points).map_err(|e| EvalError::CurveError(id, e)))
-            .flatten_ok()
-            .try_collect()?;
-        dbg.intermediate_output(id, &bezs);
-    }
-
-    Ok(EvalValue {
-        kind: EvalValueKind::Spiros(out_spiros),
-        id, // Use the ID from dbg.stroked
     })
 }

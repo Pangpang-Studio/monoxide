@@ -1,173 +1,68 @@
-use std::{cell::LazyCell, collections::BTreeMap};
+use std::collections::BTreeMap;
 
-use itertools::Itertools;
-use kurbo::{ParamCurveArclen, PathSeg};
+use crate::error::{Error, Result};
 
-use crate::{
-    CubicBezier,
-    error::{Error, Result},
-    spiro::{SpiroCurve, default_alignment, default_width_factor},
-};
-
-pub struct SolvedStrokeAttrs {
-    /// Width factor relative to the default width of the stroke.
-    pub width_factors: Vec<f64>,
-    /// Represents the position of the control point within the normal, left=0,
-    /// right=1. See [`StrokeAlignment`].
-    pub alignments: Vec<f64>,
-}
-
-/// Determine the width factors and alignments for each point of the curve.
-///
-/// The reason why these two operations are merged into one is because we need
-/// to calculate the length of each curve segments to do interpolation. Having
-/// both calculations in one function allows us to avoid calculating the
-/// length of the curve twice.
-///
-/// Additionally, in many cases, the attributes do not need to be interpolated
-/// at all, so we can avoid the overhead of calculating the curve length
-/// entirely.
-pub fn solve_stroke_attrs(
-    curve: &SpiroCurve,
-    is_closed: bool,
-    cubic: &CubicBezier,
-    indices: &[usize],
-) -> Result<SolvedStrokeAttrs> {
-    // Lazy-evaluated curve length information.
-    //
-    // Calculating the curve length can be quite expensive, so we should avoid
-    // doing it unless we actually need to interpolate the width factors or
-    // alignments.
-    //
-    // The calculated length is for each segment of the spiro curve.
-    let curve_lengths = LazyCell::new(|| calc_curve_lengths(curve, cubic, indices).unwrap());
-
-    let width_factors = populate_with_interpolation(
-        &curve.width_factors,
-        curve.len(),
-        default_width_factor(),
-        is_closed,
-        &curve_lengths,
-    )?;
-    let alignments = populate_with_interpolation(
-        &curve.alignment,
-        curve.len(),
-        default_alignment(),
-        is_closed,
-        &curve_lengths,
-    )?;
-
-    Ok(SolvedStrokeAttrs {
-        width_factors,
-        alignments,
-    })
-}
-
-fn calc_curve_lengths(
-    curve: &SpiroCurve,
-    cubic: &CubicBezier,
-    indices: &[usize],
-) -> Result<Vec<f64>> {
-    let max_error = 0.001;
-    let mut lengths = Vec::with_capacity(curve.len());
-    let arclen = |seg| PathSeg::from(cubic.segment(seg).unwrap()).arclen(max_error);
-    for &[from, to] in indices.array_windows() {
-        lengths.push((from..to).map(arclen).sum());
-    }
-    // last segment
-    lengths.push(
-        (indices.last().copied().unwrap_or(0)..cubic.segment_count())
-            .map(arclen)
-            .sum(),
-    );
-    if lengths.len() != curve.len() {
-        return Err(Error::internal("length calculation mismatch"));
-    }
-    Ok(lengths)
-}
-
-/// Given a map with indices and their corresponding values, this function
-/// interpolates the values for every point in a curve of given length,
-/// linearly, by the actual curve length of each segment.
-//
-// This function can be further generalized to support any type representing a
-// real vector space, i.e. implementing `Add`, `Sub`, `Mul<f64>`.
-fn populate_with_interpolation(
-    map: &BTreeMap<usize, f64>,
-    len: usize,
+/// Sample a sparse knot attribute by arc length. Open ends extend the nearest
+/// value. On closed paths the interval from the last key to the first wraps
+/// through the closing segment.
+pub(super) fn at_knots(
+    keys: &BTreeMap<usize, f64>,
     default: f64,
-    is_closed: bool,
-    curve_lengths: &LazyCell<Vec<f64>, impl FnOnce() -> Vec<f64>>,
+    distances: &[f64],
+    perimeter: f64,
+    closed: bool,
 ) -> Result<Vec<f64>> {
-    if map.is_empty() {
-        return Ok(vec![default; len]);
+    let Some((&last, &last_value)) = keys.last_key_value() else {
+        return Ok(vec![default; distances.len()]);
+    };
+    if last >= distances.len() || keys.values().any(|v| !v.is_finite()) {
+        return Err(Error::InvalidStroke);
     }
-    let mut res = vec![];
-    res.reserve_exact(len);
+    let (&first, &first_value) = keys.first_key_value().unwrap();
+    Ok(distances
+        .iter()
+        .enumerate()
+        .map(|(i, &s)| {
+            let (s0, a) = keys.range(..=i).next_back().map_or(
+                (
+                    distances[last] - perimeter,
+                    if closed { last_value } else { first_value },
+                ),
+                |(&k, &a)| (distances[k], a),
+            );
+            let (s1, b) = keys.range(i..).next().map_or(
+                (
+                    distances[first] + perimeter,
+                    if closed { first_value } else { last_value },
+                ),
+                |(&k, &b)| (distances[k], b),
+            );
+            if s0 == s1 || a == b {
+                a
+            } else {
+                a + (b - a) * ((s - s0) / (s1 - s0))
+            }
+        })
+        .collect())
+}
 
-    // 0..first_index
-    let (&first_key, &first_val) = map.first_key_value().expect("checked for empty map");
-    if is_closed {
-        // Fill with placeholders; see actual filling in last_index
-        res.extend(std::iter::repeat_n(0.0, first_key));
-    } else {
-        for _ in 0..first_key {
-            res.push(first_val)
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sparse_keys_stay_at_their_knots_across_the_seam() {
+        // Accumulating the next span's length before sampling shifts each
+        // key by one knot, especially at the wraparound on a closed path.
+        let keys = BTreeMap::from([(1, 1.0), (3, 5.0)]);
+        let distances = [0., 1., 2., 5., 6.];
+        assert_eq!(
+            at_knots(&keys, 0.5, &distances, 8., false).unwrap(),
+            [1., 1., 2., 5., 5.]
+        );
+        assert_eq!(
+            at_knots(&keys, 0.5, &distances, 8., true).unwrap(),
+            [2., 1., 2., 5., 4.]
+        );
     }
-
-    // first_index..last_index
-    // Only handles the start of each segment in the loop
-    for ((&idx1, &width1), (&idx2, &width2)) in map.iter().tuple_windows() {
-        debug_assert!(idx1 < idx2);
-        if idx2 - idx1 == 1 {
-            res.push(width1);
-        } else if width1 == width2 {
-            res.extend(std::iter::repeat_n(width1, idx2 - idx1))
-        } else {
-            LazyCell::force(curve_lengths);
-            let lengths = &curve_lengths[idx1..idx2];
-            let total_len: f64 = lengths.iter().copied().sum();
-            let mut sum = 0.0;
-            for l in lengths {
-                sum += l;
-                res.push(width1 + (width2 - width1) * (sum / total_len));
-            }
-        }
-    }
-
-    // last_index..
-    let (&last_key, &last_val) = map.last_key_value().expect("checked for empty map");
-    if is_closed {
-        if first_key == 0 && last_key == len - 1 {
-            res.push(last_val);
-        } else if last_val == first_val {
-            // If the last value is the same as the first value, we can just
-            // fill the rest with that value.
-            res.extend(std::iter::repeat_n(last_val, len - res.len()));
-            for x in &mut res[..first_key] {
-                *x = last_val;
-            }
-        } else {
-            // This fills both last_index.. and 0..first_index
-            let lengths_tail = &curve_lengths[last_key..];
-            let lengths_head = &curve_lengths[..first_key];
-            let total_len: f64 = lengths_tail.iter().chain(lengths_head).copied().sum();
-            let mut sum = 0.0;
-            for l in lengths_tail {
-                sum += l;
-                res.push(last_val + (first_val - last_val) * (sum / total_len));
-            }
-            for (idx, &l) in lengths_head.iter().enumerate() {
-                sum += l;
-                res[idx] = last_val + (first_val - last_val) * (sum / total_len);
-            }
-        }
-    } else {
-        for _ in last_key..len {
-            res.push(last_val);
-        }
-    }
-
-    Ok(res)
 }

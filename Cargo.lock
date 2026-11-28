@@ -1203,6 +1203,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kurbo-se"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad20db49dd9aa44062c1067b6e9edef4c9279bc374d887beab7f641ff9d227c0"
+dependencies = [
+ "kurbo",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1398,6 +1407,8 @@ version = "0.1.0"
 dependencies = [
  "itertools",
  "kurbo",
+ "kurbo-se",
+ "linesweeper",
  "monoxide-spiro",
  "serde",
  "thiserror",
