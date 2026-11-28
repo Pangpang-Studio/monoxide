@@ -100,3 +100,27 @@ fn test_encode_decode_large_coordinates() {
 
     assert_eq!(outlines, decoded, "Encode-decode test failed.");
 }
+
+#[test]
+fn implicit_close_keeps_last_on_curve_point() {
+    // Kurbo can close a stroked rectangle without repeating its start.
+    // Dropping the fourth point would turn it into a triangle in the font.
+    let mut square = QuadBezier::builder((0, 0));
+    square
+        .line_to((10, 0))
+        .line_to((10, 10))
+        .line_to((0, 10))
+        .close();
+    let glyph = encode(&[square.build()]).unwrap();
+    let decoded = decode(&glyph).unwrap();
+    let points: Vec<_> = decoded[0].iter().collect();
+    assert_eq!(
+        points,
+        [
+            (true, (0, 0)),
+            (true, (10, 0)),
+            (true, (10, 10)),
+            (true, (0, 10))
+        ]
+    );
+}
