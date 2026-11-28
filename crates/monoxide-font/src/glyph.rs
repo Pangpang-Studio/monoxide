@@ -45,7 +45,7 @@ pub use self::{
     l::{l, l_cap},
     m::{m, m_cap},
     n::{n, n_cap},
-    o::{o, o_cap},
+    o::{cyrl_barred_o, cyrl_barred_o_cap, o, o_cap},
     p::{p, p_cap},
     q::{q, q_cap},
     r::{cyrl_ya_cap, r, r_cap},
@@ -188,6 +188,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('Ԛ', q_cap),
     ('Ԝ', w_cap),
     ('Ү', y_cap),
+    ('Ө', cyrl_barred_o_cap),
     // Extended Cyrillic lowercase
     ('і', i),
     ('ј', j),
@@ -195,6 +196,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('һ', h),
     ('ԛ', q),
     ('ԝ', w),
+    ('ө', cyrl_barred_o),
     (char::REPLACEMENT_CHARACTER, tofu),
 ];
 
