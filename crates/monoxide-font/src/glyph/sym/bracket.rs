@@ -135,22 +135,17 @@ impl IntoOutline for CurlyBracketShape {
         let x0 = x0 - stw * x10s / 2.;
         let x = x0.midpoint(x1);
         let y = y0.midpoint(y1);
-        let aln = if x10s == y10s {
-            Alignment::Right
-        } else {
-            Alignment::Left
-        };
-
+        let y_tip = y1 - y10s * stw / 2.;
+        let stem_x = x + x10s * stw / 2.;
         let curl = SpiroBuilder::open()
             .insts([
-                g4!(x1, y1).heading(Dir::L),
-                g4!(mix(x0, x1, 0.2), mix(y1, y, 1.)),
-                g4!(mix(x0, x1, 0.6), mix(y1, y, 0.75)),
-                g4!(x, mix(y1, y, 0.35)).aligned(aln),
-                g4!(mix(x0, x1, 0.55), mix(y1, y, 0.15)),
-                corner!(x0, y0.midpoint(y1))
-                    .heading(Dir::L)
-                    .aligned(Alignment::Middle),
+                g4!(x1, y_tip).heading(Dir::L),
+                g4!(mix(stem_x, x1, 0.5), y_tip),
+                g4!(x, mix(y_tip, y, 0.75)),
+                g4!(stem_x, mix(y_tip, y, 0.45)),
+                g4!(mix(x0, stem_x, 0.2), mix(y_tip, y, 0.2)),
+                flat!(x0 + x10s * stw * 0.15, y),
+                corner!(x0, y),
             ])
             .stroked(stw);
 

@@ -91,16 +91,16 @@ impl IntoOutlines for FiveShape {
             // Top arc
             g4!(x, y).heading(Dir::R).aligned(Alignment::Middle),
             // Bottom arc
-            flat!(right, y - end_curve_h_bot)
+            flat!(right - stw / 2., y - end_curve_h_bot)
                 .width(1.)
-                .aligned(Alignment::Left),
-            curl!(right, y_lo + end_curve_h_bot),
-            g4!(x, y_lo - ovs)
+                .aligned(Alignment::Middle),
+            curl!(right - stw / 2., y_lo + end_curve_h_bot),
+            g4!(x, y_lo - ovs + stw / 2.)
                 .heading(Dir::L)
                 .width(1.)
-                .aligned(Alignment::Left),
-            flat!(left, y_lo + end_curve_h_bot3).aligned(0.05),
-            curl!(left, y3 - end_curve_h_bot3).width(1.025),
+                .aligned(Alignment::Middle),
+            flat!(left + stw / 2., y_lo + end_curve_h_bot3).aligned(Alignment::Middle),
+            curl!(left + stw / 2., y3 - end_curve_h_bot3).width(1.025),
         ]);
 
         [flag, bowl].map(|s| s.stroked(stw))

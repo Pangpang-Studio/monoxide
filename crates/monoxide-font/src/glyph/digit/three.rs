@@ -4,7 +4,7 @@ use monoxide_script::{dsl::SpiroInst, prelude::*};
 
 use crate::{
     InputContext,
-    dir::{Alignment, Dir},
+    dir::Dir,
     glyph::{
         digit::eight::EightShape,
         o::{IOShape, OCapShape},
@@ -23,8 +23,9 @@ pub fn three(cx: &InputContext) -> Glyph {
         ..
     } = cx.settings().view();
 
+    let radii = (mid - sbl - stw / 2., (cap - stw) / 2.);
     Glyph::builder()
-        .or_outlines(ThreeShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).stroked(stw))
+        .or_outlines(ThreeShape::new((mid, cap / 2.), radii, ovs).stroked(stw))
         .build()
 }
 
@@ -68,20 +69,16 @@ impl IntoOutlines for ThreeShape {
         let y_lo = y - ry;
         let y = mix(y_lo, y_hi, top_fact);
 
-        let midpoint = |cp: SpiroInst| cp.width(0.8).aligned(Alignment::Middle);
+        let midpoint = |cp: SpiroInst| cp.width(0.8);
         let x_midpoint_l = mix(left, x, 0.2);
 
         let top = SpiroBuilder::open().insts([
             // Top arc
-            flat!(left1, y + end_curve_h_top)
-                .width(1.)
-                .aligned(Alignment::Left),
+            flat!(left1, y + end_curve_h_top).width(1.),
             curl!(left1, y_hi - end_curve_h_top),
             g4!(x, y_hi + ovs).heading(Dir::L),
             flat!(right1, y_hi - end_curve_h_top),
-            curl!(right1, y + end_curve_h_top)
-                .width(1.)
-                .aligned(Alignment::Left),
+            curl!(right1, y + end_curve_h_top).width(1.),
             // Midpoint
             midpoint(flat!(x, y + mid_curve_h_top)),
             midpoint(curl!(x_midpoint_l, y)).heading(Dir::L),
@@ -92,15 +89,11 @@ impl IntoOutlines for ThreeShape {
             midpoint(flat!(x_midpoint_l, y)).heading(Dir::R),
             midpoint(curl!(x, y - mid_curve_h_bot)),
             // Bottom arc
-            flat!(right, y - end_curve_h_bot)
-                .width(1.)
-                .aligned(Alignment::Left),
+            flat!(right, y - end_curve_h_bot).width(1.),
             curl!(right, y_lo + end_curve_h_bot),
             g4!(x, y_lo - ovs).heading(Dir::L),
             flat!(left, y_lo + end_curve_h_bot),
-            curl!(left, y - end_curve_h_bot)
-                .width(1.)
-                .aligned(Alignment::Left),
+            curl!(left, y - end_curve_h_bot).width(1.),
         ]);
 
         [top, bot].map(|s| s.into_outline())
