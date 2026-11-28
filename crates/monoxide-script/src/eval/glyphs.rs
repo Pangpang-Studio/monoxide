@@ -82,13 +82,26 @@ fn eval_simple_glyph(
     let quads = res_outlines
         .into_iter()
         .map(|x| monoxide_curves::convert::cube_to_quad(x, 0.00001))
-        .map(|x| x.cast(|p| (p.to_vec2() * aux.point_per_em as f64).to_point()))
-        .map(|x| {
-            x.cast(|v| {
-                let x_fword = v.x as fword;
-                let y_fword = v.y as fword;
-                (x_fword, y_fword)
-            })
+        .filter_map(|curve| {
+            let mut grid = curve.cast(|p| {
+                let p = p.to_vec2() * f64::from(aux.point_per_em);
+                (p.x as fword, p.y as fword)
+            });
+            // Boolean intersections and short offset segments can coincide
+            // on the integer grid. A quadratic returning to its start retraces
+            // a line, and a handle on either endpoint is a straight edge.
+            let mut prev = grid.start;
+            grid.segments.retain_mut(|seg| {
+                if prev == seg.end {
+                    return false;
+                }
+                if prev == seg.control {
+                    seg.control = seg.end;
+                }
+                prev = seg.end;
+                true
+            });
+            (!grid.segments.is_empty()).then_some(grid)
         })
         .collect::<Vec<_>>();
 

@@ -24,7 +24,9 @@ pub struct SpiroCurve {
     /// The factor by which the width of the stroke is multiplied.
     /// If not provided, interpolates between surrounding points.
     ///
-    /// If no points to interpolate, the value is the same as 1.0.
+    /// Unspecified knots interpolate by arc length. Between knots the two
+    /// edge offsets taper linearly on lines and ease into the knots on curves.
+    /// An unmarked curve has width factor 1.0.
     pub width_factors: BTreeMap<usize, f64>,
 
     /// The alignment of the stroke at this point.

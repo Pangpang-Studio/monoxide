@@ -162,9 +162,13 @@ impl CubicBezier {
     }
 
     pub fn from_kurbo(path: &kurbo::BezPath) -> Self {
-        let elems = path.elements();
+        Self::from_kurbo_elements(path.elements())
+    }
+
+    /// Convert the elements of one kurbo subpath.
+    pub(crate) fn from_kurbo_elements(elems: &[PathEl]) -> Self {
         let mut res = Self {
-            segments: Vec::with_capacity(elems.len() - 1),
+            segments: Vec::with_capacity(elems.len().saturating_sub(1)),
             start: Point2D::default(),
             closed: false,
         };

@@ -119,9 +119,13 @@ impl<P: Copy + Eq> Iterator for QuadBezierPointIter<'_, P> {
 
             let seg = &self.curve.segments[seg_id];
             if seg.is_line() || !self.is_off_curve {
-                // If we're on the last segment and it's a closed curve, we
-                // should omit the last point.
-                if seg_id == self.curve.segments.len() - 1 && self.curve.closed {
+                // TrueType closes contours implicitly. An explicit return to
+                // the start repeats it, but an implicit close has a distinct
+                // last vertex which must still be encoded.
+                if seg_id == self.curve.segments.len() - 1
+                    && self.curve.closed
+                    && seg.end == self.curve.start
+                {
                     return None;
                 }
                 self.current_segment += 1;

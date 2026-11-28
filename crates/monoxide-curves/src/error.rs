@@ -8,6 +8,9 @@ pub enum Error {
     #[error("spiro curve is not a single piece")]
     SpiroBroken,
 
+    #[error("invalid stroke geometry or width")]
+    InvalidStroke,
+
     #[error("internal error: {0}")]
     Internal(Cow<'static, str>),
 }

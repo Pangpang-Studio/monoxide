@@ -1,13 +1,8 @@
 use std::{ops::Range, sync::Arc};
 
-use monoxide_script::prelude::*;
+use monoxide_script::{curve, prelude::*};
 
-use crate::{
-    InputContext,
-    dir::{Alignment, Dir},
-    math::mix,
-    prelude::*,
-};
+use crate::{InputContext, dir::Alignment, math::mix, prelude::*};
 
 pub fn square_bracket_l(cx: &InputContext) -> Glyph {
     bracket(
@@ -133,29 +128,20 @@ impl IntoOutline for CurlyBracketShape {
         let y10s = (y1 - y0).signum();
 
         let x0 = x0 - stw * x10s / 2.;
-        let x = x0.midpoint(x1);
         let y = y0.midpoint(y1);
-        let aln = if x10s == y10s {
-            Alignment::Right
-        } else {
-            Alignment::Left
-        };
+        let top = y1 - stw * y10s / 2.;
+        let pt = |u, v| (mix(x1, x0, u), mix(top, y, v));
 
-        let curl = SpiroBuilder::open()
+        // Mirror the two spans at the waist. A slight angle there gives
+        // the miter a clean bevel where the stroke turns back on itself.
+        BezierBuilder::open((x1, top))
             .insts([
-                g4!(x1, y1).heading(Dir::L),
-                g4!(mix(x0, x1, 0.2), mix(y1, y, 1.)),
-                g4!(mix(x0, x1, 0.6), mix(y1, y, 0.75)),
-                g4!(x, mix(y1, y, 0.35)).aligned(aln),
-                g4!(mix(x0, x1, 0.55), mix(y1, y, 0.15)),
-                corner!(x0, y0.midpoint(y1))
-                    .heading(Dir::L)
-                    .aligned(Alignment::Middle),
+                curve!(pt(0.52, 1.), pt(0.43, 0.80), pt(0.52, 0.53)),
+                curve!(pt(0.61, 0.26), pt(0.48, 0.015), (x0, y)),
+                curve!(pt(0.48, -0.015), pt(0.61, -0.26), pt(0.52, -0.53)),
+                curve!(pt(0.43, -0.80), pt(0.52, -1.), pt(1., -1.)),
             ])
-            .stroked(stw);
-
-        curl.clone()
-            .or(curl.transformed(Affine2D::reflect((x, y), (1., 0.))))
+            .stroked(stw)
     }
 }
 
