@@ -3,7 +3,7 @@ use std::{
     io,
     net::{SocketAddrV4, TcpStream},
     path::Path,
-    process::{Child, Command},
+    process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant},
@@ -191,8 +191,8 @@ fn start_playground(
         playground_args.push(format!("--serve-dir={}", playground_webui_dir.display()).into());
     }
     playground_cmd.arg("--args").arg(playground_args.join(" "));
-    playground_cmd.stdout(std::process::Stdio::inherit());
-    playground_cmd.stderr(std::process::Stdio::inherit());
+    playground_cmd.stdout(Stdio::inherit());
+    playground_cmd.stderr(Stdio::inherit());
     playground_cmd.current_dir(workspace_root());
     info!("Starting playground server...");
     let child = playground_cmd
@@ -251,8 +251,8 @@ fn start_dev_webui(pnpm: &str, dir: &Path, start_port: u16) -> anyhow::Result<(u
             .arg("--strictPort")
             .arg("--clearScreen=false")
             .current_dir(dir)
-            .stdout(std::process::Stdio::inherit())
-            .stderr(std::process::Stdio::inherit());
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
 
         let mut child = cmd.spawn().expect("Failed to run pnpm dev");
 
