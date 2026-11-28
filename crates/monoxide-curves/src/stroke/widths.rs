@@ -130,8 +130,8 @@ fn populate_with_interpolation(
             let total_len: f64 = lengths.iter().copied().sum();
             let mut sum = 0.0;
             for l in lengths {
+                res.push(interpolate(width1, width2, sum, total_len));
                 sum += l;
-                res.push(width1 + (width2 - width1) * (sum / total_len));
             }
         }
     }
@@ -155,12 +155,12 @@ fn populate_with_interpolation(
             let total_len: f64 = lengths_tail.iter().chain(lengths_head).copied().sum();
             let mut sum = 0.0;
             for l in lengths_tail {
+                res.push(interpolate(last_val, first_val, sum, total_len));
                 sum += l;
-                res.push(last_val + (first_val - last_val) * (sum / total_len));
             }
             for (idx, &l) in lengths_head.iter().enumerate() {
+                res[idx] = interpolate(last_val, first_val, sum, total_len);
                 sum += l;
-                res[idx] = last_val + (first_val - last_val) * (sum / total_len);
             }
         }
     } else {
@@ -170,4 +170,29 @@ fn populate_with_interpolation(
     }
 
     Ok(res)
+}
+
+// Each attribute belongs to the start of its outgoing segment.
+fn interpolate(start: f64, end: f64, distance: f64, length: f64) -> f64 {
+    if length == 0.0 {
+        start
+    } else {
+        start + (end - start) * (distance / length)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Sampling after advancing the length used to overwrite the authored anchor.
+    #[test]
+    fn sparse_anchors_use_distance_at_the_knot() {
+        let anchors = BTreeMap::from([(1, 0.25), (3, 1.25)]);
+        let lengths = LazyCell::new(|| vec![1., 2., 6., 3.]);
+        let sample =
+            |closed| populate_with_interpolation(&anchors, 4, 0.5, closed, &lengths).unwrap();
+        assert_eq!(sample(false), [0.25, 0.25, 0.5, 1.25]);
+        assert_eq!(sample(true), [0.5, 0.25, 0.5, 1.25]);
+    }
 }
