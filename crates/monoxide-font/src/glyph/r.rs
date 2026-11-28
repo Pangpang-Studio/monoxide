@@ -39,6 +39,17 @@ pub fn r_cap(cx: &InputContext) -> Glyph {
     Glyph::builder().or_outlines(p_shape).outline(tail).build()
 }
 
+pub fn cyrl_ya_cap(cx: &InputContext) -> Glyph {
+    let mid = cx.settings().mid();
+    let xform = Affine2D::reflect((mid, 0.), (0., 1.));
+    let r = r_cap(cx);
+
+    Glyph::builder()
+        .outlines(r.outlines.clone().transformed(xform))
+        .advance(r.advance)
+        .build()
+}
+
 pub struct RShape {
     pub hook: Arc<OutlineExpr>,
     pub pipe: Rect,

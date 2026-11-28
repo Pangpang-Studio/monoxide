@@ -8,6 +8,7 @@ use crate::{
     glyph::o::{IOShape, OCapShape, OShape},
     math::mix,
     prelude::*,
+    shape::Rect,
 };
 
 pub fn c(cx: &InputContext) -> Glyph {
@@ -42,6 +43,40 @@ pub fn c_cap(cx: &InputContext) -> Glyph {
                 .with_ovh(ovh)
                 .stroked(stw),
         )
+        .build()
+}
+
+pub fn cyrl_e_cap(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid,
+        cap,
+        ovs,
+        ovh,
+        sbl,
+        sbr,
+        stw,
+        ..
+    } = cx.settings().view();
+
+    let bowl = CShape::from(OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs))
+        .with_ovh(ovh)
+        .stroked(stw)
+        .transformed(Affine2D::reflect((mid, 0.), (0., 1.)));
+    let bar = Rect::new((mix(sbl, mid, 0.5), cap / 2.), (sbr, cap / 2.))
+        .stroked(stw)
+        .into_outline();
+
+    Glyph::builder().or_outlines([bowl, bar]).build()
+}
+
+pub fn cyrl_ukrainian_ye_cap(cx: &InputContext) -> Glyph {
+    let mid = cx.settings().mid();
+    let xform = Affine2D::reflect((mid, 0.), (0., 1.));
+    let e = cyrl_e_cap(cx);
+
+    Glyph::builder()
+        .outlines(e.outlines.clone().transformed(xform))
+        .advance(e.advance)
         .build()
 }
 

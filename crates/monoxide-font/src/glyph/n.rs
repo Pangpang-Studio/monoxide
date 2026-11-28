@@ -34,6 +34,17 @@ pub fn n_cap(cx: &InputContext) -> Glyph {
         .build()
 }
 
+pub fn cyrl_i_cap(cx: &InputContext) -> Glyph {
+    let mid = cx.settings().mid();
+    let xform = Affine2D::reflect((mid, 0.), (0., 1.));
+    let n = n_cap(cx);
+
+    Glyph::builder()
+        .outlines(n.outlines.clone().transformed(xform))
+        .advance(n.advance)
+        .build()
+}
+
 pub struct NShape {
     pub hook: Arc<OutlineExpr>,
     pub pipe: Rect,

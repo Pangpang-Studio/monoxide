@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use monoxide_script::prelude::*;
 
-use crate::{InputContext, dir::Alignment, prelude::*};
+use crate::{InputContext, dir::Alignment, prelude::*, shape::Rect};
 
 pub fn o(cx: &InputContext) -> Glyph {
     let FontParamSettingsView {
@@ -36,6 +36,47 @@ pub fn o_cap(cx: &InputContext) -> Glyph {
                 .with_ovh(ovh)
                 .stroked(stw),
         )
+        .build()
+}
+
+pub fn cyrl_barred_o(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid,
+        mih,
+        ovs,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
+
+    let o_shape = OShape::new((mid, mih), (mid - sbl, mih), ovs);
+    let bar = Rect::new((o_shape.left(), mih), (o_shape.right(), mih))
+        .stroked(stw)
+        .into_outline();
+
+    Glyph::builder()
+        .or_outlines([o_shape.stroked(stw), bar])
+        .build()
+}
+
+pub fn cyrl_barred_o_cap(cx: &InputContext) -> Glyph {
+    let FontParamSettingsView {
+        mid,
+        cap,
+        ovs,
+        ovh,
+        sbl,
+        stw,
+        ..
+    } = cx.settings().view();
+
+    let o_shape = OCapShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).with_ovh(ovh);
+    let bar = Rect::new((o_shape.left(), cap / 2.), (o_shape.right(), cap / 2.))
+        .stroked(stw)
+        .into_outline();
+
+    Glyph::builder()
+        .or_outlines([o_shape.stroked(stw), bar])
         .build()
 }
 
