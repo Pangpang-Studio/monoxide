@@ -69,6 +69,17 @@ pub fn cyrl_e_cap(cx: &InputContext) -> Glyph {
     Glyph::builder().or_outlines([bowl, bar]).build()
 }
 
+pub fn cyrl_ukrainian_ye_cap(cx: &InputContext) -> Glyph {
+    let mid = cx.settings().mid();
+    let xform = Affine2D::reflect((mid, 0.), (0., 1.));
+    let e = cyrl_e_cap(cx);
+
+    Glyph::builder()
+        .outlines(e.outlines.clone().transformed(xform))
+        .advance(e.advance)
+        .build()
+}
+
 pub struct CShape<O = OShape> {
     pub o_shape: O,
 }

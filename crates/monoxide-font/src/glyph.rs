@@ -32,7 +32,7 @@ use monoxide_script::ast::Glyph;
 pub use self::{
     a::{a, a_cap},
     b::{b, b_cap},
-    c::{c, c_cap, cyrl_e_cap},
+    c::{c, c_cap, cyrl_e_cap, cyrl_ukrainian_ye_cap},
     d::{d, d_cap},
     digit::{eight, five, four, nine, one, seven, six, three, two, zero},
     e::{e, e_cap},
@@ -181,6 +181,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('у', y),
     ('х', x),
     // Extended Cyrillic uppercase
+    ('Є', cyrl_ukrainian_ye_cap),
     ('І', i_cap),
     ('Ј', j_cap),
     ('Ѕ', s_cap),
