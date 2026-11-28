@@ -162,7 +162,6 @@ export interface StrokeConstruction {
   t: 'stroke'
   parent: number
   width: number
-  curve: SerializeSpiroPoint[][]
 }
 
 /** Maps to `ConstructionKind::Transform` variant in `model.rs` */

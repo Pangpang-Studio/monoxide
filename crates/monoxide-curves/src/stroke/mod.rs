@@ -1,417 +1,356 @@
-//! Outlining curves.
+//! Expand strokes into cubic Bézier outlines.
+//!
+//! Uniform strokes use kurbo-se's directional stroke. For per-knot widths
+//! and headings, Kurbo fits both edges of the varying cross-section along the
+//! solved Spiro centerline. Both paths are resolved to filled font contours.
 
-use std::collections::HashMap;
+mod variable;
+mod widths;
 
-use itertools::Itertools;
-use kurbo::Vec2;
+use kurbo::{BezPath, ParamCurveArclen, PathSeg, Vec2};
+use kurbo_se::{StrokeSide, StrokeStyle, stroke_aligned};
+use linesweeper::{BinaryOp, FillRule, binary_op_with_eps};
 use monoxide_spiro::{SpiroCp, SpiroCpTy};
 
 use crate::{
     CubicBezier, CubicSegment, SpiroCurve,
+    convert::spiro_to_cube_with_indices,
     cube::CubicSegmentFull,
     debug::CurveDebugger,
     error::{Error, Result},
     point::Point2D,
-    stroke::{
-        tangents::{make_line_join, move_point_normal_both},
-        widths::solve_stroke_attrs,
-    },
 };
 
-/// Represent the in and out tangent at a control point. Both tangents are
-/// represented in the out direction.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Tangent {
-    Continuous(Vec2),
-    Corner { in_: Vec2, out: Vec2 },
+const TOLERANCE: f64 = 1e-5;
+const TANGENT_EPSILON: f64 = 1e-12;
+
+#[derive(Clone, Copy, Debug)]
+struct Knot {
+    width: f64,
+    alignment: f64,
+    slant: f64,
+    /// Authored cross-section, scaled to project one unit onto the normal.
+    cross_section: Option<Vec2>,
+    width_slope: f64,
+    alignment_slope: f64,
+    slant_slope: f64,
 }
 
-/// Test if two normalized tangents are approximately the same direction.
-fn approx_eq(tan1: Vec2, tan2: Vec2) -> bool {
-    tan1.dot(tan2) > 0.99
+/// Stroke a single Spiro contour, preserving its per-knot stroke attributes.
+///
+/// The returned contours use clockwise outer boundaries and counterclockwise
+/// holes, matching the rest of the font pipeline.
+pub fn stroke_spiro(
+    curve: &SpiroCurve,
+    width: f64,
+    dbg: &mut impl CurveDebugger,
+) -> Result<Vec<CubicBezier>> {
+    ensure_single_piece(&curve.points)?;
+    validate_width(width)?;
+    validate_attributes(curve)?;
+
+    let closed = curve.points[0].ty != SpiroCpTy::Open;
+    let (mut cubics, indices) = spiro_to_cube_with_indices(&curve.points)?;
+    if cubics.len() != 1 || indices.iter().any(|idx| idx.curve_index != 0) {
+        return Err(Error::internal(
+            "a single Spiro contour must produce one cubic contour",
+        ));
+    }
+    let mut cubic = cubics.remove(0);
+    if closed
+        && let Some(last) = cubic.segments.last()
+        && last.last_point() != cubic.start
+    {
+        cubic.segments.push(CubicSegment::Line(cubic.start));
+    }
+    let mut indices: Vec<_> = indices.into_iter().map(|idx| idx.segment_index).collect();
+    if !closed {
+        indices.push(cubic.segment_count());
+    }
+    if indices.len() != curve.points.len()
+        || indices.first() != Some(&0)
+        || indices.windows(2).any(|pair| pair[0] > pair[1])
+        || indices.iter().any(|&idx| idx > cubic.segment_count())
+        || cubic.closed != closed
+    {
+        return Err(Error::internal("invalid Spiro knot indices"));
+    }
+
+    let path = cubic.to_kurbo();
+    if !path.is_finite() {
+        return Err(Error::InvalidStroke("non-finite curve coordinates"));
+    }
+    if width == 0.0 {
+        return Ok(Vec::new());
+    }
+
+    let lengths: Vec<_> = cubic
+        .segment_iter()
+        .map(|seg| PathSeg::from(seg).arclen(TOLERANCE * 0.1))
+        .collect();
+    let mut cumulative = Vec::with_capacity(lengths.len() + 1);
+    cumulative.push(0.0);
+    for length in &lengths {
+        cumulative.push(cumulative.last().copied().unwrap() + length);
+    }
+    let total_length = *cumulative.last().unwrap();
+    if !total_length.is_finite() || total_length <= TANGENT_EPSILON {
+        return Err(Error::InvalidStroke("curve has no drawable length"));
+    }
+    let positions: Vec<_> = indices.iter().map(|&idx| cumulative[idx]).collect();
+    let factors = widths::interpolate(&curve.width_factors, &positions, total_length, closed, 1.0)?;
+    if factors.iter().all(|&factor| factor == 0.0) {
+        return Ok(Vec::new());
+    }
+    let alignments = widths::interpolate(&curve.alignment, &positions, total_length, closed, 0.5)?;
+
+    let mut knots = Vec::with_capacity(curve.points.len());
+    for (idx, ((&factor, &alignment), &segment_index)) in
+        factors.iter().zip(&alignments).zip(&indices).enumerate()
+    {
+        let incoming = find_tangent(&cubic, segment_index, false);
+        let outgoing = find_tangent(&cubic, segment_index, true);
+        let tangent = match (incoming, outgoing) {
+            (Some(a), Some(b)) if a.dot(b) > 0.99 => Some(a),
+            (Some(_), Some(_)) => None,
+            (Some(a), None) | (None, Some(a)) => Some(a),
+            (None, None) => return Err(Error::InvalidStroke("curve has no tangent")),
+        };
+        let cross_section =
+            if let (Some(tangent), Some(heading)) = (tangent, curve.tangents.get(&idx)) {
+                let heading = heading.to_vec2().normalize();
+                let dot = tangent.dot(heading);
+                if dot.abs() < 1e-8 {
+                    return Err(Error::InvalidStroke(
+                        "stroke heading is perpendicular to the curve",
+                    ));
+                }
+                Some(heading.turn_90() / dot)
+            } else {
+                None
+            };
+        let slant = tangent.zip(cross_section).map_or(0.0, |(t, n)| t.dot(n));
+        let knot = Knot {
+            width: width * factor,
+            alignment,
+            slant,
+            cross_section,
+            width_slope: 0.0,
+            alignment_slope: 0.0,
+            slant_slope: 0.0,
+        };
+        let left_offset = knot.width * alignment;
+        let right_offset = knot.width * (alignment - 1.0);
+        if !knot.width.is_finite()
+            || !knot.slant.is_finite()
+            || !left_offset.is_finite()
+            || !right_offset.is_finite()
+            || !(left_offset * slant).is_finite()
+            || !(right_offset * slant).is_finite()
+        {
+            return Err(Error::InvalidStroke("stroke attributes are too large"));
+        }
+        if let Some(tangent) = tangent {
+            let cp = Point2D::new(curve.points[idx].x, curve.points[idx].y);
+            let offset = -knot.width * (1.0 - alignment);
+            dbg.line(
+                cp,
+                cp + offset * cross_section.unwrap_or_else(|| tangent.turn_90()),
+                format_args!(""),
+            );
+        }
+        knots.push(knot);
+    }
+
+    let first = knots[0];
+    let uniform = knots.iter().all(|knot| {
+        knot.width == first.width && knot.alignment == first.alignment && knot.slant.abs() < 1e-10
+    });
+    if uniform {
+        // kurbo-se names sides in Y-down coordinates; our font uses Y-up.
+        let side = match first.alignment {
+            0.0 => Some(StrokeSide::Left),
+            0.5 => Some(StrokeSide::Center),
+            1.0 => Some(StrokeSide::Right),
+            _ => None,
+        };
+        if let Some(side) = side {
+            return stroke_uniform(path, first.width, side);
+        }
+    }
+
+    let width_slopes = widths::slopes(
+        &knots.iter().map(|knot| knot.width).collect::<Vec<_>>(),
+        &positions,
+        total_length,
+        closed,
+    );
+    let alignment_slopes = widths::slopes(&alignments, &positions, total_length, closed);
+    let slant_slopes = widths::slopes(
+        &knots.iter().map(|knot| knot.slant).collect::<Vec<_>>(),
+        &positions,
+        total_length,
+        closed,
+    );
+    for (i, knot) in knots.iter_mut().enumerate() {
+        knot.width_slope = width_slopes[i];
+        knot.alignment_slope = alignment_slopes[i];
+        knot.slant_slope = slant_slopes[i];
+        if !knot.width_slope.is_finite()
+            || !knot.alignment_slope.is_finite()
+            || !knot.slant_slope.is_finite()
+        {
+            return Err(Error::InvalidStroke("stroke attributes are too large"));
+        }
+    }
+
+    let (outline, folds) = variable::stroke(&cubic, &indices, &lengths, &knots)?;
+    stroke_contours(&outline, &folds)
+}
+
+/// Stroke a cubic Bézier contour with a centered, butt-capped stroke.
+pub fn stroke_bezier(curve: &CubicBezier, width: f64) -> Result<Vec<CubicBezier>> {
+    validate_width(width)?;
+    stroke_uniform(curve.to_kurbo(), width, StrokeSide::Center)
+}
+
+fn stroke_uniform(path: BezPath, width: f64, side: StrokeSide) -> Result<Vec<CubicBezier>> {
+    if !path.is_finite() {
+        return Err(Error::InvalidStroke("non-finite curve coordinates"));
+    }
+    if width == 0.0 {
+        return Ok(Vec::new());
+    }
+    let style = StrokeStyle::new(width).with_side(side);
+    let outline = stroke_aligned(path, &style, TOLERANCE);
+    stroke_contours(&outline, &BezPath::new())
+}
+
+/// Kurbo emits a nonzero fill that can overlap itself at inside joins and
+/// tight turns. Extract its actual boundary before quantizing it for TrueType.
+fn stroke_contours(path: &BezPath, folds: &BezPath) -> Result<Vec<CubicBezier>> {
+    if !path.is_finite() || !folds.is_finite() {
+        return Err(Error::InvalidStroke(
+            "stroke produced non-finite coordinates",
+        ));
+    }
+    // Folds are independently filled: their ink can lie in a region where
+    // oppositely directed pieces of the original boundary cancelled out.
+    let ink = binary_op_with_eps(path, folds, FillRule::NonZero, BinaryOp::Union, TOLERANCE)
+        .map_err(|_| Error::internal("stroke produced an invalid outline"))?;
+    Ok(ink
+        .contours()
+        // At a tangency the sweep can isolate a contour consisting entirely
+        // of numerical noise. Keep long, thin features as long as either
+        // dimension is resolvable at the fitting tolerance.
+        .filter(|c| c.path.control_box().size().max_side() > TOLERANCE)
+        // TrueType outer contours run clockwise in font coordinates.
+        .map(|c| CubicBezier::from_kurbo(&c.path.reverse_subpaths()))
+        .collect())
+}
+
+fn validate_width(width: f64) -> Result<()> {
+    if !width.is_finite() || width < 0.0 {
+        return Err(Error::InvalidStroke(
+            "stroke width must be finite and non-negative",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_attributes(curve: &SpiroCurve) -> Result<()> {
+    if curve
+        .points
+        .iter()
+        .any(|p| !p.x.is_finite() || !p.y.is_finite())
+    {
+        return Err(Error::InvalidStroke("non-finite curve coordinates"));
+    }
+    if curve
+        .width_factors
+        .iter()
+        .any(|(&idx, &value)| idx >= curve.len() || !value.is_finite() || value < 0.0)
+    {
+        return Err(Error::InvalidStroke("invalid stroke width factor"));
+    }
+    if curve
+        .alignment
+        .iter()
+        .any(|(&idx, &value)| idx >= curve.len() || !value.is_finite())
+    {
+        return Err(Error::InvalidStroke("invalid stroke alignment"));
+    }
+    if curve.tangents.iter().any(|(&idx, tangent)| {
+        idx >= curve.len()
+            || !tangent.x.is_finite()
+            || !tangent.y.is_finite()
+            || tangent.to_vec2().hypot() <= TANGENT_EPSILON
+    }) {
+        return Err(Error::InvalidStroke("invalid stroke heading"));
+    }
+    Ok(())
 }
 
 fn ensure_single_piece(curve: &[SpiroCp]) -> Result<()> {
     use SpiroCpTy::*;
 
-    let is_single_piece = match curve {
-        [] | [_] => false, // No curve
+    let single = match curve {
+        [] | [_] => false,
         [
             SpiroCp { ty: Open, .. },
-            open @ ..,
+            middle @ ..,
             SpiroCp { ty: EndOpen, .. },
-        ] => !open.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
-        [SpiroCp { ty: Open, .. }, ..] | [SpiroCp { ty: EndOpen, .. }, ..] => false,
+        ] => !middle.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
+        [
+            SpiroCp {
+                ty: Open | EndOpen, ..
+            },
+            ..,
+        ] => false,
         closed => !closed.iter().any(|cp| matches!(cp.ty, Open | EndOpen)),
     };
-    if !is_single_piece {
-        return Err(Error::SpiroBroken);
+    if single {
+        Ok(())
+    } else {
+        Err(Error::SpiroBroken)
     }
-    Ok(())
 }
 
-pub type TangentOverride = HashMap<usize, Tangent>;
-
-/// The result of the stroke operation. It can be either a single spiro curve,
-/// or two curves if the input curve is closed.
-#[derive(Debug, Clone)]
-pub enum StrokedSpiroCurve {
-    One(SpiroCurve),
-    Two(SpiroCurve, SpiroCurve),
-}
-
-/// Stroke a spiro curve. Returns a single spiro curve representing the stroke.
-/// The curve might contain more than one segment if the input curve is closed,
-/// or has multiple disconnected parts.
-///
-/// The result should be fed into another pass removing self-loops.
-pub fn stroke_spiro(
-    curve: &SpiroCurve,
-    width: f64,
-    dbg: &mut impl CurveDebugger,
-) -> Result<StrokedSpiroCurve> {
-    // This ensures that the `curve` has >= 2 points, so operations like `[0]`
-    // and `.last().unwrap()` should be safe.
-    ensure_single_piece(&curve.points)?;
-
-    let is_closed = curve.points[0].ty != SpiroCpTy::Open;
-    let (left, mut right) = stroke_spiro_raw(curve, is_closed, width, dbg)?;
-
-    // Anyway, we should reverse the right curve first.
-    right.reverse();
-    for cp in &mut right {
-        *cp = reverse_spiro_point(*cp);
-    }
-
-    // Both `left` and `right` should be either:
-    //
-    // - A closed curve. In this case, the two curves are simply concatenated
-    //   (the right one reversed because we need to decrease the winding
-    //   number).
-    if is_closed {
-        return Ok(StrokedSpiroCurve::Two(
-            SpiroCurve::from_points(left, true),
-            SpiroCurve::from_points(right, true),
-        ));
-    }
-
-    // - [Open, ..., EndOpen], i.e. an open curve. In this case, we need to
-    //   replace all `Open` and `EndOpen` with `Corner`, except the first one
-    //   which should be `End`.
-    let mut result = left;
-    debug_assert_eq!(result[0].ty, SpiroCpTy::Open);
-    result[0].ty = SpiroCpTy::Corner;
-    // Rewrite the last point
-    debug_assert_eq!(result.last().unwrap().ty, SpiroCpTy::EndOpen);
-    result.last_mut().unwrap().ty = SpiroCpTy::Corner;
-    // and those in the right curve (remember we have reversed it)
-    debug_assert_eq!(right[0].ty, SpiroCpTy::Open);
-    right[0].ty = SpiroCpTy::Corner;
-    debug_assert_eq!(right.last().unwrap().ty, SpiroCpTy::EndOpen);
-    right.last_mut().unwrap().ty = SpiroCpTy::Corner;
-
-    result.extend(right);
-
-    Ok(StrokedSpiroCurve::One(SpiroCurve::from_points(
-        result, true,
-    )))
-}
-
-#[allow(dead_code)]
-fn debug_spiro_points<C: CurveDebugger>(
-    cube_curve: &CubicBezier,
-    spiro_indices: &[usize],
-    dbg: &mut C,
-) {
-    let mut spiro_index = 0;
-    // indices are segment indices
-    for (idx, CubicSegmentFull { start, rest: seg }) in cube_curve.segment_iter().enumerate() {
-        if idx == 0 {
-            if spiro_indices[spiro_index] == 0 {
-                dbg.point(
-                    crate::debug::DebugPointKind::Curve,
-                    start,
-                    format_args!("spiro(0)"),
-                );
-            }
-            spiro_index += 1;
+fn segment_tangent(segment: &CubicSegmentFull, at_end: bool) -> Option<Vec2> {
+    let candidates = match segment.rest {
+        CubicSegment::Line(end) => [end - segment.start; 3],
+        CubicSegment::Curve(c1, c2, end) if at_end => [end - c2, end - c1, end - segment.start],
+        CubicSegment::Curve(c1, c2, end) => {
+            [c1 - segment.start, c2 - segment.start, end - segment.start]
         }
+    };
+    candidates
+        .into_iter()
+        .find(|v| v.hypot() > TANGENT_EPSILON)
+        .map(Vec2::normalize)
+}
 
-        // start is irrelevant for the rest of the segments
-        let spiro_point_idx = if spiro_indices[spiro_index] == idx + 1 {
-            spiro_index += 1;
-            Some(spiro_index - 1)
+fn find_tangent(curve: &CubicBezier, index: usize, forward: bool) -> Option<Vec2> {
+    let n = curve.segment_count();
+    for step in 0..n {
+        let segment_index = if forward {
+            let i = index + step;
+            if i >= n && !curve.closed {
+                break;
+            }
+            i % n
         } else {
-            None
-        };
-
-        let tag = |dbg: &mut C, at| match spiro_point_idx {
-            Some(idx) => dbg.point(
-                crate::debug::DebugPointKind::Curve,
-                at,
-                format_args!("spiro({idx})"),
-            ),
-            None => dbg.point(crate::debug::DebugPointKind::Curve, at, format_args!("")),
-        };
-        match seg {
-            CubicSegment::Line(end) => {
-                tag(dbg, end);
-                dbg.line(start, end, format_args!(""));
+            if step >= index && !curve.closed {
+                break;
             }
-            CubicSegment::Curve(p1, p2, p3) => {
-                dbg.point(crate::debug::DebugPointKind::Control, p1, format_args!(""));
-                dbg.point(crate::debug::DebugPointKind::Control, p2, format_args!(""));
-                tag(dbg, p3);
-                dbg.line(start, p1, format_args!(""));
-                dbg.line(p2, p3, format_args!(""));
-            }
+            (index + n - 1 - step) % n
+        };
+        if let Some(tangent) = segment_tangent(&curve.segment(segment_index)?, !forward) {
+            return Some(tangent);
         }
     }
+    None
 }
-
-/// Stroke a spiro curve. Returns two spiro curves of the inner and outer
-/// boundaries of the stroke. The spiro curve should be _one_ continuous curve,
-/// with no gaps.
-///
-/// The result should be fed into another pass removing self-loops.
-fn stroke_spiro_raw(
-    curve: &SpiroCurve,
-    is_closed: bool,
-    width: f64,
-    dbg: &mut impl CurveDebugger,
-) -> Result<(Vec<SpiroCp>, Vec<SpiroCp>)> {
-    if curve.points.is_empty() {
-        return Err(Error::SpiroBroken);
-    }
-
-    // Before stroking the curve, we first need to determine the normal
-    // direction at each control point. To make things simpler, we just convert
-    // the curve into bezier segments and extract the normal from them.
-    let (curves, indices) = crate::convert::spiro_to_cube_with_indices(&curve.points)?;
-
-    // There will be only one curve, since we know the spiro curve is a single
-    // piece.
-    let [cubic] = &curves[..] else {
-        return Err(Error::internal(
-            "`spiro_to_cube_with_indices()` should return a single contour for one spiro piece",
-        ));
-    };
-    if indices.iter().any(|idx| idx.curve_index != 0) {
-        return Err(Error::internal(
-            "spiro knot markers unexpectedly referenced multiple cubic contours",
-        ));
-    }
-
-    // And we can transform the indices into a vector of raw indices too
-    //
-    // Semantics: each index means the point corresponds to the **start** of the
-    // given segment, i.e. the i-th on-curve point of the cubic bezier.
-    let mut indices = indices.into_iter().map(|x| x.segment_index).collect_vec();
-
-    if !is_closed {
-        // open curves don't have the last point logged, so we add it
-        // manually.
-        let last_index = cubic.segment_count();
-        indices.push(last_index);
-    }
-
-    // debug_spiro_points(&cubic, &indices, dbg);
-
-    // Determine the stroke attributes (width factors, alignments, etc.) at each
-    // control point.
-    let stroke_attrs = solve_stroke_attrs(curve, is_closed, cubic, &indices)?;
-
-    // Calculate tangent for each control point.
-    let actual_tangents = tangents::calc_tangents(&curve.points, cubic, &indices);
-
-    // the curve on the left side of the stroke
-    let mut left_curve = Vec::new();
-    // the curve on the right side of the stroke
-    let mut right_curve = Vec::new();
-
-    if curve.points.len() != actual_tangents.len() {
-        return Err(Error::internal(
-            "`curve` and `actual_tangents` do not have the same length",
-        ));
-    }
-    for (idx, (&cp, tangent)) in curve.points.iter().zip(actual_tangents).enumerate() {
-        let tangent_override = curve.tangents.get(&idx);
-        let (tangent, tan_width_factor) = match tangent {
-            Tangent::Continuous(tan) => {
-                if let Some(tangent_override) = tangent_override {
-                    let dir_orig = tan.x.atan2(tan.y);
-                    let dir_override = tangent_override.x.atan2(tangent_override.y);
-                    let angle_diff = (dir_override - dir_orig).abs();
-                    let angle_diff = if angle_diff > std::f64::consts::PI {
-                        2.0 * std::f64::consts::PI - angle_diff
-                    } else {
-                        angle_diff
-                    };
-                    let width_factor = 1.0 / angle_diff.cos();
-                    (
-                        Tangent::Continuous(tangent_override.to_vec2()),
-                        width_factor,
-                    )
-                } else {
-                    (tangent, 1.0)
-                }
-            }
-            Tangent::Corner { .. } => (tangent, 1.0),
-            // TODO: warn about cannot override corner
-        };
-        let stroke_width_factor = stroke_attrs.width_factors[idx];
-        let width = width * stroke_width_factor * tan_width_factor;
-
-        let left_offset_factor = stroke_attrs.alignments[idx];
-        let right_offset_factor = 1.0 - left_offset_factor;
-
-        let left_offset = width * left_offset_factor;
-        let right_offset = width * right_offset_factor;
-
-        let (left, right) = determine_stroked_points(left_offset, right_offset, cp, tangent);
-        dbg.line(cp.proj(Point2D::new), right, format_args!(""));
-        push_point(left, right, cp, &mut left_curve, &mut right_curve);
-    }
-
-    Ok((left_curve, right_curve))
-}
-
-fn determine_stroked_points(
-    left_offset: f64,
-    right_offset: f64,
-    cp: SpiroCp,
-    tangent: Tangent,
-) -> (Point2D, Point2D) {
-    match tangent {
-        Tangent::Continuous(tangent) => {
-            move_point_normal_both(Point2D::new(cp.x, cp.y), tangent, left_offset, right_offset)
-        }
-        Tangent::Corner { in_, out } => make_line_join(cp, in_, out, left_offset, right_offset),
-    }
-}
-
-fn push_point(
-    left: Point2D,
-    right: Point2D,
-    orig: SpiroCp,
-    left_curve: &mut Vec<SpiroCp>,
-    right_curve: &mut Vec<SpiroCp>,
-) {
-    left_curve.push(SpiroCp {
-        x: left.x,
-        y: left.y,
-        ty: orig.ty,
-    });
-    right_curve.push(SpiroCp {
-        x: right.x,
-        y: right.y,
-        ty: orig.ty,
-    });
-}
-
-fn reverse_spiro_point(cp: SpiroCp) -> SpiroCp {
-    let ty = match cp.ty {
-        SpiroCpTy::Left => SpiroCpTy::Right,
-        SpiroCpTy::Right => SpiroCpTy::Left,
-        SpiroCpTy::EndOpen => SpiroCpTy::Open,
-        SpiroCpTy::Open => SpiroCpTy::EndOpen,
-
-        x => x,
-    };
-    SpiroCp { ty, ..cp }
-}
-
-mod tangents;
-mod widths;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn closed_stroke_spiro_indices_are_single_curve_and_in_range() {
-        let curve = SpiroCurve::from_points(
-            vec![
-                SpiroCp {
-                    x: 0.70,
-                    y: 1.10,
-                    ty: SpiroCpTy::G4,
-                },
-                SpiroCp {
-                    x: 0.50,
-                    y: 1.20,
-                    ty: SpiroCpTy::G4,
-                },
-                SpiroCp {
-                    x: 0.30,
-                    y: 1.10,
-                    ty: SpiroCpTy::G4,
-                },
-                SpiroCp {
-                    x: 0.10,
-                    y: 0.80,
-                    ty: SpiroCpTy::Left,
-                },
-                SpiroCp {
-                    x: 0.10,
-                    y: 0.20,
-                    ty: SpiroCpTy::Right,
-                },
-                SpiroCp {
-                    x: 0.30,
-                    y: -0.10,
-                    ty: SpiroCpTy::G4,
-                },
-                SpiroCp {
-                    x: 0.50,
-                    y: -0.20,
-                    ty: SpiroCpTy::G4,
-                },
-                SpiroCp {
-                    x: 0.70,
-                    y: -0.10,
-                    ty: SpiroCpTy::G4,
-                },
-                SpiroCp {
-                    x: 0.90,
-                    y: 0.20,
-                    ty: SpiroCpTy::Left,
-                },
-                SpiroCp {
-                    x: 0.90,
-                    y: 0.80,
-                    ty: SpiroCpTy::Right,
-                },
-            ],
-            true,
-        );
-
-        let stroked = stroke_spiro(&curve, 0.08, &mut ()).expect("stroke should succeed");
-        let StrokedSpiroCurve::Two(left, right) = stroked else {
-            panic!("closed stroke should produce two closed contours");
-        };
-
-        for outline in [&left, &right] {
-            let (cubics, indices) = crate::convert::spiro_to_cube_with_indices(&outline.points)
-                .expect("spiro to cubic conversion should succeed");
-            assert_eq!(
-                cubics.len(),
-                1,
-                "expected one cubic contour for closed stroked outline"
-            );
-            let nsegs = cubics[0].segment_count();
-            assert_eq!(
-                indices.len(),
-                outline.points.len(),
-                "one knot index expected per spiro control point"
-            );
-            for idx in indices {
-                assert_eq!(idx.curve_index, 0, "expected single contour index");
-                assert!(
-                    idx.segment_index <= nsegs,
-                    "segment index should fit within contour"
-                );
-            }
-        }
-    }
-}
+mod tests;

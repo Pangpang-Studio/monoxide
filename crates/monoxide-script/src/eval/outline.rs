@@ -1,8 +1,6 @@
-use itertools::{Itertools, chain};
+use itertools::Itertools;
 use linesweeper::{BinaryOp, FillRule, binary_op};
-use monoxide_curves::{
-    CubicBezier, SpiroCurve, convert::spiro_to_cube, stroke::StrokedSpiroCurve, xform::AffineExt,
-};
+use monoxide_curves::{CubicBezier, SpiroCurve, convert::spiro_to_cube, xform::AffineExt};
 
 use crate::{ast::OutlineExpr, trace::EvalTracer};
 
@@ -86,11 +84,6 @@ impl<Id: Copy> EvalValue<Id> {
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum EvalError<Id> {
-    #[error(
-        "bezier stroking unimplemented at {0}: try putting `.transformed()` before `.stroked()`"
-    )]
-    StrokingABezier(Id),
-
     #[error("boolean operation error at {0}: {1}")]
     Boolean(Id, #[source] linesweeper::Error),
 
@@ -106,8 +99,9 @@ fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> Eval
         }
         OutlineExpr::Spiro(spiro) => {
             let id = dbg.constructed_spiro(&spiro.points);
-            // convert to beziers if needed
-            eval_to_bez(id, spiro, dbg)?;
+            if E::needs_evaluate_intermediate() {
+                eval_to_bez(id, spiro, dbg)?;
+            }
             Ok(EvalValue::spiro(spiro.clone(), id))
         }
         OutlineExpr::Bool(op, lhs, rhs) => {
@@ -127,12 +121,7 @@ fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> Eval
         }
         OutlineExpr::Stroked(outline_expr, width) => {
             let evaled = eval_outline_internal(outline_expr, dbg)?;
-            match evaled.kind {
-                EvalValueKind::Beziers(_) => Err(EvalError::StrokingABezier(evaled.id)),
-                EvalValueKind::Spiros(eval_spiros) => {
-                    eval_stroked(evaled.id, &eval_spiros, *width, dbg)
-                }
-            }
+            eval_stroked(evaled, *width, dbg)
         }
         OutlineExpr::Transformed(expr, xform) => {
             let evaled = eval_outline_internal(expr, dbg)?;
@@ -189,48 +178,85 @@ fn eval_bool<E: EvalTracer>(
     })
 }
 
-fn eval_stroked<E: EvalTracer>(
-    evaled_id: E::Id,
-    eval_spiros: &[SpiroCurve],
-    width: f64,
-    dbg: &mut E,
-) -> EvalResult<E> {
-    // For each of the spiro curves, stroke them. This may result in
-    // more than one spiro per original spiro.
+fn eval_stroked<E: EvalTracer>(evaled: EvalValue<E::Id>, width: f64, dbg: &mut E) -> EvalResult<E> {
     let id = dbg.preallocate_next();
-
-    let mut out_spiros: Vec<SpiroCurve> = vec![];
-    for spiro in eval_spiros {
-        let oc = monoxide_curves::stroke::stroke_spiro(spiro, width, &mut dbg.curve_debugger(id))
-            .map_err(|e| EvalError::CurveError(id, e))?;
-        match oc {
-            StrokedSpiroCurve::One(spiro_cps) => {
-                out_spiros.push(spiro_cps);
+    let mut outlines = Vec::new();
+    match &evaled.kind {
+        EvalValueKind::Spiros(spiros) => {
+            for spiro in spiros {
+                outlines.extend(
+                    monoxide_curves::stroke::stroke_spiro(
+                        spiro,
+                        width,
+                        &mut dbg.curve_debugger(id),
+                    )
+                    .map_err(|e| EvalError::CurveError(id, e))?,
+                );
             }
-            StrokedSpiroCurve::Two(first_curve, second_curve) => {
-                out_spiros.push(first_curve);
-                out_spiros.push(second_curve);
+        }
+        EvalValueKind::Beziers(beziers) => {
+            for bezier in beziers {
+                outlines.extend(
+                    monoxide_curves::stroke::stroke_bezier(bezier, width)
+                        .map_err(|e| EvalError::CurveError(id, e))?,
+                );
             }
         }
     }
 
-    let id = dbg.stroked(
-        evaled_id,
-        width,
-        out_spiros.iter().map(|s| s.points.as_slice()),
-    );
-
+    let id = dbg.stroked(evaled.id, width);
     if E::needs_evaluate_intermediate() {
-        // Convert both original spiro and the stroked spiro to beziers
-        let bezs: Vec<_> = chain!(eval_spiros, &out_spiros)
-            .map(|spiro| spiro_to_cube(&spiro.points).map_err(|e| EvalError::CurveError(id, e)))
-            .flatten_ok()
-            .try_collect()?;
-        dbg.intermediate_output(id, &bezs);
+        dbg.intermediate_output(id, &outlines);
     }
 
     Ok(EvalValue {
-        kind: EvalValueKind::Spiros(out_spiros),
-        id, // Use the ID from dbg.stroked
+        kind: EvalValueKind::Beziers(outlines),
+        id,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use monoxide_curves::{CubicBezier, point::Point2D, xform::Affine2D};
+
+    use super::*;
+
+    #[test]
+    fn strokes_transformed_beziers() {
+        let mut builder = CubicBezier::builder(Point2D::new(0.0, 0.0));
+        builder.line_to(Point2D::new(2.0, 0.0));
+        let outline = Arc::new(OutlineExpr::Bezier(builder.build()))
+            .transformed(Affine2D::translate((3.0, 4.0)))
+            .stroked(2.0);
+        let mut result = Vec::new();
+        eval_outline(&outline, &mut result, &mut ()).unwrap();
+        assert_eq!(result.len(), 1);
+        let points: Vec<_> = result[0].iter().map(|(_, point)| point).collect();
+        assert!(points.iter().all(|p| (3.0..=5.0).contains(&p.x)));
+        assert!(points.iter().all(|p| (3.0..=5.0).contains(&p.y)));
+        assert!(points.iter().any(|p| p.y == 3.0));
+        assert!(points.iter().any(|p| p.y == 5.0));
+    }
+
+    #[test]
+    fn boolean_operations_accept_stroked_closed_curves() {
+        fn square(x0: f64, y0: f64, x1: f64, y1: f64) -> Arc<OutlineExpr> {
+            let mut builder = CubicBezier::builder(Point2D::new(x0, y0));
+            builder
+                .line_to(Point2D::new(x1, y0))
+                .line_to(Point2D::new(x1, y1))
+                .line_to(Point2D::new(x0, y1))
+                .close();
+            Arc::new(OutlineExpr::Bezier(builder.build()))
+        }
+
+        let ring = square(0.0, 0.0, 4.0, 4.0).stroked(1.0);
+        let outline = ring.bool(square(5.0, 0.0, 6.0, 1.0), BinaryOp::Union);
+        let mut result = Vec::new();
+        eval_outline(&outline, &mut result, &mut ()).unwrap();
+        assert_eq!(result.len(), 3);
+        assert!(result.iter().all(|contour| contour.closed));
+    }
 }

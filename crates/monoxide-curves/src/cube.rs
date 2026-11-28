@@ -164,7 +164,7 @@ impl CubicBezier {
     pub fn from_kurbo(path: &kurbo::BezPath) -> Self {
         let elems = path.elements();
         let mut res = Self {
-            segments: Vec::with_capacity(elems.len() - 1),
+            segments: Vec::with_capacity(elems.len().saturating_sub(1)),
             start: Point2D::default(),
             closed: false,
         };
@@ -173,8 +173,14 @@ impl CubicBezier {
             match elem {
                 PathEl::MoveTo(p) => res.start = *p,
                 PathEl::LineTo(p) => res.segments.push(CubicSegment::Line(*p)),
-                PathEl::QuadTo(_, _) => {
-                    unimplemented!("quadratic segments are not supported in CubicBezier")
+                PathEl::QuadTo(control, end) => {
+                    let start = res
+                        .segments
+                        .last()
+                        .map_or(res.start, CubicSegment::last_point);
+                    let cubic = kurbo::QuadBez::new(start, *control, *end).raise();
+                    res.segments
+                        .push(CubicSegment::Curve(cubic.p1, cubic.p2, cubic.p3));
                 }
                 PathEl::CurveTo(c1, c2, p) => res.segments.push(CubicSegment::Curve(*c1, *c2, *p)),
                 PathEl::ClosePath => res.closed = true,

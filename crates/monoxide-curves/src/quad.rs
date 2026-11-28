@@ -58,6 +58,24 @@ impl<P: Copy> QuadBezier<P> {
     }
 }
 
+impl<P: Copy + Eq> QuadBezier<P> {
+    /// Remove segments that collapse on the font grid. A quadratic returning
+    /// to its start retraces a line and contributes no ink to a filled contour.
+    pub fn simplify_for_fill(&mut self) {
+        let mut start = self.start;
+        self.segments.retain_mut(|seg| {
+            if seg.end == start {
+                return false;
+            }
+            if seg.control == start {
+                seg.control = seg.end;
+            }
+            start = seg.end;
+            true
+        });
+    }
+}
+
 pub struct QuadBezierBuilder<P = Point2D> {
     bezier: QuadBezier<P>,
 }
@@ -119,9 +137,11 @@ impl<P: Copy + Eq> Iterator for QuadBezierPointIter<'_, P> {
 
             let seg = &self.curve.segments[seg_id];
             if seg.is_line() || !self.is_off_curve {
-                // If we're on the last segment and it's a closed curve, we
-                // should omit the last point.
-                if seg_id == self.curve.segments.len() - 1 && self.curve.closed {
+                // TrueType closes contours implicitly. Omit only a repeated start.
+                if seg_id == self.curve.segments.len() - 1
+                    && self.curve.closed
+                    && seg.end == self.curve.start
+                {
                     return None;
                 }
                 self.current_segment += 1;

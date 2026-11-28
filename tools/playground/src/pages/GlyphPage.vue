@@ -211,6 +211,14 @@ function debugPathsForPart(
   paths: CubicBezier[],
 ) {
   let part = glyphDetail.construction[id]!
+  if (part.kind.t === 'stroke') {
+    // Show the centerline alongside the expanded boundary.
+    const parent = glyphDetail.construction[part.kind.parent]!
+    const centerline =
+      parent.result_curve ??
+      (parent.kind.t === 'cubic-bezier' ? parent.kind.curve : [])
+    paths.push(...centerline)
+  }
   if (part.kind.t === 'cubic-bezier') {
     for (const bez of part.kind.curve) paths.push(bez)
   }

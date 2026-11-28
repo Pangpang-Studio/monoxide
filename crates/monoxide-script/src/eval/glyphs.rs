@@ -82,13 +82,15 @@ fn eval_simple_glyph(
     let quads = res_outlines
         .into_iter()
         .map(|x| monoxide_curves::convert::cube_to_quad(x, 0.00001))
-        .map(|x| x.cast(|p| (p.to_vec2() * aux.point_per_em as f64).to_point()))
-        .map(|x| {
-            x.cast(|v| {
+        .filter_map(|x| {
+            let mut grid = x.cast(|p| {
+                let v = p.to_vec2() * aux.point_per_em as f64;
                 let x_fword = v.x as fword;
                 let y_fword = v.y as fword;
                 (x_fword, y_fword)
-            })
+            });
+            grid.simplify_for_fill();
+            (!grid.segments.is_empty()).then_some(grid)
         })
         .collect::<Vec<_>>();
 

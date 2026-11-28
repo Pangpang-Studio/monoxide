@@ -234,24 +234,9 @@ impl EvalTracer for GlyphDetailTracer {
         id
     }
 
-    fn stroked<'b>(
-        &mut self,
-        parent: Self::Id,
-        width: f64,
-        spiros: impl IntoIterator<Item = &'b [SpiroCp]>,
-    ) -> Self::Id
-    where
-        Self: 'b,
-    {
+    fn stroked(&mut self, parent: Self::Id, width: f64) -> Self::Id {
         let (ser, id) = self.allocate_next();
-        ser.kind = ConstructionKind::Stroke {
-            parent,
-            width,
-            curve: spiros
-                .into_iter()
-                .map(|s| s.iter().cloned().map(|x| x.into()).collect())
-                .collect(),
-        };
+        ser.kind = ConstructionKind::Stroke { parent, width };
         id
     }
 
@@ -334,5 +319,46 @@ fn kind_to_string(kind: &DebugPointKind) -> &'static str {
         DebugPointKind::Control => "control",
         DebugPointKind::Misc => "misc",
         DebugPointKind::Hidden => "hidden",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use monoxide_curves::SpiroCurve;
+    use monoxide_spiro::SpiroCpTy;
+
+    use super::*;
+
+    #[test]
+    fn stroke_trace_records_bezier_outlines() {
+        let curve = SpiroCurve::from_points(
+            vec![
+                SpiroCp {
+                    x: 0.0,
+                    y: 0.0,
+                    ty: SpiroCpTy::Open,
+                },
+                SpiroCp {
+                    x: 1.0,
+                    y: 0.0,
+                    ty: SpiroCpTy::EndOpen,
+                },
+            ],
+            false,
+        );
+        let outline = Arc::new(OutlineExpr::Spiro(curve)).stroked(0.2);
+        let mut tracer = GlyphDetailTracer::new();
+        let mut output = Vec::new();
+        let id = eval_outline(&outline, &mut output, &mut tracer).unwrap();
+        let construction = &tracer.buf[id];
+        let ConstructionKind::Stroke { parent, .. } = &construction.kind else {
+            panic!("expected a stroke construction");
+        };
+        assert_eq!(
+            construction.result_curve.as_deref(),
+            Some(output.as_slice())
+        );
+        assert!(!tracer.buf[*parent].result_curve.as_ref().unwrap()[0].closed);
+        assert_eq!(construction.debug_lines.len(), 2);
     }
 }
