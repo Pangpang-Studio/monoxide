@@ -91,7 +91,7 @@ pub fn hash(cx: &InputContext) -> Glyph {
     let yr = 0.0..cap;
 
     Glyph::builder()
-        .outlines(
+        .or_outlines(
             [
                 vbar(left, yr.clone()),
                 vbar(right, yr),

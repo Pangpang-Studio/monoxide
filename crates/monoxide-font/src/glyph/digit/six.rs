@@ -16,7 +16,7 @@ pub fn six(cx: &InputContext) -> Glyph {
     } = cx.settings().view();
 
     Glyph::builder()
-        .outlines(
+        .or_outlines(
             NineShape::new(sbl..sbr, 0.0..cap, mid - stw / 2., ovs)
                 .stroked(stw)
                 .transformed(Affine2D::rotate_about(PI, (mid, cap / 2.))),
