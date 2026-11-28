@@ -91,11 +91,6 @@ pub enum EvalError<Id> {
     )]
     StrokingABezier(Id),
 
-    #[error(
-        "boolean operation on multiple beziers unimplemented at {0}: try using a single bezier"
-    )]
-    BoolingMultipleBeziers(Id),
-
     #[error("boolean operation error at {0}: {1}")]
     Boolean(Id, #[source] linesweeper::Error),
 
@@ -125,9 +120,6 @@ fn eval_outline_internal<E: EvalTracer>(expr: &OutlineExpr, dbg: &mut E) -> Eval
                         .map(|s| eval_to_bez(evaled.id, &s, dbg))
                         .flatten_ok()
                         .try_collect()?,
-                };
-                let Ok([bez]) = <[_; _]>::try_from(bez) else {
-                    return Err(EvalError::BoolingMultipleBeziers(evaled.id));
                 };
                 Ok((evaled.id, bez))
             };
@@ -178,12 +170,13 @@ fn eval_to_bez<E: EvalTracer>(
 
 fn eval_bool<E: EvalTracer>(
     op: BinaryOp,
-    (lhs_id, lhs): (E::Id, CubicBezier),
-    (rhs_id, rhs): (E::Id, CubicBezier),
+    (lhs_id, lhs): (E::Id, Vec<CubicBezier>),
+    (rhs_id, rhs): (E::Id, Vec<CubicBezier>),
     dbg: &mut E,
 ) -> EvalResult<E> {
     let id = dbg.boolean(op.into(), &[lhs_id, rhs_id]);
-    let merged = binary_op(&lhs.to_kurbo(), &rhs.to_kurbo(), FillRule::NonZero, op)
+    let to_path = |contours: &[_]| contours.iter().flat_map(CubicBezier::to_kurbo).collect();
+    let merged = binary_op(&to_path(&lhs), &to_path(&rhs), FillRule::NonZero, op)
         .map_err(|e| EvalError::Boolean(id, e))?
         .contours()
         // NOTE: We reverse the subpaths to avoid stacked beziers cancelling out each other.
