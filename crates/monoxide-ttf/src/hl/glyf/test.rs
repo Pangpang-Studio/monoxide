@@ -52,6 +52,40 @@ fn test_points_iter_2() {
 }
 
 #[test]
+fn encode_keeps_the_last_distinct_point_of_an_implicitly_closed_stroke() {
+    let mut contour = QuadBezier::builder((0, 0));
+    contour.line_to((20, 0)).quad_to((25, 10), (20, 20)).close();
+    let glyph = encode(&[contour.build()]).unwrap();
+    let contours = decode(&glyph).unwrap();
+    assert_eq!(
+        contours[0].iter().collect::<Vec<_>>(),
+        [
+            (true, (0, 0)),
+            (true, (20, 0)),
+            (false, (25, 10)),
+            (true, (20, 20))
+        ]
+    );
+}
+
+#[test]
+fn collapsed_segments_drop_out_of_a_quantized_stroke() {
+    let mut builder = QuadBezier::builder((0, 0));
+    builder
+        .line_to((0, 0))
+        .quad_to((0, 0), (10, 0))
+        .quad_to((11, 1), (10, 0))
+        .line_to((5, 5))
+        .close();
+    let mut contour = builder.build();
+    contour.simplify_for_fill();
+    assert_eq!(
+        contour.iter().collect::<Vec<_>>(),
+        [(true, (0, 0)), (true, (10, 0)), (true, (5, 5))]
+    );
+}
+
+#[test]
 fn test_encode_decode() {
     let mut line1 = QuadBezier::builder((0, 0));
     line1
