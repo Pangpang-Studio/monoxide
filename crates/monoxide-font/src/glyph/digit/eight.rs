@@ -4,7 +4,6 @@ use monoxide_script::prelude::*;
 
 use crate::{
     InputContext,
-    dir::{Alignment, Dir},
     glyph::o::{IOShape, OCapShape},
     math::mix,
     prelude::*,
@@ -20,8 +19,9 @@ pub fn eight(cx: &InputContext) -> Glyph {
         ..
     } = cx.settings().view();
 
+    let radii = (mid - sbl - stw / 2., (cap - stw) / 2.);
     Glyph::builder()
-        .outline(EightShape::new((mid, cap / 2.), (mid - sbl, cap / 2.), ovs).stroked(stw))
+        .outline(EightShape::new((mid, cap / 2.), radii, ovs).stroked(stw))
         .build()
 }
 
@@ -60,32 +60,24 @@ impl IntoOutline for EightShape {
         let y_lo = y - ry;
         let y = mix(y_lo, y_hi, top_fact);
 
-        let midpoint = g4!(x, y).width(0.8).aligned(Alignment::Middle);
+        let midpoint = g4!(x, y).width(0.8);
 
         SpiroBuilder::closed()
             .insts([
                 // Top arc
-                flat!(right1, y + end_curve_h_top)
-                    .width(1.)
-                    .aligned(Alignment::Right),
+                flat!(right1, y + end_curve_h_top).width(1.),
                 curl!(right1, y_hi - end_curve_h_top),
-                g4!(x, y_hi + ovs).heading(Dir::L),
+                g4!(x, y_hi + ovs),
                 flat!(left1, y_hi - end_curve_h_top),
-                curl!(left1, y + end_curve_h_top)
-                    .width(1.)
-                    .aligned(Alignment::Right),
+                curl!(left1, y + end_curve_h_top).width(1.),
                 // Midpoint
                 midpoint.clone(),
                 // Bottom arc
-                flat!(right, y - end_curve_h_bot)
-                    .width(1.)
-                    .aligned(Alignment::Left),
+                flat!(right, y - end_curve_h_bot).width(1.),
                 curl!(right, y_lo + end_curve_h_bot),
-                g4!(x, y_lo - ovs).heading(Dir::L),
+                g4!(x, y_lo - ovs),
                 flat!(left, y_lo + end_curve_h_bot),
-                curl!(left, y - end_curve_h_bot)
-                    .width(1.)
-                    .aligned(Alignment::Left),
+                curl!(left, y - end_curve_h_bot).width(1.),
                 // Midpoint
                 midpoint,
             ])
