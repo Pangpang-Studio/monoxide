@@ -48,7 +48,7 @@ pub use self::{
     o::{o, o_cap},
     p::{p, p_cap},
     q::{q, q_cap},
-    r::{r, r_cap},
+    r::{cyrl_ya_cap, r, r_cap},
     s::{s, s_cap},
     sym::{
         apostrophe, asterisk, backslash, backtick, caret, colon, comma, curly_bracket_l,
@@ -171,6 +171,7 @@ pub const GLYPH_FNS: &[(char, GlyphFn)] = &[
     ('Т', t_cap),
     ('Х', x_cap),
     ('Э', cyrl_e_cap),
+    ('Я', cyrl_ya_cap),
     // Cyrillic lowercase
     ('а', a),
     ('е', e),
