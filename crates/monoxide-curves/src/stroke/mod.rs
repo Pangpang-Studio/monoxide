@@ -168,6 +168,22 @@ mod tests {
     }
 
     #[test]
+    fn heading_at_a_corner_cuts_both_spans_on_the_same_line() {
+        use SpiroCpTy::*;
+        let mut curve = SpiroCurve::from(vec![
+            Open.at((0., 0.)),
+            Corner.at((0.5, 1.)),
+            EndOpen.at((1., 0.)),
+        ]);
+        curve.tangents.insert(1, (0., 1.).into());
+        curve.alignment.insert(1, 0.25);
+        let outline = stroke_spiro(&curve, 0.1, &mut ()).unwrap();
+        assert_eq!(outline.len(), 1);
+        assert!((outline[0].to_kurbo().bounding_box().y1 - 1.).abs() < 2e-6);
+        assert_on_outline(&outline, (0.5, 1.).into());
+    }
+
+    #[test]
     fn right_angle_keeps_fractional_miter_and_zero_width_tip() {
         use SpiroCpTy::*;
         let mut curve = SpiroCurve::from(vec![

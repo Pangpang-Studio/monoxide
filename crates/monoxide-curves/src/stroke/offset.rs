@@ -57,8 +57,11 @@ fn tangent(seg: PathSeg, t: f64) -> Vec2 {
 /// angle bisector. At near-reversals it would be unbounded, so each side
 /// keeps its own normal and the two endpoints form a bevel.
 fn section(knot: Knot, tangent: Vec2, adjacent: Option<Vec2>) -> Section {
-    let skew = match adjacent {
-        Some(other) if other.dot(tangent) < 1. - 1e-8 => {
+    let skew = match (knot.heading, adjacent) {
+        // Both incident spans terminate on the same cut line. Their projected
+        // offsets can differ, giving e.g. a flat crown on a diagonal join.
+        (Some(h), _) if h.dot(tangent).abs() > 1e-8 => h.turn_90().dot(tangent) / h.dot(tangent),
+        (_, Some(other)) if other.dot(tangent) < 1. - 1e-8 => {
             let denominator = 1. + other.dot(tangent);
             // Limit the miter to four times the side's offset.
             if denominator >= 2. / 4_f64.powi(2) {
@@ -67,10 +70,7 @@ fn section(knot: Knot, tangent: Vec2, adjacent: Option<Vec2>) -> Section {
                 0.
             }
         }
-        _ => knot
-            .heading
-            .filter(|h| h.dot(tangent).abs() > 1e-8)
-            .map_or(0., |h| h.turn_90().dot(tangent) / h.dot(tangent)),
+        _ => 0.,
     };
     Section {
         width: knot.width,
